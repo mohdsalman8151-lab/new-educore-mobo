@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Exam Master Setup — EduCore SMS</title>
+  <meta name="description" content="Manage all examination configurations — create, edit, schedule, and lifecycle-manage exams across academic sessions.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;900&family=IBM+Plex+Mono:wght@400;500;600&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../css/main.css">
+  <link rel="stylesheet" href="../../css/components.css">
+  <style>
+    /* KPI cards — attendance-style */
+    .em-kpi { display:grid; grid-template-columns:repeat(5,1fr); gap:1rem; margin-bottom:1.5rem; }
+    @media(max-width:1100px){ .em-kpi{grid-template-columns:repeat(3,1fr);} }
+    .kpi-card { background:var(--bg2); border-radius:var(--radius); border:1px solid var(--border); padding:1.1rem 1.25rem; display:flex; flex-direction:column; gap:0.35rem; position:relative; overflow:hidden; transition:transform 0.2s,box-shadow 0.2s; }
+    .kpi-card:hover { transform:translateY(-2px); box-shadow:var(--shadow-md); }
+    .kpi-card::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; background:var(--kc); }
+    .kpi-icon { width:36px; height:36px; border-radius:8px; display:flex; align-items:center; justify-content:center; background:color-mix(in srgb,var(--kc) 12%,transparent); margin-bottom:0.2rem; }
+    .kpi-icon svg { width:18px; height:18px; fill:none; stroke:var(--kc); stroke-width:2; }
+    .kpi-label { font-size:0.72rem; color:var(--text2); font-weight:500; text-transform:uppercase; letter-spacing:0.04em; }
+    .kpi-value { font-size:1.85rem; font-weight:700; font-family:'IBM Plex Mono',monospace; line-height:1; }
+    .kpi-sub { font-size:0.72rem; color:var(--text2); }
+    /* Filter bar — attendance-style */
+    .em-filter-bar { display:flex; gap:0.75rem; flex-wrap:wrap; align-items:center; background:var(--bg2); padding:1rem 1.25rem; border-radius:var(--radius); border:1px solid var(--border); margin-bottom:1.25rem; }
+    .em-filter-bar .filter-label { font-size:0.72rem; font-weight:600; color:var(--text2); white-space:nowrap; }
+    /* Lifecycle pipeline */
+    .lifecycle-pipeline { display:flex; gap:0; align-items:center; padding:0.85rem 1.25rem; background:var(--bg2); border-radius:var(--radius); border:1px solid var(--border); margin-bottom:1.25rem; flex-wrap:wrap; gap:0.5rem; }
+    .lc-pill { padding:5px 16px; border-radius:20px; font-size:0.78rem; font-weight:600; display:flex; align-items:center; gap:0.4rem; }
+    .lc-sep { color:var(--text3); font-size:1.1rem; }
+    /* Exam type badges */
+    .exam-type-badge { font-size:0.65rem; font-weight:700; padding:2px 8px; border-radius:10px; text-transform:uppercase; letter-spacing:0.04em; white-space:nowrap; }
+    .type-unit { background:rgba(52,152,219,.12); color:#2980B9; }
+    .type-midterm { background:rgba(243,156,18,.12); color:#D68910; }
+    .type-halfyearly { background:rgba(22,160,133,.12); color:#16A085; }
+    .type-annual { background:rgba(142,68,173,.12); color:#7D3C98; }
+    .type-board { background:rgba(231,76,60,.12); color:#C0392B; }
+    .type-practical { background:rgba(39,174,96,.12); color:#1E8449; }
+    /* Modal tabs */
+    .modal-tabs { display:flex; border-bottom:2px solid var(--border); margin-bottom:1rem; }
+    .mtab { padding:0.65rem 1.25rem; font-size:0.83rem; font-weight:600; color:var(--text2); border-bottom:3px solid transparent; cursor:pointer; transition:all 0.18s; white-space:nowrap; }
+    .mtab.active { color:var(--primary); border-bottom-color:var(--primary); }
+    .mtab-panel { display:none; }
+    .mtab-panel.active { display:block; }
+    .class-checks { display:flex; flex-wrap:wrap; gap:0.4rem; margin-top:0.3rem; }
+    .class-check { display:flex; align-items:center; gap:0.3rem; padding:4px 10px; border:1px solid var(--border); border-radius:20px; cursor:pointer; font-size:0.75rem; transition:all 0.15s; }
+    .class-check:has(input:checked) { border-color:var(--primary); background:color-mix(in srgb,var(--primary) 10%,transparent); color:var(--primary); font-weight:600; }
+    .class-check input { margin:0; }
+    .sub-marks-table { width:100%; border-collapse:collapse; font-size:0.78rem; }
+    .sub-marks-table th { padding:0.5rem 0.75rem; text-align:left; font-size:0.67rem; text-transform:uppercase; letter-spacing:0.04em; color:var(--text3); border-bottom:2px solid var(--border); background:var(--bg); }
+    .sub-marks-table td { padding:0.5rem 0.75rem; border-bottom:1px solid var(--border); }
+    .sub-marks-table td input { width:60px; padding:4px 6px; border:1px solid var(--border); border-radius:4px; background:var(--bg2); color:var(--text); font-size:0.75rem; text-align:center; }
+    /* Lifecycle steps inside modal */
+    .lc-steps { display:flex; align-items:center; padding:0.75rem; background:var(--bg); border-radius:var(--radius); gap:0; }
+    .lc-step { display:flex; flex-direction:column; align-items:center; gap:2px; flex:1; position:relative; }
+    .lc-step:not(:last-child)::after { content:''; position:absolute; right:-50%; top:13px; width:100%; height:2px; background:var(--border); z-index:0; }
+    .lc-dot { width:28px; height:28px; border-radius:50%; border:2px solid var(--border); background:var(--bg2); display:flex; align-items:center; justify-content:center; font-size:0.65rem; font-weight:700; z-index:1; position:relative; }
+    .lc-dot.done { border-color:var(--success); background:var(--success); color:#fff; }
+    .lc-dot.active { border-color:var(--primary); background:var(--primary); color:#fff; }
+    .lc-lbl { font-size:0.6rem; color:var(--text3); text-align:center; margin-top:2px; }
+  </style>
+</head>
+<body>
+<div class="mobile-overlay" id="mobileOverlay" onclick="closeMobileSidebar()"></div>
+<header class="topbar">
+  <div class="logo-area"><div class="logo-mark"><svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div><span class="logo-text">EduCore SMS</span></div>
+  <button class="sidebar-toggle" onclick="toggleSidebar()"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
+  <div class="tb-search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg><input type="text" placeholder="Search exams…" oninput="filterTable(this.value)"></div>
+  <div class="tb-right">
+    <div class="tb-date" id="tb-date"></div>
+    <button class="dark-toggle" onclick="toggleDarkMode()"><svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg><svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/></svg></button>
+    <div class="dropdown-wrapper"><div class="tb-user" onclick="toggleUserDropdown(event)" id="userBtn"><div class="avatar">EC</div><div class="tb-user-info"><div class="tb-user-name">Dr. K. Ramesh</div><div class="tb-user-role">Exam Controller</div></div></div><div class="user-dropdown" id="userDropdown"><div class="user-dd-header"><div class="user-dd-name">Dr. K. Ramesh</div><div class="user-dd-role">Exam Controller · EduCore SMS</div></div><a class="user-dd-item danger" href="../../index.html"><svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>Logout</a></div></div>
+  </div>
+</header>
+<div class="layout" id="layout">
+  <nav class="sidebar" id="sidebar"><div id="sidebar-nav"></div></nav>
+  <main class="main">
+    <div class="breadcrumb"><a href="../../index.html">Dashboard</a><span class="breadcrumb-sep">›</span><a href="dashboard.html">Examination</a><span class="breadcrumb-sep">›</span><span>Exam Master Setup</span></div>
+    <div class="page-header">
+      <div><h1>Exam Master Setup</h1><div class="page-subtitle">Manage examination configurations · AY 2025–26 · 18 Exams Configured</div></div>
+      <div class="ph-actions">
+        <button class="btn btn-ghost" onclick="showToast('Exporting exam config…','info')">
+          <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Export
+        </button>
+        <button class="btn btn-primary" onclick="openModal('addExamModal')">
+          <svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          New Exam
+        </button>
+      </div>
+    </div>
+
+    <!-- KPI Strip -->
+    <div class="em-kpi">
+      <div class="kpi-card" style="--kc:var(--primary)">
+        <div class="kpi-icon"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
+        <div class="kpi-label">Total Exams</div>
+        <div class="kpi-value" data-count="18" style="color:var(--primary)">0</div>
+        <div class="kpi-sub">AY 2025–26</div>
+      </div>
+      <div class="kpi-card" style="--kc:var(--success)">
+        <div class="kpi-icon"><svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></div>
+        <div class="kpi-label">Completed</div>
+        <div class="kpi-value" data-count="14" style="color:var(--success)">0</div>
+        <div class="kpi-sub">Results published</div>
+      </div>
+      <div class="kpi-card" style="--kc:var(--info)">
+        <div class="kpi-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+        <div class="kpi-label">Ongoing</div>
+        <div class="kpi-value" data-count="2" style="color:var(--info)">0</div>
+        <div class="kpi-sub">Currently running</div>
+      </div>
+      <div class="kpi-card" style="--kc:var(--warning)">
+        <div class="kpi-icon"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
+        <div class="kpi-label">Upcoming</div>
+        <div class="kpi-value" data-count="4" style="color:var(--warning)">0</div>
+        <div class="kpi-sub">Scheduled</div>
+      </div>
+      <div class="kpi-card" style="--kc:var(--accent)">
+        <div class="kpi-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div>
+        <div class="kpi-label">Drafts</div>
+        <div class="kpi-value" data-count="1" style="color:var(--accent)">0</div>
+        <div class="kpi-sub">Awaiting approval</div>
+      </div>
+    </div>
+
+    <!-- Lifecycle Pipeline -->
+    <div class="lifecycle-pipeline">
+      <div style="font-size:0.78rem;font-weight:700;color:var(--text)">Exam Lifecycle:</div>
+      <div class="lc-pill" style="background:rgba(149,165,166,0.12);color:var(--text2)">① Draft</div>
+      <span class="lc-sep">›</span>
+      <div class="lc-pill" style="background:rgba(243,156,18,0.12);color:var(--warning)">② Scheduled</div>
+      <span class="lc-sep">›</span>
+      <div class="lc-pill" style="background:rgba(41,128,185,0.12);color:var(--info)">③ Ongoing</div>
+      <span class="lc-sep">›</span>
+      <div class="lc-pill" style="background:rgba(22,160,133,0.12);color:var(--success)">④ Completed</div>
+      <span class="lc-sep">›</span>
+      <div class="lc-pill" style="background:rgba(142,68,173,0.12);color:#7D3C98">⑤ Results Published</div>
+    </div>
+
+    <!-- Filter Bar -->
+    <div class="em-filter-bar">
+      <div><span class="filter-label">Session</span>
+        <select id="fSession" style="padding:6px 10px;border-radius:6px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:0.8rem;margin-left:6px">
+          <option>2025–26</option><option>2024–25</option>
+        </select>
+      </div>
+      <div><span class="filter-label">Type</span>
+        <select id="fType" onchange="applyFilters()" style="padding:6px 10px;border-radius:6px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:0.8rem;margin-left:6px">
+          <option value="">All Types</option><option>Unit Test</option><option>Mid-Term</option><option>Half-Yearly</option><option>Annual</option><option>Board Exam</option><option>Practical</option>
+        </select>
+      </div>
+      <div><span class="filter-label">Status</span>
+        <select id="fStatus" onchange="applyFilters()" style="padding:6px 10px;border-radius:6px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:0.8rem;margin-left:6px">
+          <option value="">All Status</option><option>Draft</option><option>Scheduled</option><option>Ongoing</option><option>Completed</option><option>Results Published</option>
+        </select>
+      </div>
+      <div><span class="filter-label">Class</span>
+        <select id="fClass" onchange="applyFilters()" style="padding:6px 10px;border-radius:6px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:0.8rem;margin-left:6px">
+          <option value="">All Classes</option><option>VI</option><option>VII</option><option>VIII</option><option>IX</option><option>X</option><option>XI</option><option>XII</option>
+        </select>
+      </div>
+      <div style="margin-left:auto;display:flex;gap:0.5rem">
+        <button class="btn btn-ghost btn-sm" onclick="showToast('Printing exam list…','info')">Print</button>
+        <button class="btn btn-ghost btn-sm" onclick="filterTable('')">Reset</button>
+      </div>
+      <span style="font-size:0.75rem;color:var(--text3);align-self:center" id="filterCount">Showing 18 exams</span>
+    </div>
+
+    <!-- Exam Table -->
+    <div class="card card-flush">
+      <div class="table-wrap">
+        <table style="width:100%;border-collapse:collapse">
+          <thead>
+            <tr>
+              <th style="padding:0.6rem 1rem;text-align:left;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.05em;color:var(--text3);border-bottom:2px solid var(--border)">Exam Name</th>
+              <th style="padding:0.6rem 1rem;text-align:left;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.05em;color:var(--text3);border-bottom:2px solid var(--border)">Type</th>
+              <th style="padding:0.6rem 1rem;text-align:left;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.05em;color:var(--text3);border-bottom:2px solid var(--border)">Session / Term</th>
+              <th style="padding:0.6rem 1rem;text-align:left;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.05em;color:var(--text3);border-bottom:2px solid var(--border)">Dates</th>
+              <th style="padding:0.6rem 1rem;text-align:left;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.05em;color:var(--text3);border-bottom:2px solid var(--border)">Classes</th>
+              <th style="padding:0.6rem 1rem;text-align:center;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.05em;color:var(--text3);border-bottom:2px solid var(--border)">Subjects</th>
+              <th style="padding:0.6rem 1rem;text-align:center;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.05em;color:var(--text3);border-bottom:2px solid var(--border)">Max Marks</th>
+              <th style="padding:0.6rem 1rem;text-align:left;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.05em;color:var(--text3);border-bottom:2px solid var(--border)">Status</th>
+              <th style="padding:0.6rem 1rem;text-align:left;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.05em;color:var(--text3);border-bottom:2px solid var(--border)">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="examTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- Add Exam Modal -->
+<div class="modal-backdrop" id="addExamModal">
+  <div class="modal" style="max-width:700px;width:95%">
+    <div class="modal-header">
+      <div class="modal-title">Create New Examination</div>
+      <button class="modal-close" onclick="closeModal('addExamModal')"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="modal-body" style="max-height:75vh;overflow-y:auto">
+      <div class="modal-tabs">
+        <div class="mtab active" onclick="switchTab(this,'tab-basic')">Basic Info</div>
+        <div class="mtab" onclick="switchTab(this,'tab-classes')">Classes & Subjects</div>
+        <div class="mtab" onclick="switchTab(this,'tab-marks')">Marks Config</div>
+        <div class="mtab" onclick="switchTab(this,'tab-rules')">Rules & Policies</div>
+      </div>
+      <!-- Tab: Basic Info -->
+      <div class="mtab-panel active" id="tab-basic">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem">
+          <div class="form-group"><label class="form-label">Exam Name <span style="color:var(--accent)">*</span></label><input class="form-input" type="text" placeholder="e.g. Half-Yearly Examination 2025–26"></div>
+          <div class="form-group"><label class="form-label">Exam Code</label><input class="form-input" type="text" placeholder="e.g. HY-2025-26"></div>
+          <div class="form-group"><label class="form-label">Academic Session <span style="color:var(--accent)">*</span></label><select class="form-input"><option>2025–26</option><option>2024–25</option><option>2026–27</option></select></div>
+          <div class="form-group"><label class="form-label">Term</label><select class="form-input"><option>Term I (Jun–Oct)</option><option>Term II (Nov–Mar)</option><option>Annual</option></select></div>
+          <div class="form-group"><label class="form-label">Exam Type <span style="color:var(--accent)">*</span></label><select class="form-input"><option>-- Select --</option><option>Unit Test</option><option>Mid-Term</option><option>Half-Yearly</option><option>Annual</option><option>Board Exam</option><option>Practical</option><option>Viva</option></select></div>
+          <div class="form-group"><label class="form-label">Exam Category</label><select class="form-input"><option>Scholastic</option><option>Co-Scholastic</option><option>Board</option><option>Internal Assessment</option></select></div>
+          <div class="form-group"><label class="form-label">Start Date <span style="color:var(--accent)">*</span></label><input class="form-input" type="date" value="2026-07-05"></div>
+          <div class="form-group"><label class="form-label">End Date <span style="color:var(--accent)">*</span></label><input class="form-input" type="date" value="2026-07-18"></div>
+          <div class="form-group"><label class="form-label">Result Declaration</label><input class="form-input" type="date" value="2026-07-28"></div>
+          <div class="form-group"><label class="form-label">Grading Scheme</label><select class="form-input"><option>CBSE 10-Point GPA</option><option>Percentage-Based</option><option>Marks-Only</option></select></div>
+        </div>
+        <div class="form-group" style="margin-top:0.5rem"><label class="form-label">Description / Instructions</label><textarea class="form-input" rows="3" placeholder="Additional notes or instructions…"></textarea></div>
+      </div>
+      <!-- Tab: Classes -->
+      <div class="mtab-panel" id="tab-classes">
+        <div class="form-group">
+          <label class="form-label">Applicable Classes <span style="color:var(--accent)">*</span></label>
+          <div class="class-checks">
+            <label class="class-check"><input type="checkbox"> I</label><label class="class-check"><input type="checkbox"> II</label><label class="class-check"><input type="checkbox"> III</label><label class="class-check"><input type="checkbox"> IV</label><label class="class-check"><input type="checkbox"> V</label><label class="class-check"><input type="checkbox"> VI</label><label class="class-check"><input type="checkbox"> VII</label><label class="class-check"><input type="checkbox"> VIII</label>
+            <label class="class-check"><input type="checkbox" checked> IX</label><label class="class-check"><input type="checkbox" checked> X</label><label class="class-check"><input type="checkbox" checked> XI</label><label class="class-check"><input type="checkbox" checked> XII</label>
+          </div>
+        </div>
+        <div class="form-group" style="margin-top:1rem">
+          <label class="form-label">Sections</label>
+          <div class="class-checks"><label class="class-check"><input type="checkbox" checked> A</label><label class="class-check"><input type="checkbox" checked> B</label><label class="class-check"><input type="checkbox" checked> C</label><label class="class-check"><input type="checkbox"> D</label></div>
+        </div>
+        <div class="form-group" style="margin-top:1rem">
+          <label class="form-label">Subjects Included</label>
+          <div class="class-checks">
+            <label class="class-check"><input type="checkbox" checked> Mathematics</label><label class="class-check"><input type="checkbox" checked> Physics</label><label class="class-check"><input type="checkbox" checked> Chemistry</label><label class="class-check"><input type="checkbox" checked> English</label><label class="class-check"><input type="checkbox" checked> Hindi</label><label class="class-check"><input type="checkbox" checked> Biology</label><label class="class-check"><input type="checkbox" checked> Computer Science</label><label class="class-check"><input type="checkbox"> Economics</label><label class="class-check"><input type="checkbox"> History</label><label class="class-check"><input type="checkbox"> Geography</label><label class="class-check"><input type="checkbox"> Physical Education</label>
+          </div>
+        </div>
+      </div>
+      <!-- Tab: Marks -->
+      <div class="mtab-panel" id="tab-marks">
+        <table class="sub-marks-table">
+          <thead><tr><th>Subject</th><th>Theory Max</th><th>Practical Max</th><th>Internal Max</th><th>Total</th><th>Passing</th></tr></thead>
+          <tbody>
+            <tr><td><strong>Mathematics</strong></td><td><input type="number" value="80"></td><td><input type="number" value="0"></td><td><input type="number" value="20"></td><td><input type="number" value="100" readonly style="background:var(--bg);color:var(--text3)"></td><td><input type="number" value="33"></td></tr>
+            <tr><td><strong>Physics</strong></td><td><input type="number" value="70"></td><td><input type="number" value="30"></td><td><input type="number" value="0"></td><td><input type="number" value="100" readonly style="background:var(--bg);color:var(--text3)"></td><td><input type="number" value="33"></td></tr>
+            <tr><td><strong>Chemistry</strong></td><td><input type="number" value="70"></td><td><input type="number" value="30"></td><td><input type="number" value="0"></td><td><input type="number" value="100" readonly style="background:var(--bg);color:var(--text3)"></td><td><input type="number" value="33"></td></tr>
+            <tr><td><strong>English</strong></td><td><input type="number" value="80"></td><td><input type="number" value="0"></td><td><input type="number" value="20"></td><td><input type="number" value="100" readonly style="background:var(--bg);color:var(--text3)"></td><td><input type="number" value="33"></td></tr>
+            <tr><td><strong>Hindi</strong></td><td><input type="number" value="80"></td><td><input type="number" value="0"></td><td><input type="number" value="20"></td><td><input type="number" value="100" readonly style="background:var(--bg);color:var(--text3)"></td><td><input type="number" value="33"></td></tr>
+            <tr><td><strong>Biology</strong></td><td><input type="number" value="70"></td><td><input type="number" value="30"></td><td><input type="number" value="0"></td><td><input type="number" value="100" readonly style="background:var(--bg);color:var(--text3)"></td><td><input type="number" value="33"></td></tr>
+            <tr><td><strong>Computer Science</strong></td><td><input type="number" value="70"></td><td><input type="number" value="30"></td><td><input type="number" value="0"></td><td><input type="number" value="100" readonly style="background:var(--bg);color:var(--text3)"></td><td><input type="number" value="33"></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <!-- Tab: Rules -->
+      <div class="mtab-panel" id="tab-rules">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem">
+          <div class="form-group"><label class="form-label">Grace Marks (Max)</label><input class="form-input" type="number" value="5" min="0" max="20"></div>
+          <div class="form-group"><label class="form-label">Grace per Subject</label><input class="form-input" type="number" value="5" min="0" max="10"></div>
+          <div class="form-group"><label class="form-label">Fail Rule</label><select class="form-input"><option>Fail if any 1 subject failed</option><option>Fail if 2+ subjects failed</option><option>Overall % below 33%</option></select></div>
+          <div class="form-group"><label class="form-label">Compartment Eligibility</label><select class="form-input"><option>1 subject fail = Compartment</option><option>2 subjects = Compartment</option><option>Not applicable</option></select></div>
+          <div class="form-group"><label class="form-label">Marks Edit After Submit</label><select class="form-input"><option>No (locked after submission)</option><option>Yes (requires approval)</option></select></div>
+          <div class="form-group"><label class="form-label">Revaluation Allowed</label><select class="form-input"><option>Yes</option><option>No</option></select></div>
+          <div class="form-group"><label class="form-label">Result Visibility</label><select class="form-input"><option>After Principal approval</option><option>After EC approval</option><option>Immediate</option></select></div>
+          <div class="form-group"><label class="form-label">Supplementary Allowed</label><select class="form-input"><option>Yes — for failed students</option><option>No</option></select></div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('addExamModal')">Cancel</button>
+      <button class="btn btn-ghost" onclick="showToast('Exam saved as draft','info');closeModal('addExamModal')">Save Draft</button>
+      <button class="btn btn-primary" onclick="showToast('Examination created successfully!','success');closeModal('addExamModal')">Create Examination</button>
+    </div>
+  </div>
+</div>
+
+<!-- Lifecycle Modal -->
+<div class="modal-backdrop" id="lifecycleModal">
+  <div class="modal" style="max-width:580px;width:95%">
+    <div class="modal-header"><div class="modal-title" id="lcTitle">Exam Lifecycle</div><button class="modal-close" onclick="closeModal('lifecycleModal')"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
+    <div class="modal-body">
+      <div class="lc-steps" id="lcSteps"></div>
+      <div style="margin-top:1rem" id="lcDetails"></div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal('lifecycleModal')">Close</button><button class="btn btn-primary" onclick="showToast('Lifecycle updated','success');closeModal('lifecycleModal')">Advance Stage</button></div>
+  </div>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+<script src="../../js/app.js"></script>
+<script src="../../js/sidebar.js"></script>
+<script>
+renderSidebar('exams','exam-master','../../');
+
+var EXAMS=[
+  {id:'EX-001',name:'Unit Test I — Term I',code:'UT1-T1-25',type:'Unit Test',session:'2025-26',term:'Term I',start:'14 Jun 2025',end:'18 Jun 2025',classes:'VI–XII',subjects:10,max:25,status:'Completed',sc:'badge-green',stage:4},
+  {id:'EX-002',name:'Unit Test II — Term I',code:'UT2-T1-25',type:'Unit Test',session:'2025-26',term:'Term I',start:'02 Aug 2025',end:'06 Aug 2025',classes:'VI–XII',subjects:10,max:25,status:'Completed',sc:'badge-green',stage:4},
+  {id:'EX-003',name:'Mid-Term Examination — Term I',code:'MT-T1-25',type:'Mid-Term',session:'2025-26',term:'Term I',start:'15 Sep 2025',end:'24 Sep 2025',classes:'VI–XII',subjects:10,max:100,status:'Completed',sc:'badge-green',stage:4},
+  {id:'EX-004',name:'Unit Test III — Term I',code:'UT3-T1-25',type:'Unit Test',session:'2025-26',term:'Term I',start:'12 Oct 2025',end:'16 Oct 2025',classes:'VI–XII',subjects:10,max:25,status:'Completed',sc:'badge-green',stage:4},
+  {id:'EX-005',name:'Half-Yearly Examination',code:'HY-25-26',type:'Half-Yearly',session:'2025-26',term:'Annual',start:'10 Nov 2025',end:'22 Nov 2025',classes:'VI–XII',subjects:10,max:100,status:'Results Published',sc:'badge-purple',stage:4},
+  {id:'EX-006',name:'Practical Exams — Term I (XI–XII)',code:'PRAC-T1-25',type:'Practical',session:'2025-26',term:'Term I',start:'25 Nov 2025',end:'28 Nov 2025',classes:'XI–XII',subjects:4,max:30,status:'Completed',sc:'badge-green',stage:4},
+  {id:'EX-007',name:'Unit Test I — Term II',code:'UT1-T2-26',type:'Unit Test',session:'2025-26',term:'Term II',start:'12 Jan 2026',end:'16 Jan 2026',classes:'VI–XII',subjects:10,max:25,status:'Completed',sc:'badge-green',stage:4},
+  {id:'EX-008',name:'Board Practical Exams — XII',code:'BD-PRAC-26',type:'Practical',session:'2025-26',term:'Annual',start:'10 Jan 2026',end:'20 Jan 2026',classes:'XII',subjects:4,max:30,status:'Completed',sc:'badge-green',stage:4},
+  {id:'EX-009',name:'Pre-Board Examination — XII',code:'PB-26',type:'Annual',session:'2025-26',term:'Annual',start:'05 Jan 2026',end:'14 Jan 2026',classes:'XII',subjects:5,max:100,status:'Completed',sc:'badge-green',stage:4},
+  {id:'EX-010',name:'Board Theory Examination — XII',code:'BD-THEORY-26',type:'Board Exam',session:'2025-26',term:'Annual',start:'15 Feb 2026',end:'05 Apr 2026',classes:'XII',subjects:5,max:100,status:'Results Published',sc:'badge-purple',stage:4},
+  {id:'EX-011',name:'Unit Test II — Term II',code:'UT2-T2-26',type:'Unit Test',session:'2025-26',term:'Term II',start:'02 Mar 2026',end:'06 Mar 2026',classes:'VI–XII',subjects:10,max:25,status:'Completed',sc:'badge-green',stage:4},
+  {id:'EX-012',name:'Mid-Term Examination — Term II',code:'MT-T2-26',type:'Mid-Term',session:'2025-26',term:'Term II',start:'20 Mar 2026',end:'30 Mar 2026',classes:'VI–XII',subjects:10,max:100,status:'Completed',sc:'badge-green',stage:4},
+  {id:'EX-013',name:'Unit Test III — Term II',code:'UT3-T2-26',type:'Unit Test',session:'2025-26',term:'Term II',start:'12 May 2026',end:'16 May 2026',classes:'VI–XI',subjects:10,max:25,status:'Completed',sc:'badge-green',stage:4},
+  {id:'EX-014',name:'Annual Examination — Middle School',code:'ANN-MID-26',type:'Annual',session:'2025-26',term:'Annual',start:'15 Jun 2026',end:'26 Jun 2026',classes:'VI–VIII',subjects:7,max:100,status:'Ongoing',sc:'badge-blue',stage:2},
+  {id:'EX-015',name:'Annual Examination — Secondary',code:'ANN-SEC-26',type:'Annual',session:'2025-26',term:'Annual',start:'25 Jun 2026',end:'05 Jul 2026',classes:'IX–X',subjects:8,max:100,status:'Ongoing',sc:'badge-blue',stage:2},
+  {id:'EX-016',name:'Annual Examination — Sr. Secondary',code:'ANN-SR-26',type:'Annual',session:'2025-26',term:'Annual',start:'05 Jul 2026',end:'18 Jul 2026',classes:'XI',subjects:5,max:100,status:'Scheduled',sc:'badge-yellow',stage:1},
+  {id:'EX-017',name:'Practical Exams — Term II (XI)',code:'PRAC-T2-26',type:'Practical',session:'2025-26',term:'Term II',start:'20 Jul 2026',end:'25 Jul 2026',classes:'XI',subjects:3,max:30,status:'Scheduled',sc:'badge-yellow',stage:1},
+  {id:'EX-018',name:'Supplementary Examination 2026',code:'SUPP-26',type:'Unit Test',session:'2025-26',term:'Annual',start:'01 Aug 2026',end:'10 Aug 2026',classes:'IX–XII',subjects:8,max:100,status:'Draft',sc:'badge-gray',stage:0},
+];
+var LC_STAGES=['Draft','Scheduled','Ongoing','Completed','Published'];
+
+function typeClass(t){
+  return t==='Unit Test'?'type-unit':t==='Mid-Term'?'type-midterm':t==='Half-Yearly'?'type-halfyearly':t==='Annual'?'type-annual':t==='Board Exam'?'type-board':t==='Practical'?'type-practical':'type-unit';
+}
+function renderTable(data){
+  document.getElementById('examTableBody').innerHTML=data.map(function(e){
+    return '<tr>'
+      +'<td style="padding:0.65rem 1rem"><strong style="font-size:0.82rem">'+e.name+'</strong><div style="font-size:0.65rem;color:var(--text3);font-family:\'IBM Plex Mono\',monospace;margin-top:2px">'+e.code+'</div></td>'
+      +'<td style="padding:0.65rem 1rem"><span class="exam-type-badge '+typeClass(e.type)+'">'+e.type+'</span></td>'
+      +'<td style="padding:0.65rem 1rem;font-size:0.78rem">'+e.session+'<div style="font-size:0.65rem;color:var(--text3)">'+e.term+'</div></td>'
+      +'<td style="padding:0.65rem 1rem;font-size:0.75rem;font-family:\'IBM Plex Mono\',monospace">'+e.start+'<div style="color:var(--text3)">to '+e.end+'</div></td>'
+      +'<td style="padding:0.65rem 1rem"><span class="badge badge-blue">'+e.classes+'</span></td>'
+      +'<td style="padding:0.65rem 1rem;text-align:center;font-family:\'IBM Plex Mono\',monospace;font-size:0.82rem">'+e.subjects+'</td>'
+      +'<td style="padding:0.65rem 1rem;text-align:center;font-family:\'IBM Plex Mono\',monospace;font-size:0.82rem">'+e.max+'</td>'
+      +'<td style="padding:0.65rem 1rem"><span class="badge '+e.sc+'">'+e.status+'</span></td>'
+      +'<td style="padding:0.65rem 1rem">'
+        +'<div style="display:flex;gap:0.35rem">'
+          +'<button class="btn-view-sm" onclick="openLifecycle(\''+e.id+'\')">Lifecycle</button>'
+          +'<button class="btn-view-sm" onclick="openModal(\'addExamModal\')">Edit</button>'
+          +'<button class="btn-reject-sm" onclick="showToast(\'Exam cloned\',\'success\')">Clone</button>'
+        +'</div>'
+      +'</td>'
+      +'</tr>';
+  }).join('');
+  document.getElementById('filterCount').textContent='Showing '+data.length+' exam'+(data.length!==1?'s':'');
+}
+function applyFilters(){
+  var type=document.getElementById('fType').value;
+  var status=document.getElementById('fStatus').value;
+  var cls=document.getElementById('fClass').value;
+  renderTable(EXAMS.filter(function(e){
+    if(type&&e.type!==type) return false;
+    if(status&&e.status!==status) return false;
+    if(cls&&!e.classes.includes(cls)) return false;
+    return true;
+  }));
+}
+function filterTable(q){renderTable(q?EXAMS.filter(function(e){return e.name.toLowerCase().includes(q.toLowerCase())||e.code.toLowerCase().includes(q.toLowerCase());}):EXAMS);}
+
+function openLifecycle(id){
+  var e=EXAMS.find(function(x){return x.id===id;});
+  if(!e) return;
+  document.getElementById('lcTitle').textContent=e.name;
+  var steps=LC_STAGES.map(function(s,i){
+    var cls=i<e.stage?'done':i===e.stage?'active':'';
+    return '<div class="lc-step"><div class="lc-dot '+cls+'">'+(i<e.stage?'✓':(i+1))+'</div><div class="lc-lbl">'+s+'</div></div>';
+  }).join('');
+  document.getElementById('lcSteps').innerHTML=steps;
+  document.getElementById('lcDetails').innerHTML=
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;font-size:0.82rem;margin-bottom:0.75rem">'
+    +'<div><span style="color:var(--text3)">Code:</span> <strong>'+e.code+'</strong></div>'
+    +'<div><span style="color:var(--text3)">Type:</span> <strong>'+e.type+'</strong></div>'
+    +'<div><span style="color:var(--text3)">Start:</span> <strong>'+e.start+'</strong></div>'
+    +'<div><span style="color:var(--text3)">End:</span> <strong>'+e.end+'</strong></div>'
+    +'<div><span style="color:var(--text3)">Classes:</span> <strong>'+e.classes+'</strong></div>'
+    +'<div><span style="color:var(--text3)">Subjects:</span> <strong>'+e.subjects+'</strong></div>'
+    +'</div>'
+    +'<div style="padding:0.75rem;background:var(--bg2);border-radius:var(--radius);border:1px solid var(--border);font-size:0.75rem;color:var(--text2)">'
+    +'Currently <strong>'+e.status+'</strong>. '+(e.stage<LC_STAGES.length-1?'Next step: advance to <strong>'+LC_STAGES[e.stage+1]+'</strong>':'Lifecycle complete.')+'</div>';
+  openModal('lifecycleModal');
+}
+function switchTab(el,id){
+  document.querySelectorAll('.mtab').forEach(function(t){t.classList.remove('active');});
+  document.querySelectorAll('.mtab-panel').forEach(function(p){p.classList.remove('active');});
+  el.classList.add('active');
+  document.getElementById(id).classList.add('active');
+}
+function openModal(id){var m=document.getElementById(id);if(m)m.classList.add('open');}
+function closeModal(id){var m=document.getElementById(id);if(m)m.classList.remove('open');}
+document.addEventListener('click',function(e){if(e.target.classList.contains('modal-backdrop'))e.target.classList.remove('open');});
+function showToast(msg,type){var icons={success:'<path d="M9 11l3 3L22 4"/>',error:'<path d="M18 6 6 18M6 6l12 12"/>',info:'<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>',warning:'<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>'}; var c=document.getElementById('toastContainer');var t=document.createElement('div');t.className='toast toast-'+type;t.innerHTML='<div class="toast-icon"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">'+icons[type]+'</svg></div><div class="toast-body"><div class="toast-title">'+(type.charAt(0).toUpperCase()+type.slice(1))+'</div><div class="toast-msg">'+msg+'</div></div>';c.appendChild(t);setTimeout(function(){t.classList.add('show');},10);setTimeout(function(){t.classList.remove('show');setTimeout(function(){t.remove();},300);},3500);}
+function animateCounters(){document.querySelectorAll('[data-count]').forEach(function(el){var target=parseFloat(el.getAttribute('data-count'));var duration=1200,start=performance.now();function step(now){var p=Math.min((now-start)/duration,1);var e=1-Math.pow(1-p,3);el.textContent=Math.round(target*e);if(p<1)requestAnimationFrame(step);}requestAnimationFrame(step);});}
+renderTable(EXAMS);
+animateCounters();
+</script>
+</body>
+</html>

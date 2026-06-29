@@ -1,196 +1,363 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Exam Schedule and Timetable - EduCore SMS</title>
+  <title>Exam Schedule & Timetable — EduCore SMS</title>
+  <meta name="description" content="Schedule examinations, generate timetables, detect conflicts and allocate rooms across all classes.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;900&family=IBM+Plex+Mono:wght@400;500;600&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=IBM+Plex+Mono:wght@400;500;600&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../../css/main.css">
   <link rel="stylesheet" href="../../css/components.css">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <style>
+    .view-toggle{display:flex;gap:0;border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;}
+    .vt-btn{padding:.45rem .9rem;font-size:.78rem;font-weight:600;cursor:pointer;background:var(--bg2);color:var(--text2);border:none;transition:all .15s;}
+    .vt-btn.active{background:var(--primary);color:#fff;}
+    .cal-header{display:grid;grid-template-columns:repeat(7,1fr);gap:1px;background:var(--border);margin-bottom:1px;}
+    .cal-header-day{background:var(--bg2);padding:.5rem;text-align:center;font-size:.7rem;font-weight:700;color:var(--text3);text-transform:uppercase;}
+    .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:1px;background:var(--border);}
+    .cal-cell{background:var(--bg2);min-height:100px;padding:.4rem;position:relative;}
+    .cal-cell.other-month{background:var(--bg);opacity:.6;}
+    .cal-cell.today{background:rgba(10,61,98,.04);}
+    .cal-date-num{font-size:.72rem;font-weight:700;color:var(--text3);margin-bottom:3px;}
+    .cal-date-num.today-num{width:22px;height:22px;background:var(--primary);color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.65rem;}
+    .cal-exam-chip{font-size:.62rem;padding:2px 5px;border-radius:3px;margin-bottom:2px;cursor:pointer;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600;}
+    /* Schedule Table */
+    .sch-table{width:100%;border-collapse:collapse;}
+    .sch-table th{padding:.6rem 1rem;text-align:left;font-size:.67rem;text-transform:uppercase;letter-spacing:.05em;color:var(--text3);border-bottom:2px solid var(--border);background:var(--bg);white-space:nowrap;}
+    .sch-table td{padding:.65rem 1rem;border-bottom:1px solid var(--border);font-size:.8rem;}
+    .sch-table tr:hover td{background:rgba(10,61,98,.02);}
+    .conflict-badge{display:inline-flex;align-items:center;gap:3px;font-size:.62rem;padding:2px 7px;border-radius:10px;background:rgba(231,76,60,.12);color:var(--accent);font-weight:700;}
+    .conflict-badge svg{width:10px;height:10px;stroke:currentColor;fill:none;}
+    .slot-time{font-family:'IBM Plex Mono',monospace;font-size:.75rem;white-space:nowrap;}
+    /* Week view */
+    .week-grid{display:grid;grid-template-columns:80px repeat(6,1fr);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;}
+    .wg-header{padding:.5rem;text-align:center;font-size:.72rem;font-weight:700;background:var(--bg2);border-bottom:1px solid var(--border);border-right:1px solid var(--border);}
+    .wg-time{padding:.5rem;font-size:.68rem;font-family:'IBM Plex Mono',monospace;color:var(--text3);background:var(--bg2);border-right:1px solid var(--border);border-bottom:1px solid var(--border);display:flex;align-items:center;}
+    .wg-slot{padding:.35rem;border-right:1px solid var(--border);border-bottom:1px solid var(--border);min-height:64px;position:relative;}
+    .wg-event{border-radius:4px;padding:3px 6px;font-size:.65rem;font-weight:600;cursor:pointer;margin-bottom:2px;}
+    /* Conflict panel */
+    .conflict-panel{background:rgba(231,76,60,.06);border:1px solid rgba(231,76,60,.2);border-radius:var(--radius);padding:1rem;margin-bottom:1rem;}
+    .conflict-item{display:flex;gap:.75rem;align-items:flex-start;padding:.5rem 0;border-bottom:1px solid rgba(231,76,60,.15);}
+    .conflict-item:last-child{border-bottom:none;}
+    .conflict-icon{width:28px;height:28px;border-radius:50%;background:rgba(231,76,60,.15);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  </style>
 </head>
 <body>
 <div class="mobile-overlay" id="mobileOverlay" onclick="closeMobileSidebar()"></div>
 <header class="topbar">
-  <div class="logo-area">
-    <div class="logo-mark"><svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div>
-    <span class="logo-text">EduCore SMS</span>
-  </div>
-  <button class="sidebar-toggle" onclick="toggleSidebar()">
-    <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round">
-      <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
-    </svg>
-  </button>
-  <div class="tb-search">
-    <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-    <input type="text" placeholder="Search anything..." id="globalSearch">
-  </div>
+  <div class="logo-area"><div class="logo-mark"><svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div><span class="logo-text">EduCore SMS</span></div>
+  <button class="sidebar-toggle" onclick="toggleSidebar()"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
+  <div class="tb-search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg><input type="text" placeholder="Search exam schedule…"></div>
   <div class="tb-right">
     <div class="tb-date" id="tb-date"></div>
-    <button class="dark-toggle" onclick="toggleDarkMode()">
-      <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
-      <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/></svg>
-    </button>
-    <div class="dropdown-wrapper">
-      <div class="tb-btn" onclick="toggleNotif(event)" id="notifBtn">
-        <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
-        <div class="notif-dot"></div>
-      </div>
-      <div class="notif-dropdown" id="notifDropdown">
-        <div class="notif-header"><h4>Notifications</h4><span onclick="markAllRead()">Mark all read</span></div>
-        <div class="notif-item">
-          <div class="notif-icon" style="background:var(--warning)"><svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg></div>
-          <div class="notif-text"><p><strong>Fee dues</strong> - 48 students have outstanding dues</p><span>1 hour ago</span></div>
-          <div class="notif-unread"></div>
-        </div>
-        <div class="notif-item">
-          <div class="notif-icon" style="background:var(--info)"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>
-          <div class="notif-text"><p><strong>New admission</strong> - 5 new applications received</p><span>3 hours ago</span></div>
-          <div class="notif-unread"></div>
-        </div>
-        <div class="notif-item">
-          <div class="notif-icon" style="background:var(--success)"><svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/></svg></div>
-          <div class="notif-text"><p><strong>Attendance marked</strong> - All classes updated</p><span>Today 9:00 AM</span></div>
-        </div>
-        <div class="notif-footer"><a href="../../modules/communication/noticeboard.html">View all</a></div>
-      </div>
-    </div>
-    <div class="dropdown-wrapper">
-      <div class="tb-user" onclick="toggleUserDropdown(event)" id="userBtn">
-        <div class="avatar">SA</div>
-        <div class="tb-user-info">
-          <div class="tb-user-name">Super Admin</div>
-          <div class="tb-user-role">Administrator</div>
-        </div>
-      </div>
-      <div class="user-dropdown" id="userDropdown">
-        <div class="user-dd-header"><div class="user-dd-name">Super Admin</div><div class="user-dd-role">Administrator</div></div>
-        <a class="user-dd-item" href="../../modules/settings/school-profile.html">
-          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v2M12 20v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M2 12h2M20 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
-          Settings
-        </a>
-        <a class="user-dd-item danger" href="../../index.html">
-          <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-          Logout
-        </a>
-      </div>
-    </div>
+    <button class="dark-toggle" onclick="toggleDarkMode()"><svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg><svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/></svg></button>
+    <div class="dropdown-wrapper"><div class="tb-user" onclick="toggleUserDropdown(event)"><div class="avatar">EC</div><div class="tb-user-info"><div class="tb-user-name">Dr. K. Ramesh</div><div class="tb-user-role">Exam Controller</div></div></div><div class="user-dropdown" id="userDropdown"><div class="user-dd-header"><div class="user-dd-name">Dr. K. Ramesh</div><div class="user-dd-role">Exam Controller · EduCore SMS</div></div><a class="user-dd-item danger" href="../../index.html"><svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>Logout</a></div></div>
   </div>
 </header>
 <div class="layout" id="layout">
   <nav class="sidebar" id="sidebar"><div id="sidebar-nav"></div></nav>
   <main class="main">
-    <div class="breadcrumb">
-      <a href="../../index.html">Dashboard</a>
-      <span class="breadcrumb-sep">&#8250;</span>
-      <span>Exam Schedule and Timetable</span>
-    </div>
+    <div class="breadcrumb"><a href="../../index.html">Dashboard</a><span class="breadcrumb-sep">›</span><span>Examination</span><span class="breadcrumb-sep">›</span><span>Exam Schedule & Timetable</span></div>
     <div class="page-header">
-      <div><h1>Exam Schedule and Timetable</h1><div class="page-subtitle">Exam Schedule and Timetable - Academic Year 2025-26</div></div>
+      <div><h1>Exam Schedule & Timetable</h1><div class="page-subtitle">Annual Examination 2025–26 · Grades IX–XII · 24 Slots Scheduled</div></div>
       <div class="ph-actions">
-        <button class="btn btn-ghost" onclick="exportData()">
-          <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-          Export
+        <div class="view-toggle">
+          <button class="vt-btn active" id="vt-list" onclick="setView('list')">List</button>
+          <button class="vt-btn" id="vt-cal" onclick="setView('calendar')">Calendar</button>
+          <button class="vt-btn" id="vt-week" onclick="setView('week')">Week</button>
+        </div>
+        <button class="btn btn-ghost" onclick="showToast('Printing timetable…','info')">Print</button>
+        <button class="btn btn-primary" onclick="openModal('addSlotModal')">
+          <svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Add Slot
         </button>
-        <button class="btn btn-primary" onclick="openModal('addModal')">
-          <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          Add New
-        </button>
       </div>
     </div>
-    <div class="stats-grid"><div class='stat-card' style='--c1:#0A3D62;--c2:#1a5276'><div class='stat-icon'><svg viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2'><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div><div class='stat-body'><div class='stat-label'>Total Records</div><div class='stat-value' data-count='198'>198</div><div class='stat-change up'>+8 this month</div></div></div><div class='stat-card' style='--c1:#16A085;--c2:#0e6655'><div class='stat-icon'><svg viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2'><path d="M9 11l3 3L22 4"/></svg></div><div class='stat-body'><div class='stat-label'>Active</div><div class='stat-value' data-count='585'>585</div><div class='stat-change up'>of total records</div></div></div><div class='stat-card' style='--c1:#F39C12;--c2:#d68910'><div class='stat-icon'><svg viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2'><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div><div class='stat-body'><div class='stat-label'>Pending</div><div class='stat-value' data-count='53'>53</div><div class='stat-change down'>Need attention</div></div></div><div class='stat-card' style='--c1:#8E44AD;--c2:#6c3483'><div class='stat-icon'><svg viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2'><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div><div class='stat-body'><div class='stat-label'>This Month</div><div class='stat-value' data-count='9'>9</div><div class='stat-change neu'>New entries</div></div></div></div>
-    <div class="filter-bar">
-      <div class="search-box">
-        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-        <input type="text" id="searchInput" placeholder="Search..." oninput="searchTable()">
-      </div>
-      <select class="filter-select"><option>All Status</option><option>Active</option><option>Inactive</option></select>
-      <div class="filter-spacer"></div>
-      <button class="btn btn-ghost btn-sm" onclick="clearFilters()">Clear</button>
+
+    <!-- Filters -->
+    <div style="display:flex;gap:.6rem;flex-wrap:wrap;align-items:center;margin-bottom:1rem">
+      <select class="filter-select" onchange="applyScheduleFilters(this)"><option>Annual Examination 2025–26</option><option>Half-Yearly 2025–26</option><option>Mid-Term Term II</option></select>
+      <select class="filter-select" id="sch-class"><option value="">All Classes</option><option>IX</option><option>X</option><option>XI</option><option>XII</option></select>
+      <select class="filter-select"><option>All Subjects</option><option>Mathematics</option><option>Physics</option><option>Chemistry</option><option>English</option><option>Hindi</option><option>Biology</option><option>Computer Science</option></select>
+      <select class="filter-select"><option>All Rooms</option><option>Room A1</option><option>Room A2</option><option>Room B1</option><option>Hall 1</option><option>Hall 2</option></select>
+      <span style="font-size:.75rem;color:var(--accent);font-weight:600;margin-left:auto">⚠ 2 Conflicts Detected</span>
     </div>
-    <div class="table-card">
-      <div class="table-wrap">
-        <table id="dataTable">
-          <thead><tr><th><input type="checkbox" class="table-checkbox" id="chkAll" onclick="toggleAll(this)"></th><th onclick='sortCol("id")'>ID</th><th onclick='sortCol("name")'>Name</th><th onclick='sortCol("ref")'>Reference</th><th onclick='sortCol("date")'>Date</th><th onclick='sortCol("status")'>Status</th><th>Actions</th></tr></thead>
-          <tbody id="tableBody"><tr><td><input type="checkbox" class="table-checkbox row-chk"></td><td>ID-1000</td><td><strong>Aarav Sharma</strong></td><td>REF-2025-100</td><td>1 Jun 2025</td><td><span class='badge badge-green'>Active</span></td><td><div class="row-actions"><button class="btn-icon" onclick="viewRow(this)" title="View"><svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button><button class="btn-icon" onclick="editRow(this)" title="Edit"><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button><button class="btn-icon" onclick="deleteRow(this)" title="Delete"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button></div></td></tr><tr><td><input type="checkbox" class="table-checkbox row-chk"></td><td>ID-1001</td><td><strong>Priya Singh</strong></td><td>REF-2025-101</td><td>2 Jun 2025</td><td><span class='badge badge-yellow'>Pending</span></td><td><div class="row-actions"><button class="btn-icon" onclick="viewRow(this)" title="View"><svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button><button class="btn-icon" onclick="editRow(this)" title="Edit"><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button><button class="btn-icon" onclick="deleteRow(this)" title="Delete"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button></div></td></tr><tr><td><input type="checkbox" class="table-checkbox row-chk"></td><td>ID-1002</td><td><strong>Rohan Mehta</strong></td><td>REF-2025-102</td><td>3 Jun 2025</td><td><span class='badge badge-blue'>In Progress</span></td><td><div class="row-actions"><button class="btn-icon" onclick="viewRow(this)" title="View"><svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button><button class="btn-icon" onclick="editRow(this)" title="Edit"><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button><button class="btn-icon" onclick="deleteRow(this)" title="Delete"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button></div></td></tr><tr><td><input type="checkbox" class="table-checkbox row-chk"></td><td>ID-1003</td><td><strong>Sneha Patel</strong></td><td>REF-2025-103</td><td>4 Jun 2025</td><td><span class='badge badge-green'>Completed</span></td><td><div class="row-actions"><button class="btn-icon" onclick="viewRow(this)" title="View"><svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button><button class="btn-icon" onclick="editRow(this)" title="Edit"><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button><button class="btn-icon" onclick="deleteRow(this)" title="Delete"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button></div></td></tr><tr><td><input type="checkbox" class="table-checkbox row-chk"></td><td>ID-1004</td><td><strong>Karan Verma</strong></td><td>REF-2025-104</td><td>5 Jun 2025</td><td><span class='badge badge-red'>Inactive</span></td><td><div class="row-actions"><button class="btn-icon" onclick="viewRow(this)" title="View"><svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button><button class="btn-icon" onclick="editRow(this)" title="Edit"><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button><button class="btn-icon" onclick="deleteRow(this)" title="Delete"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button></div></td></tr><tr><td><input type="checkbox" class="table-checkbox row-chk"></td><td>ID-1005</td><td><strong>Ananya Gupta</strong></td><td>REF-2025-105</td><td>6 Jun 2025</td><td><span class='badge badge-green'>Active</span></td><td><div class="row-actions"><button class="btn-icon" onclick="viewRow(this)" title="View"><svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button><button class="btn-icon" onclick="editRow(this)" title="Edit"><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button><button class="btn-icon" onclick="deleteRow(this)" title="Delete"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button></div></td></tr><tr><td><input type="checkbox" class="table-checkbox row-chk"></td><td>ID-1006</td><td><strong>Vikram Nair</strong></td><td>REF-2025-106</td><td>7 Jun 2025</td><td><span class='badge badge-yellow'>Pending</span></td><td><div class="row-actions"><button class="btn-icon" onclick="viewRow(this)" title="View"><svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button><button class="btn-icon" onclick="editRow(this)" title="Edit"><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button><button class="btn-icon" onclick="deleteRow(this)" title="Delete"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button></div></td></tr><tr><td><input type="checkbox" class="table-checkbox row-chk"></td><td>ID-1007</td><td><strong>Divya Reddy</strong></td><td>REF-2025-107</td><td>8 Jun 2025</td><td><span class='badge badge-blue'>In Progress</span></td><td><div class="row-actions"><button class="btn-icon" onclick="viewRow(this)" title="View"><svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button><button class="btn-icon" onclick="editRow(this)" title="Edit"><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button><button class="btn-icon" onclick="deleteRow(this)" title="Delete"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button></div></td></tr><tr><td><input type="checkbox" class="table-checkbox row-chk"></td><td>ID-1008</td><td><strong>Arjun Kumar</strong></td><td>REF-2025-108</td><td>9 Jun 2025</td><td><span class='badge badge-green'>Completed</span></td><td><div class="row-actions"><button class="btn-icon" onclick="viewRow(this)" title="View"><svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button><button class="btn-icon" onclick="editRow(this)" title="Edit"><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button><button class="btn-icon" onclick="deleteRow(this)" title="Delete"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button></div></td></tr><tr><td><input type="checkbox" class="table-checkbox row-chk"></td><td>ID-1009</td><td><strong>Riya Joshi</strong></td><td>REF-2025-109</td><td>10 Jun 2025</td><td><span class='badge badge-red'>Inactive</span></td><td><div class="row-actions"><button class="btn-icon" onclick="viewRow(this)" title="View"><svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button><button class="btn-icon" onclick="editRow(this)" title="Edit"><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button><button class="btn-icon" onclick="deleteRow(this)" title="Delete"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button></div></td></tr><tr><td><input type="checkbox" class="table-checkbox row-chk"></td><td>ID-1010</td><td><strong>Dev Agarwal</strong></td><td>REF-2025-110</td><td>11 Jun 2025</td><td><span class='badge badge-green'>Active</span></td><td><div class="row-actions"><button class="btn-icon" onclick="viewRow(this)" title="View"><svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button><button class="btn-icon" onclick="editRow(this)" title="Edit"><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button><button class="btn-icon" onclick="deleteRow(this)" title="Delete"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button></div></td></tr><tr><td><input type="checkbox" class="table-checkbox row-chk"></td><td>ID-1011</td><td><strong>Kavya Nair</strong></td><td>REF-2025-111</td><td>12 Jun 2025</td><td><span class='badge badge-yellow'>Pending</span></td><td><div class="row-actions"><button class="btn-icon" onclick="viewRow(this)" title="View"><svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button><button class="btn-icon" onclick="editRow(this)" title="Edit"><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button><button class="btn-icon" onclick="deleteRow(this)" title="Delete"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button></div></td></tr></tbody>
-        </table>
+
+    <!-- Conflict Panel -->
+    <div class="conflict-panel" id="conflictPanel">
+      <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.75rem">
+        <svg viewBox="0 0 24 24" style="width:16px;height:16px;stroke:var(--accent);fill:none;stroke-width:2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        <strong style="font-size:.82rem;color:var(--accent)">Scheduling Conflicts Detected</strong>
+        <button class="btn btn-ghost btn-sm" style="margin-left:auto;font-size:.68rem" onclick="document.getElementById('conflictPanel').style.display='none'">Dismiss</button>
       </div>
-      <div class="table-footer">
-        <span class="table-info" id="tableInfo">Loading...</span>
-        <div class="pagination">
-          <button class="page-btn"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
-          <button class="page-btn active">1</button>
-          <button class="page-btn">2</button>
-          <button class="page-btn">3</button>
-          <button class="page-btn"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></button>
+      <div class="conflict-item">
+        <div class="conflict-icon"><svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:var(--accent);fill:none;stroke-width:2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div>
+        <div>
+          <div style="font-size:.8rem;font-weight:700">Teacher Clash — Mr. Rajesh Kumar</div>
+          <div style="font-size:.72rem;color:var(--text2)">Assigned to both X-A Mathematics and X-B Mathematics on 05 Jul 2026 at 9:00–12:00</div>
+          <button class="btn btn-ghost btn-sm" style="font-size:.65rem;margin-top:.3rem" onclick="openModal('addSlotModal')">Resolve</button>
+        </div>
+      </div>
+      <div class="conflict-item">
+        <div class="conflict-icon"><svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:var(--accent);fill:none;stroke-width:2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></div>
+        <div>
+          <div style="font-size:.8rem;font-weight:700">Room Clash — Room A1</div>
+          <div style="font-size:.72rem;color:var(--text2)">Room A1 (Cap: 40) double-booked for IX-A English and XI-A Hindi on 08 Jul 2026 at 9:00–12:00</div>
+          <button class="btn btn-ghost btn-sm" style="font-size:.65rem;margin-top:.3rem" onclick="openModal('addSlotModal')">Resolve</button>
         </div>
       </div>
     </div>
-    <!-- Add Modal -->
-    <div class="modal-backdrop" id="addModal">
-      <div class="modal">
-        <div class="modal-header">
-          <div class="modal-title">Add New</div>
-          <button class="modal-close" onclick="closeModal('addModal')"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+
+    <!-- LIST VIEW -->
+    <div id="view-list">
+      <div class="card card-flush">
+        <div class="table-wrap">
+          <table class="sch-table" id="scheduleTable">
+            <thead>
+              <tr>
+                <th>Date</th><th>Day</th><th>Subject</th><th>Class / Section</th>
+                <th>Time Slot</th><th>Duration</th><th>Room</th><th>Invigilator</th><th>Max Marks</th><th>Status</th><th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="scheduleBody"></tbody>
+          </table>
         </div>
-        <div class="modal-body">
-          <div class="alert alert-info"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>Fill in the details. Fields marked * are required.</div>
-          <div class="form-grid" style="margin-top:1rem">
-            <div class="form-group"><label class="form-label">Name / Title <span class="req">*</span></label><input type="text" class="form-input" id="addName" placeholder="Enter name"></div>
-            <div class="form-group"><label class="form-label">Status</label><select class="form-select"><option>Active</option><option>Inactive</option></select></div>
-            <div class="form-group"><label class="form-label">Date</label><input type="date" class="form-input"></div>
-            <div class="form-group"><label class="form-label">Reference</label><input type="text" class="form-input" placeholder="Auto-generated"></div>
-            <div class="form-group form-full"><label class="form-label">Notes</label><textarea class="form-textarea" placeholder="Additional notes..."></textarea></div>
-          </div>
+      </div>
+    </div>
+
+    <!-- CALENDAR VIEW (hidden) -->
+    <div id="view-calendar" style="display:none">
+      <div class="card" style="padding:1rem">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem">
+          <button class="btn btn-ghost btn-sm" onclick="changeMonth(-1)">‹ Prev</button>
+          <h3 style="font-size:1rem;font-weight:700" id="calMonthLabel">July 2026</h3>
+          <button class="btn btn-ghost btn-sm" onclick="changeMonth(1)">Next ›</button>
         </div>
-        <div class="modal-footer">
-          <button class="btn btn-ghost" onclick="closeModal('addModal')">Cancel</button>
-          <button class="btn btn-primary" onclick="submitAdd()">Save Record</button>
+        <div class="cal-header">
+          <div class="cal-header-day">Sun</div><div class="cal-header-day">Mon</div>
+          <div class="cal-header-day">Tue</div><div class="cal-header-day">Wed</div>
+          <div class="cal-header-day">Thu</div><div class="cal-header-day">Fri</div>
+          <div class="cal-header-day">Sat</div>
+        </div>
+        <div class="cal-grid" id="calendarGrid"></div>
+        <div style="display:flex;gap:1rem;margin-top:.75rem;flex-wrap:wrap">
+          <span style="font-size:.7rem"><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#E8505B;margin-right:4px"></span>Annual Exam</span>
+          <span style="font-size:.7rem"><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#F39C12;margin-right:4px"></span>Unit Test</span>
+          <span style="font-size:.7rem"><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#16A085;margin-right:4px"></span>Practical</span>
+          <span style="font-size:.7rem"><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#9B59B6;margin-right:4px"></span>Viva / Others</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- WEEK VIEW (hidden) -->
+    <div id="view-week" style="display:none">
+      <div class="card" style="padding:1rem">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem">
+          <button class="btn btn-ghost btn-sm">‹ Prev Week</button>
+          <h3 style="font-size:1rem;font-weight:700">Week of 05 Jul 2026</h3>
+          <button class="btn btn-ghost btn-sm">Next Week ›</button>
+        </div>
+        <div style="overflow-x:auto">
+          <div class="week-grid" id="weekGrid"></div>
         </div>
       </div>
     </div>
   </main>
 </div>
+
+<!-- Add Slot Modal -->
+<div class="modal-backdrop" id="addSlotModal">
+  <div class="modal" style="max-width:600px;width:95%">
+    <div class="modal-header">
+      <div class="modal-title">Add Exam Slot</div>
+      <button class="modal-close" onclick="closeModal('addSlotModal')"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem">
+        <div class="form-group">
+          <label class="form-label">Academic Session</label>
+          <select class="form-input"><option>2025–26</option></select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Examination</label>
+          <select class="form-input"><option>Annual Exam 2025–26</option><option>Half-Yearly 2025–26</option></select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Class</label>
+          <select class="form-input" id="slot-class"><option>IX</option><option>X</option><option>XI</option><option>XII</option></select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Section</label>
+          <select class="form-input"><option>A</option><option>B</option><option>C</option><option>All Sections</option></select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Subject <span style="color:var(--accent)">*</span></label>
+          <select class="form-input"><option>Mathematics</option><option>Physics</option><option>Chemistry</option><option>English</option><option>Hindi</option><option>Biology</option><option>Computer Science</option></select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Exam Date <span style="color:var(--accent)">*</span></label>
+          <input class="form-input" type="date" value="2026-07-05">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Start Time <span style="color:var(--accent)">*</span></label>
+          <input class="form-input" type="time" value="09:00">
+        </div>
+        <div class="form-group">
+          <label class="form-label">End Time <span style="color:var(--accent)">*</span></label>
+          <input class="form-input" type="time" value="12:00">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Room / Hall <span style="color:var(--accent)">*</span></label>
+          <select class="form-input" id="slot-room">
+            <option>Room A1 (Cap: 40)</option><option>Room A2 (Cap: 42)</option>
+            <option>Room B1 (Cap: 38)</option><option>Hall 1 (Cap: 120)</option><option>Hall 2 (Cap: 100)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Invigilator <span style="color:var(--accent)">*</span></label>
+          <select class="form-input">
+            <option>Mr. Rajesh Kumar</option><option>Mrs. Priya Nair</option>
+            <option>Mrs. Anita Sharma</option><option>Mr. Arun Menon</option>
+            <option>Mrs. Kavita Pillai</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Max Marks</label>
+          <input class="form-input" type="number" value="100">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Passing Marks</label>
+          <input class="form-input" type="number" value="33">
+        </div>
+      </div>
+      <div style="margin-top:.75rem;padding:.75rem;background:rgba(22,160,133,.08);border:1px solid rgba(22,160,133,.2);border-radius:var(--radius)">
+        <div style="font-size:.75rem;color:var(--success);font-weight:600">✓ No conflicts detected for selected room and invigilator on this date/time.</div>
+      </div>
+    </div>
+    <div class="modal-footer" style="padding:1rem 1.25rem;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:.6rem">
+      <button class="btn btn-ghost" onclick="closeModal('addSlotModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="showToast('Exam slot added successfully!','success');closeModal('addSlotModal')">Add Slot</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast-container" id="toastContainer"></div>
 <script src="../../js/app.js"></script>
 <script src="../../js/sidebar.js"></script>
 <script>
 renderSidebar('exams','exams','../../');
-function showToast(msg, type) {
-  type = type || 'success';
-  var icons = { success:'<path d="M9 11l3 3L22 4"/>', error:'<path d="M18 6 6 18M6 6l12 12"/>', info:'<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>', warning:'<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>' };
-  var c = document.getElementById('toastContainer');
-  var t = document.createElement('div');
-  t.className = 'toast toast-' + type;
-  t.innerHTML = '<div class="toast-icon"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">'+icons[type]+'</svg></div><div class="toast-body"><div class="toast-title">'+(type.charAt(0).toUpperCase()+type.slice(1))+'</div><div class="toast-msg">'+msg+'</div></div>';
-  c.appendChild(t);
-  setTimeout(function(){t.classList.add('show');},10);
-  setTimeout(function(){t.classList.remove('show');setTimeout(function(){t.remove();},300);},3500);
+
+var DAYS = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+var SHORT_DAYS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+var SLOT_COLORS = {
+  'Mathematics':'#E8505B','Physics':'#F39C12','Chemistry':'#3498DB',
+  'English':'#1ABC9C','Hindi':'#9B59B6','Biology':'#16A085',
+  'Computer Science':'#E67E22','Economics':'#2980B9','History':'#8E44AD','Geography':'#27AE60'
+};
+
+var SCHEDULE = [
+  {date:'2026-07-05',day:'Sunday',subject:'Mathematics',class:'X-A',time:'09:00–12:00',duration:'3 hrs',room:'Room A1',invigilator:'Mr. Rajesh Kumar',max:100,status:'Scheduled'},
+  {date:'2026-07-05',day:'Sunday',subject:'Mathematics',class:'X-B',time:'09:00–12:00',duration:'3 hrs',room:'Room A2',invigilator:'Mrs. Priya Nair',max:100,status:'Scheduled'},
+  {date:'2026-07-05',day:'Sunday',subject:'Mathematics',class:'IX-A',time:'09:00–12:00',duration:'3 hrs',room:'Room B1',invigilator:'Mr. Arun Menon',max:100,status:'Scheduled'},
+  {date:'2026-07-07',day:'Tuesday',subject:'English',class:'X-A',time:'09:00–11:00',duration:'2 hrs',room:'Room A1',invigilator:'Mrs. Sunita Singh',max:100,status:'Scheduled'},
+  {date:'2026-07-07',day:'Tuesday',subject:'English',class:'X-B',time:'09:00–11:00',duration:'2 hrs',room:'Room A2',invigilator:'Mr. Vivek Rao',max:100,status:'Scheduled'},
+  {date:'2026-07-08',day:'Wednesday',subject:'Hindi',class:'IX-A',time:'09:00–12:00',duration:'3 hrs',room:'Room A1',invigilator:'Mrs. Kavita Pillai',max:100,status:'⚠ Conflict',conflict:true},
+  {date:'2026-07-08',day:'Wednesday',subject:'Physics',class:'XI-A',time:'09:00–12:00',duration:'3 hrs',room:'Room B1',invigilator:'Mrs. Anita Sharma',max:100,status:'Scheduled'},
+  {date:'2026-07-10',day:'Friday',subject:'Chemistry',class:'XI-A',time:'09:00–12:00',duration:'3 hrs',room:'Room A1',invigilator:'Mrs. Priya Nair',max:100,status:'Scheduled'},
+  {date:'2026-07-10',day:'Friday',subject:'Biology',class:'XI-B',time:'09:00–12:00',duration:'3 hrs',room:'Room A2',invigilator:'Mr. Rajesh Kumar',max:100,status:'Scheduled'},
+  {date:'2026-07-12',day:'Sunday',subject:'Computer Science',class:'XI-A',time:'09:00–11:30',duration:'2.5 hrs',room:'Lab 1',invigilator:'Mr. Arun Menon',max:70,status:'Scheduled'},
+  {date:'2026-07-12',day:'Sunday',subject:'Economics',class:'XII-A',time:'09:00–12:00',duration:'3 hrs',room:'Room A1',invigilator:'Mrs. Sunita Singh',max:100,status:'Scheduled'},
+  {date:'2026-07-14',day:'Tuesday',subject:'Mathematics',class:'XII-A',time:'09:00–12:00',duration:'3 hrs',room:'Hall 1',invigilator:'Mr. Rajesh Kumar',max:100,status:'Scheduled'},
+  {date:'2026-07-15',day:'Wednesday',subject:'Physics',class:'XII-A',time:'09:00–12:00',duration:'3 hrs',room:'Hall 1',invigilator:'Mrs. Anita Sharma',max:100,status:'Scheduled'},
+  {date:'2026-07-16',day:'Thursday',subject:'Chemistry',class:'XII-A',time:'09:00–12:00',duration:'3 hrs',room:'Hall 2',invigilator:'Mrs. Priya Nair',max:100,status:'Scheduled'},
+  {date:'2026-07-17',day:'Friday',subject:'English',class:'XII-A',time:'09:00–11:00',duration:'2 hrs',room:'Hall 1',invigilator:'Mr. Vivek Rao',max:100,status:'Scheduled'},
+  {date:'2026-07-18',day:'Saturday',subject:'Biology',class:'XII-A',time:'09:00–12:00',duration:'3 hrs',room:'Hall 2',invigilator:'Mr. Arun Menon',max:100,status:'Scheduled'},
+];
+
+function renderListView(){
+  document.getElementById('scheduleBody').innerHTML = SCHEDULE.map(function(s){
+    var sc = s.conflict ? 'badge-red' : (s.status==='Completed'?'badge-green':'badge-blue');
+    var color = SLOT_COLORS[s.subject] || '#666';
+    return '<tr>'+
+      '<td class="slot-time">'+s.date+'</td>'+
+      '<td style="font-size:.78rem">'+s.day+'</td>'+
+      '<td><span style="display:inline-flex;align-items:center;gap:5px"><span style="width:8px;height:8px;border-radius:50%;background:'+color+';flex-shrink:0"></span><strong style="font-size:.82rem">'+s.subject+'</strong></span></td>'+
+      '<td><span class="badge badge-blue">'+s.class+'</span></td>'+
+      '<td class="slot-time">'+s.time+'</td>'+
+      '<td style="font-size:.75rem;color:var(--text2)">'+s.duration+'</td>'+
+      '<td style="font-size:.78rem">'+s.room+'</td>'+
+      '<td style="font-size:.78rem">'+s.invigilator+'</td>'+
+      '<td style="text-align:center;font-family:\'IBM Plex Mono\',monospace;font-size:.82rem">'+s.max+'</td>'+
+      '<td><span class="badge '+sc+'">'+s.status+'</span></td>'+
+      '<td><div style="display:flex;gap:.3rem"><button class="btn btn-ghost btn-sm" style="font-size:.65rem;padding:3px 7px" onclick="openModal(\'addSlotModal\')">Edit</button><button class="btn btn-ghost btn-sm" style="font-size:.65rem;padding:3px 7px;color:var(--accent)" onclick="showToast(\'Slot deleted\',\'error\')">Delete</button></div></td>'+
+      '</tr>';
+  }).join('');
 }
-function openModal(id) { var m=document.getElementById(id); if(m) m.classList.add('open'); }
-function closeModal(id) { var m=document.getElementById(id); if(m) m.classList.remove('open'); }
-document.addEventListener('click', function(e) { if(e.target.classList.contains('modal-backdrop')) e.target.classList.remove('open'); });
-function searchTable() {
-  var q = document.getElementById('searchInput').value.toLowerCase();
-  var rows = document.querySelectorAll('#tableBody tr');
-  var v = 0;
-  rows.forEach(function(r){ var s=r.textContent.toLowerCase().includes(q); r.style.display=s?'':'none'; if(s)v++; });
-  document.getElementById('tableInfo').textContent = 'Showing '+v+' of '+rows.length+' records';
+
+var currentMonth = 6; // July 2026
+var currentYear = 2026;
+var MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+function renderCalendar(){
+  document.getElementById('calMonthLabel').textContent = MONTHS[currentMonth]+' '+currentYear;
+  var firstDay = new Date(currentYear, currentMonth, 1).getDay();
+  var daysInMonth = new Date(currentYear, currentMonth+1, 0).getDate();
+  var grid = document.getElementById('calendarGrid');
+  var html = '';
+  // blanks
+  for(var i=0;i<firstDay;i++) html += '<div class="cal-cell other-month"></div>';
+  for(var d=1;d<=daysInMonth;d++){
+    var dateStr = currentYear+'-'+(currentMonth+1<10?'0':'')+(currentMonth+1)+'-'+(d<10?'0':'')+d;
+    var dayExams = SCHEDULE.filter(function(s){return s.date===dateStr;});
+    var isToday = (d===5 && currentMonth===6 && currentYear===2026);
+    html += '<div class="cal-cell'+(isToday?' today':'')+'">'+
+      '<div class="cal-date-num'+(isToday?' today-num':'')+'">'+d+'</div>'+
+      dayExams.map(function(e){
+        var color = SLOT_COLORS[e.subject]||'#666';
+        return '<div class="cal-exam-chip" style="background:'+color+'20;color:'+color+'" title="'+e.class+' — '+e.subject+'">'+e.subject.substring(0,8)+'</div>';
+      }).join('')+
+      '</div>';
+  }
+  grid.innerHTML = html;
 }
-function clearFilters() { document.getElementById('searchInput').value=''; searchTable(); }
-function toggleAll(cb) { document.querySelectorAll('.row-chk').forEach(function(c){c.checked=cb.checked;}); }
-function viewRow(btn) { showToast('Opening record details...','info'); }
-function editRow(btn) { openModal('addModal'); }
-function deleteRow(btn) { if(confirm('Delete this record?')) { btn.closest('tr').style.opacity='0.4'; showToast('Record deleted','error'); } }
-function submitAdd() {
-  var n=document.getElementById('addName').value;
-  if(!n){showToast('Name is required','error');return;}
-  closeModal('addModal');
-  showToast('Record saved successfully!','success');
+
+function changeMonth(d){ currentMonth+=d; if(currentMonth>11){currentMonth=0;currentYear++;} if(currentMonth<0){currentMonth=11;currentYear--;} renderCalendar(); }
+
+function renderWeekView(){
+  var TIMES=['09:00','10:00','11:00','12:00','13:00','14:00'];
+  var WEEK_DAYS=['Sun 05','Mon 06','Tue 07','Wed 08','Thu 09','Fri 10'];
+  var WEEK_DATES=['2026-07-05','2026-07-06','2026-07-07','2026-07-08','2026-07-09','2026-07-10'];
+  var wg = document.getElementById('weekGrid');
+  var html = '<div class="wg-header"></div>'+WEEK_DAYS.map(function(d){return '<div class="wg-header">'+d+'</div>';}).join('');
+  TIMES.forEach(function(t){
+    html += '<div class="wg-time">'+t+'</div>';
+    WEEK_DATES.forEach(function(date){
+      var evs = SCHEDULE.filter(function(s){return s.date===date && s.time.startsWith(t.replace(':00',''));});
+      html += '<div class="wg-slot">'+evs.map(function(e){
+        var color = SLOT_COLORS[e.subject]||'#666';
+        return '<div class="wg-event" style="background:'+color+'20;color:'+color+'">'+e.class+' '+e.subject.substring(0,6)+'</div>';
+      }).join('')+'</div>';
+    });
+  });
+  wg.innerHTML = html;
 }
-function sortCol(k) { showToast('Sorted by '+k,'info'); }
-function exportData() { showToast('Preparing export...','info'); }
-(function(){ var r=document.querySelectorAll('#tableBody tr'); document.getElementById('tableInfo').textContent='Showing '+r.length+' records'; })();
+
+function setView(v){
+  ['list','calendar','week'].forEach(function(vv){
+    document.getElementById('view-'+vv).style.display = vv===v?'':'none';
+    document.getElementById('vt-'+vv).classList.toggle('active',vv===v);
+  });
+  if(v==='calendar') renderCalendar();
+  if(v==='week') renderWeekView();
+}
+
+function applyScheduleFilters(sel){ showToast('Filter applied','info'); }
+function openModal(id){var m=document.getElementById(id);if(m)m.classList.add('open');}
+function closeModal(id){var m=document.getElementById(id);if(m)m.classList.remove('open');}
+document.addEventListener('click',function(e){if(e.target.classList.contains('modal-backdrop'))e.target.classList.remove('open');});
+function showToast(msg,type){var icons={success:'<path d="M9 11l3 3L22 4"/>',error:'<path d="M18 6 6 18M6 6l12 12"/>',info:'<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>',warning:'<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>'}; var c=document.getElementById('toastContainer');var t=document.createElement('div');t.className='toast toast-'+type;t.innerHTML='<div class="toast-icon"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">'+icons[type]+'</svg></div><div class="toast-body"><div class="toast-title">'+(type.charAt(0).toUpperCase()+type.slice(1))+'</div><div class="toast-msg">'+msg+'</div></div>';c.appendChild(t);setTimeout(function(){t.classList.add('show');},10);setTimeout(function(){t.classList.remove('show');setTimeout(function(){t.remove();},300);},3500);}
+
+renderListView();
 </script>
 </body>
 </html>

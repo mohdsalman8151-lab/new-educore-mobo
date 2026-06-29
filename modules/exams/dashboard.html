@@ -10,64 +10,82 @@
   <link rel="stylesheet" href="../../css/components.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
   <style>
-    /* KPI Row */
-    .exam-kpi { display:grid; grid-template-columns:repeat(8,1fr); gap:0.75rem; margin-bottom:1.5rem; }
-    @media(max-width:1200px){ .exam-kpi{grid-template-columns:repeat(4,1fr);} }
-    .ek-card { background:var(--bg2); border:1px solid var(--border); border-radius:var(--radius); padding:0.9rem 1rem; border-top:3px solid var(--ekc); }
-    .ek-label { font-size:0.63rem; color:var(--text2); text-transform:uppercase; letter-spacing:0.05em; }
-    .ek-value { font-size:1.7rem; font-weight:700; font-family:'IBM Plex Mono',monospace; color:var(--ekc); line-height:1.1; margin:0.15rem 0; }
-    .ek-sub { font-size:0.65rem; color:var(--text2); }
-    /* Dashboard layout */
-    .dash-layout { display:grid; grid-template-columns:1fr 320px; gap:1.25rem; }
-    @media(max-width:1100px){ .dash-layout{grid-template-columns:1fr;} }
-    .dash-left { display:flex; flex-direction:column; gap:1.25rem; }
-    .dash-right { display:flex; flex-direction:column; gap:1.25rem; }
-    /* Charts row */
-    .charts-3col { display:grid; grid-template-columns:1fr 1fr 1fr; gap:1.25rem; }
-    @media(max-width:1100px){ .charts-3col{grid-template-columns:1fr;} }
-    .charts-2col { display:grid; grid-template-columns:1.4fr 1fr; gap:1.25rem; }
-    @media(max-width:1100px){ .charts-2col{grid-template-columns:1fr;} }
-    /* Heatmap */
+    /* ── KPI STRIP (attendance-style) ── */
+    .exam-kpi { display:grid; grid-template-columns:repeat(8,1fr); gap:1rem; margin-bottom:1.5rem; }
+    @media(max-width:1400px){ .exam-kpi{grid-template-columns:repeat(4,1fr);} }
+    @media(max-width:768px){ .exam-kpi{grid-template-columns:repeat(2,1fr);} }
+    .kpi-card { background:var(--bg2); border-radius:var(--radius); border:1px solid var(--border); padding:1.1rem 1.25rem; display:flex; flex-direction:column; gap:0.35rem; position:relative; overflow:hidden; transition:transform 0.2s,box-shadow 0.2s; cursor:default; }
+    .kpi-card:hover { transform:translateY(-2px); box-shadow:var(--shadow-md); }
+    .kpi-card::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; background:var(--kc); }
+    .kpi-icon { width:36px; height:36px; border-radius:8px; display:flex; align-items:center; justify-content:center; background:color-mix(in srgb,var(--kc) 12%,transparent); margin-bottom:0.2rem; }
+    .kpi-icon svg { width:18px; height:18px; fill:none; stroke:var(--kc); stroke-width:2; }
+    .kpi-label { font-size:0.72rem; color:var(--text2); font-weight:500; text-transform:uppercase; letter-spacing:0.04em; }
+    .kpi-value { font-size:1.85rem; font-weight:700; color:var(--text); font-family:'IBM Plex Mono',monospace; line-height:1; }
+    .kpi-sub { font-size:0.72rem; color:var(--text2); }
+    .kpi-badge { position:absolute; top:0.9rem; right:0.9rem; font-size:0.65rem; padding:2px 7px; border-radius:20px; font-weight:700; background:color-mix(in srgb,var(--kc) 15%,transparent); color:var(--kc); }
+    /* ── CHARTS ── */
+    .charts-row { display:grid; grid-template-columns:2fr 1fr; gap:1.5rem; margin-bottom:1.5rem; }
+    @media(max-width:1100px){ .charts-row{grid-template-columns:1fr;} }
+    .charts-row-3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:1.5rem; margin-bottom:1.5rem; }
+    @media(max-width:1100px){ .charts-row-3{grid-template-columns:1fr;} }
+    .charts-4col { display:grid; grid-template-columns:repeat(4,1fr); gap:1rem; margin-bottom:1.5rem; }
+    @media(max-width:1400px){ .charts-4col{grid-template-columns:repeat(2,1fr);} }
+    /* ── HEATMAP ── */
     .heatmap-grid { display:grid; gap:3px; }
-    .hm-cell { border-radius:4px; display:flex; align-items:center; justify-content:center; font-size:0.65rem; font-weight:700; color:#fff; cursor:pointer; transition:opacity 0.15s; }
-    .hm-cell:hover { opacity:0.8; }
+    .hm-cell { border-radius:4px; display:flex; align-items:center; justify-content:center; font-size:0.65rem; font-weight:700; color:#fff; cursor:pointer; transition:transform 0.15s; }
+    .hm-cell:hover { transform:scale(1.08); }
     .hm-header { font-size:0.65rem; color:var(--text3); text-align:center; font-weight:600; }
     .hm-row-label { font-size:0.7rem; color:var(--text2); font-weight:600; display:flex; align-items:center; }
-    /* Top performers */
-    .performer-row { display:flex; align-items:center; gap:0.75rem; padding:0.6rem 0; border-bottom:1px solid var(--border); }
+    /* ── TOP PERFORMERS ── */
+    .performer-row { display:flex; align-items:center; gap:0.75rem; padding:0.65rem 0; border-bottom:1px solid var(--border); }
     .performer-row:last-child { border-bottom:none; }
-    .perf-rank { width:26px; height:26px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:0.7rem; font-weight:700; flex-shrink:0; }
-    .perf-avatar { width:34px; height:34px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:0.7rem; font-weight:700; color:#fff; flex-shrink:0; }
-    .perf-name { font-size:0.82rem; font-weight:700; color:var(--text); }
+    .perf-rank { width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:0.75rem; font-weight:700; flex-shrink:0; }
+    .perf-avatar { width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:0.7rem; font-weight:700; color:#fff; flex-shrink:0; }
+    .perf-name { font-size:0.83rem; font-weight:700; color:var(--text); }
     .perf-sub { font-size:0.68rem; color:var(--text2); font-family:'IBM Plex Mono',monospace; }
     .perf-score { font-size:1rem; font-weight:700; font-family:'IBM Plex Mono',monospace; color:var(--primary); text-align:right; }
-    /* Activity feed */
-    .act-item { display:flex; gap:0.75rem; padding:0.6rem 0; border-bottom:1px solid var(--border); position:relative; }
+    /* ── ACTIVITY FEED (attendance-style) ── */
+    .activity-feed { display:flex; flex-direction:column; gap:0; }
+    .act-item { display:flex; gap:0.75rem; padding:0.75rem 0; border-bottom:1px solid var(--border); align-items:flex-start; }
     .act-item:last-child { border-bottom:none; }
-    .act-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; margin-top:5px; }
+    .act-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; margin-top:4px; }
     .act-body { flex:1; }
-    .act-title { font-size:0.8rem; font-weight:600; color:var(--text); }
-    .act-sub { font-size:0.7rem; color:var(--text2); margin-top:1px; }
-    .act-time { font-size:0.63rem; color:var(--text3); white-space:nowrap; font-family:'IBM Plex Mono',monospace; }
-    /* Pending actions table */
-    .pending-table { width:100%; border-collapse:collapse; }
-    .pending-table th { text-align:left; padding:0.55rem 1rem; font-size:0.67rem; text-transform:uppercase; letter-spacing:0.05em; color:var(--text3); border-bottom:2px solid var(--border); background:var(--bg); }
-    .pending-table td { padding:0.6rem 1rem; font-size:0.78rem; border-bottom:1px solid var(--border); }
-    .pending-table tr:last-child td { border-bottom:none; }
-    .pending-table tr:hover td { background:rgba(10,61,98,0.02); }
-    /* Upcoming exams */
-    .ue-item { display:flex; gap:0.75rem; padding:0.65rem 0; border-bottom:1px solid var(--border); }
+    .act-title { font-size:0.82rem; color:var(--text); font-weight:500; }
+    .act-meta { font-size:0.72rem; color:var(--text2); font-family:'IBM Plex Mono',monospace; margin-top:1px; }
+    /* ── PENDING ACTIONS ── */
+    .approval-card { display:flex; gap:0.75rem; padding:0.75rem; background:var(--bg); border-radius:var(--radius-sm); border:1px solid var(--border); margin-bottom:0.5rem; }
+    .approval-card:last-child { margin-bottom:0; }
+    .appr-icon { width:38px; height:38px; border-radius:8px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+    .appr-icon svg { width:18px; height:18px; fill:none; stroke:#fff; stroke-width:2; }
+    .appr-body { flex:1; min-width:0; }
+    .appr-name { font-size:0.82rem; font-weight:600; color:var(--text); }
+    .appr-detail { font-size:0.72rem; color:var(--text2); }
+    .appr-actions { display:flex; gap:0.4rem; margin-top:0.4rem; }
+    .btn-approve-sm { padding:4px 10px; background:rgba(22,160,133,0.12); color:var(--success); border:none; border-radius:4px; font-size:0.7rem; font-weight:700; cursor:pointer; transition:all 0.15s; }
+    .btn-reject-sm  { padding:4px 10px; background:rgba(232,80,91,0.12);  color:var(--accent);  border:none; border-radius:4px; font-size:0.7rem; font-weight:700; cursor:pointer; transition:all 0.15s; }
+    .btn-view-sm    { padding:4px 10px; background:rgba(10,61,98,0.08);   color:var(--primary); border:none; border-radius:4px; font-size:0.7rem; font-weight:700; cursor:pointer; transition:all 0.15s; }
+    .btn-approve-sm:hover { background:var(--success); color:#fff; }
+    .btn-reject-sm:hover  { background:var(--accent);  color:#fff; }
+    .btn-view-sm:hover    { background:var(--primary);  color:#fff; }
+    /* ── UPCOMING EXAM STRIP ── */
+    .ue-item { display:flex; gap:0.75rem; padding:0.65rem 0; border-bottom:1px solid var(--border); align-items:flex-start; }
     .ue-item:last-child { border-bottom:none; }
-    .ue-date { display:flex; flex-direction:column; align-items:center; justify-content:center; min-width:42px; height:42px; border-radius:8px; background:rgba(10,61,98,0.08); }
-    .ue-day { font-size:1.1rem; font-weight:700; font-family:'IBM Plex Mono',monospace; color:var(--primary); line-height:1; }
+    .ue-date { display:flex; flex-direction:column; align-items:center; justify-content:center; min-width:44px; height:44px; border-radius:8px; background:color-mix(in srgb,var(--uc) 12%,transparent); }
+    .ue-day { font-size:1.1rem; font-weight:700; font-family:'IBM Plex Mono',monospace; line-height:1; color:var(--uc); }
     .ue-mon { font-size:0.58rem; font-weight:700; text-transform:uppercase; color:var(--text3); }
-    .ue-title { font-size:0.82rem; font-weight:600; color:var(--text); }
+    .ue-title { font-size:0.83rem; font-weight:600; color:var(--text); }
     .ue-sub { font-size:0.7rem; color:var(--text2); margin-top:1px; }
-    /* Progress bar */
-    .prog-bar { height:6px; background:var(--border); border-radius:3px; overflow:hidden; margin-top:4px; }
-    .prog-fill { height:100%; border-radius:3px; }
-    /* Grade pills */
-    .grade-pill { display:inline-flex; align-items:center; gap:4px; padding:3px 10px; border-radius:12px; font-size:0.7rem; font-weight:700; }
+    /* ── REVALUATION ── */
+    .reval-item { display:flex; gap:0.6rem; align-items:center; padding:0.5rem 0; border-bottom:1px solid var(--border); }
+    .reval-item:last-child { border-bottom:none; }
+    /* ── CLASS TABLE ── */
+    .exam-class-table { width:100%; border-collapse:collapse; }
+    .exam-class-table th { text-align:left; padding:0.55rem 0.8rem; font-size:0.72rem; text-transform:uppercase; letter-spacing:0.05em; color:var(--text3); border-bottom:2px solid var(--border); }
+    .exam-class-table td { padding:0.6rem 0.8rem; font-size:0.82rem; border-bottom:1px solid var(--border); vertical-align:middle; }
+    .exam-class-table tr:last-child td { border-bottom:none; }
+    .exam-class-table tr:hover td { background:var(--bg); }
+    .mini-bar { height:6px; border-radius:3px; background:var(--border); overflow:hidden; width:80px; }
+    .mini-fill { height:100%; border-radius:3px; }
   </style>
 </head>
 <body>
@@ -75,121 +93,212 @@
 <header class="topbar">
   <div class="logo-area"><div class="logo-mark"><svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div><span class="logo-text">EduCore SMS</span></div>
   <button class="sidebar-toggle" onclick="toggleSidebar()"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
-  <div class="tb-search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg><input type="text" placeholder="Search exams, students…"></div>
+  <div class="tb-search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg><input type="text" placeholder="Search exams, students, results…"></div>
   <div class="tb-right">
     <div class="tb-date" id="tb-date"></div>
-    <button class="dark-toggle" onclick="toggleDarkMode()"><svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg><svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/></svg></button>
-    <div class="dropdown-wrapper"><div class="tb-user" onclick="toggleUserDropdown(event)" id="userBtn"><div class="avatar">EC</div><div class="tb-user-info"><div class="tb-user-name">Dr. K. Ramesh</div><div class="tb-user-role">Exam Controller</div></div></div><div class="user-dropdown" id="userDropdown"><div class="user-dd-header"><div class="user-dd-name">Dr. K. Ramesh</div><div class="user-dd-role">Exam Controller · EduCore SMS</div></div><a class="user-dd-item danger" href="../../index.html"><svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>Logout</a></div></div>
+    <button class="dark-toggle" onclick="toggleDarkMode()"><svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg><svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/></svg></button>
+    <div class="dropdown-wrapper">
+      <div class="tb-btn" onclick="toggleNotif(event)" id="notifBtn">
+        <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        <div class="notif-dot"></div>
+      </div>
+      <div class="notif-dropdown" id="notifDropdown">
+        <div class="notif-header"><h4>Notifications</h4><span onclick="markAllRead()">Mark all read</span></div>
+        <div class="notif-item"><div class="notif-icon" style="background:var(--accent)"><svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg></div><div class="notif-text"><p><strong>Marks pending</strong> — 12 subjects awaiting entry for Annual Exam</p><span>Today, 9:10 AM</span></div><div class="notif-unread"></div></div>
+        <div class="notif-item"><div class="notif-icon" style="background:var(--warning)"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg></div><div class="notif-text"><p><strong>Approval pending</strong> — X-A Maths marks submitted by Mr. Rajesh</p><span>Today, 9:30 AM</span></div><div class="notif-unread"></div></div>
+        <div class="notif-item"><div class="notif-icon" style="background:var(--info)"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div><div class="notif-text"><p><strong>Revaluation request</strong> — RV-041 Vikram Nair, XII-A Maths</p><span>Yesterday</span></div></div>
+        <div class="notif-footer"><a href="notifications.html">View all notifications →</a></div>
+      </div>
+    </div>
+    <div class="dropdown-wrapper">
+      <div class="tb-user" onclick="toggleUserDropdown(event)" id="userBtn"><div class="avatar">EC</div><div class="tb-user-info"><div class="tb-user-name">Dr. K. Ramesh</div><div class="tb-user-role">Exam Controller</div></div></div>
+      <div class="user-dropdown" id="userDropdown"><div class="user-dd-header"><div class="user-dd-name">Dr. K. Ramesh</div><div class="user-dd-role">Exam Controller · EduCore SMS</div></div><a class="user-dd-item" href="settings.html"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>Settings</a><a class="user-dd-item danger" href="../../index.html"><svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>Logout</a></div>
+    </div>
   </div>
 </header>
+
 <div class="layout" id="layout">
   <nav class="sidebar" id="sidebar"><div id="sidebar-nav"></div></nav>
   <main class="main">
     <div class="breadcrumb"><a href="../../index.html">Dashboard</a><span class="breadcrumb-sep">›</span><span>Examination</span><span class="breadcrumb-sep">›</span><span>Dashboard</span></div>
     <div class="page-header">
-      <div><h1>Examination Dashboard</h1><div class="page-subtitle">Academic Year 2025–26 · Term II · Exam Controller View</div></div>
+      <div><h1>Examination Dashboard</h1><div class="page-subtitle">Academic Year 2025–26 · Term II · Exam Controller View · Main Campus</div></div>
       <div class="ph-actions">
-        <select class="filter-select"><option>AY 2025–26</option><option>AY 2024–25</option></select>
-        <select class="filter-select"><option>Term II (Jan–May 2026)</option><option>Term I (Jun–Dec 2025)</option></select>
-        <button class="btn btn-ghost" onclick="showToast('Exporting dashboard report…','info')">Export Report</button>
-        <a class="btn btn-primary" href="exam-master.html">
+        <select class="filter-select" id="sessionFilter" onchange="updateDashboard()" style="min-width:140px">
+          <option value="2025-26">AY 2025–26</option><option value="2024-25">AY 2024–25</option>
+        </select>
+        <select class="filter-select" style="min-width:160px">
+          <option>Term II (Jan–May 2026)</option><option>Term I (Jun–Dec 2025)</option>
+        </select>
+        <button class="btn btn-ghost" onclick="window.print()">
+          <svg viewBox="0 0 24 24"><path d="M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+          Print
+        </button>
+        <a href="exam-master.html" class="btn btn-primary">
           <svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           New Exam
         </a>
       </div>
     </div>
 
-    <!-- KPI Strip -->
-    <div class="exam-kpi">
-      <div class="ek-card" style="--ekc:var(--warning)"><div class="ek-label">Upcoming Exams</div><div class="ek-value">4</div><div class="ek-sub">Next: 5 Jul 2026</div></div>
-      <div class="ek-card" style="--ekc:var(--info)"><div class="ek-label">Ongoing</div><div class="ek-value">2</div><div class="ek-sub">Mid-Term Exams</div></div>
-      <div class="ek-card" style="--ekc:var(--success)"><div class="ek-label">Completed</div><div class="ek-value">18</div><div class="ek-sub">This academic year</div></div>
-      <div class="ek-card" style="--ekc:var(--accent)"><div class="ek-label">Pending Marks</div><div class="ek-value">12</div><div class="ek-sub">Subjects awaiting entry</div></div>
-      <div class="ek-card" style="--ekc:var(--orange)"><div class="ek-label">Awaiting Approval</div><div class="ek-value">6</div><div class="ek-sub">Under review</div></div>
-      <div class="ek-card" style="--ekc:var(--primary)"><div class="ek-label">Results Published</div><div class="ek-value">14</div><div class="ek-sub">Accessible to students</div></div>
-      <div class="ek-card" style="--ekc:var(--accent)"><div class="ek-label">Failed Students</div><div class="ek-value">28</div><div class="ek-sub">Across all subjects</div></div>
-      <div class="ek-card" style="--ekc:var(--success)"><div class="ek-label">School Pass %</div><div class="ek-value">91.2%</div><div class="ek-sub">Half-Yearly 2025–26</div></div>
+    <!-- Alert Banner -->
+    <div class="alert" style="background:rgba(243,156,18,0.08);border:1px solid rgba(243,156,18,0.3);border-radius:var(--radius-sm);padding:0.75rem 1rem;display:flex;align-items:center;gap:0.75rem;margin-bottom:1.5rem;font-size:0.82rem;color:var(--text)">
+      <svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:var(--warning);fill:none;stroke-width:2;flex-shrink:0"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      <span><strong>6 subjects</strong> still have pending marks entry for Annual Exam — deadline in 2 days. <a href="marks-entry.html" style="color:var(--primary);font-weight:600;text-decoration:underline">Enter marks now →</a></span>
+      <button onclick="this.parentElement.style.display='none'" style="margin-left:auto;background:none;border:none;color:var(--text2);font-size:1.1rem;cursor:pointer">×</button>
     </div>
 
-    <div class="dash-layout">
-      <div class="dash-left">
-        <!-- Charts Row 1 -->
-        <div class="charts-3col">
-          <div class="card">
-            <div class="card-header"><div class="card-title">Grade Distribution</div><div class="card-meta">Half-Yearly 2025–26 · All Classes</div></div>
-            <div class="chart-wrap" style="height:180px"><canvas id="gradeDistChart"></canvas></div>
-          </div>
-          <div class="card">
-            <div class="card-header"><div class="card-title">Class-wise Pass %</div><div class="card-meta">Half-Yearly · All Grades</div></div>
-            <div class="chart-wrap" style="height:180px"><canvas id="classPassChart"></canvas></div>
-          </div>
-          <div class="card">
-            <div class="card-header"><div class="card-title">Result Approval Status</div><div class="card-meta">Current exam cycle</div></div>
-            <div class="chart-wrap" style="height:180px"><canvas id="approvalChart"></canvas></div>
+    <!-- KPI Strip (attendance-style) -->
+    <div class="exam-kpi">
+      <div class="kpi-card" style="--kc:var(--warning)">
+        <div class="kpi-badge">Next: 5 Jul</div>
+        <div class="kpi-icon"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg></div>
+        <div class="kpi-label">Upcoming Exams</div>
+        <div class="kpi-value" data-count="4" id="kpi1" style="color:var(--warning)">0</div>
+        <div class="kpi-sub">Scheduled this month</div>
+      </div>
+      <div class="kpi-card" style="--kc:var(--info)">
+        <div class="kpi-badge">Live</div>
+        <div class="kpi-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+        <div class="kpi-label">Ongoing Exams</div>
+        <div class="kpi-value" data-count="2" id="kpi2" style="color:var(--info)">0</div>
+        <div class="kpi-sub">Mid-Term in progress</div>
+      </div>
+      <div class="kpi-card" style="--kc:var(--success)">
+        <div class="kpi-icon"><svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></div>
+        <div class="kpi-label">Completed</div>
+        <div class="kpi-value" data-count="18" id="kpi3" style="color:var(--success)">0</div>
+        <div class="kpi-sub">This academic year</div>
+      </div>
+      <div class="kpi-card" style="--kc:var(--accent)">
+        <div class="kpi-icon"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></div>
+        <div class="kpi-label">Pending Marks</div>
+        <div class="kpi-value" data-count="12" id="kpi4" style="color:var(--accent)">0</div>
+        <div class="kpi-sub">Subjects awaiting entry</div>
+      </div>
+      <div class="kpi-card" style="--kc:var(--orange, #E67E22)">
+        <div class="kpi-icon"><svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div>
+        <div class="kpi-label">Awaiting Approval</div>
+        <div class="kpi-value" data-count="6" id="kpi5" style="color:#E67E22">0</div>
+        <div class="kpi-sub">Under review</div>
+      </div>
+      <div class="kpi-card" style="--kc:var(--primary)">
+        <div class="kpi-icon"><svg viewBox="0 0 24 24"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg></div>
+        <div class="kpi-label">Results Published</div>
+        <div class="kpi-value" data-count="14" id="kpi6" style="color:var(--primary)">0</div>
+        <div class="kpi-sub">Accessible to students</div>
+      </div>
+      <div class="kpi-card" style="--kc:var(--accent)">
+        <div class="kpi-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg></div>
+        <div class="kpi-label">Failed Students</div>
+        <div class="kpi-value" data-count="28" id="kpi7" style="color:var(--accent)">0</div>
+        <div class="kpi-sub">Across all subjects</div>
+      </div>
+      <div class="kpi-card" style="--kc:var(--success)">
+        <div class="kpi-badge">Term II</div>
+        <div class="kpi-icon"><svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div>
+        <div class="kpi-label">School Pass %</div>
+        <div class="kpi-value" data-count="91" data-suffix="%" id="kpi8" style="color:var(--success)">0</div>
+        <div class="kpi-sub">Half-Yearly 2025–26</div>
+      </div>
+    </div>
+
+    <!-- Row 1: Subject Trend + Today's Status -->
+    <div class="charts-row">
+      <div class="card">
+        <div class="card-header">
+          <div><div class="card-title">Subject Performance Trend</div><div class="card-meta">Average score · 4 exams · AY 2025–26 · Class X</div></div>
+          <div style="display:flex;gap:0.5rem">
+            <select class="filter-select" style="font-size:0.75rem;padding:4px 10px"><option>Class X</option><option>Class IX</option><option>Class XI</option><option>Class XII</option></select>
+            <a href="analysis.html" class="btn btn-sm btn-primary">Analytics</a>
           </div>
         </div>
+        <div class="chart-wrap" style="height:200px"><canvas id="subjTrendChart"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-header"><div class="card-title">Result Approval Status</div><div class="card-meta">Current exam cycle</div></div>
+        <div class="chart-wrap" style="height:150px"><canvas id="approvalDonut"></canvas></div>
+        <div style="margin:0 1.25rem 0.75rem">
+          <div style="display:flex;justify-content:space-between;font-size:0.75rem;padding:0.3rem 0;border-bottom:1px solid var(--border)"><span style="display:flex;align-items:center;gap:6px"><span style="width:10px;height:10px;border-radius:2px;background:var(--success);display:inline-block"></span>Approved</span><strong style="color:var(--success)">24</strong></div>
+          <div style="display:flex;justify-content:space-between;font-size:0.75rem;padding:0.3rem 0;border-bottom:1px solid var(--border)"><span style="display:flex;align-items:center;gap:6px"><span style="width:10px;height:10px;border-radius:2px;background:var(--warning);display:inline-block"></span>Under Review</span><strong style="color:var(--warning)">6</strong></div>
+          <div style="display:flex;justify-content:space-between;font-size:0.75rem;padding:0.3rem 0;border-bottom:1px solid var(--border)"><span style="display:flex;align-items:center;gap:6px"><span style="width:10px;height:10px;border-radius:2px;background:var(--info);display:inline-block"></span>Submitted</span><strong style="color:var(--info)">8</strong></div>
+          <div style="display:flex;justify-content:space-between;font-size:0.75rem;padding:0.3rem 0"><span style="display:flex;align-items:center;gap:6px"><span style="width:10px;height:10px;border-radius:2px;background:var(--text3);display:inline-block"></span>Draft / Pending</span><strong style="color:var(--text3)">14</strong></div>
+        </div>
+      </div>
+    </div>
 
-        <!-- Subject Performance Trend -->
+    <!-- Row 2: Grade Distribution + Class-wise Pass% + GPA -->
+    <div class="charts-row-3">
+      <div class="card">
+        <div class="card-header"><div class="card-title">Grade Distribution</div><div class="card-meta">Half-Yearly 2025–26 · All Classes</div></div>
+        <div class="chart-wrap" style="height:180px"><canvas id="gradeDistChart"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-header"><div class="card-title">Class-wise Pass %</div><div class="card-meta">Half-Yearly · All Grades</div></div>
+        <div class="chart-wrap" style="height:180px"><canvas id="classPassChart"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-header"><div class="card-title">GPA Distribution</div><div class="card-meta">Half-Yearly 2025–26</div></div>
+        <div class="chart-wrap" style="height:180px"><canvas id="gpaDistChart"></canvas></div>
+      </div>
+    </div>
+
+    <!-- Row 3: Class Performance Table + Heatmap -->
+    <div class="charts-row">
+      <div class="card card-flush">
+        <div class="card-padding" style="display:flex;justify-content:space-between;align-items:center">
+          <div><div class="card-title">Class-wise Result Summary</div><div class="card-meta">Half-Yearly 2025–26 · All grades</div></div>
+          <div style="display:flex;gap:0.5rem;align-items:center">
+            <select class="filter-select" style="font-size:0.75rem;padding:4px 10px"><option>All Sections</option><option>Section A</option><option>Section B</option></select>
+            <a href="analysis.html" style="font-size:0.73rem;color:var(--primary);font-weight:600">Full Report →</a>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table class="exam-class-table">
+            <thead><tr><th>Class</th><th>Section</th><th>Students</th><th>Appeared</th><th>Pass</th><th>Fail</th><th>Pass %</th><th>Avg Marks</th><th>Top Score</th></tr></thead>
+            <tbody id="classTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header"><div class="card-title">Subject × Class Heatmap</div><div class="card-meta">Avg marks (out of 100) · Half-Yearly</div></div>
+        <div style="padding:0.5rem 1rem 1rem;overflow-x:auto"><div id="heatmapContainer"></div></div>
+      </div>
+    </div>
+
+    <!-- Row 4: Pending Actions + Top Performers + Activity + Upcoming -->
+    <div class="charts-row-3">
+      <!-- Pending Actions -->
+      <div class="card">
+        <div class="card-header">
+          <div><div class="card-title" style="color:var(--accent)">⚠ Pending Marks Entry</div><div class="card-meta">Actions requiring your attention</div></div>
+          <a href="marks-entry.html" style="font-size:0.73rem;color:var(--accent);font-weight:600">All (12) →</a>
+        </div>
+        <div id="pendingActionsList" style="padding:0 1.25rem 0.75rem"></div>
+      </div>
+
+      <!-- Top Performers + Revaluation -->
+      <div style="display:flex;flex-direction:column;gap:1.5rem">
         <div class="card">
-          <div class="card-header"><div class="card-title">Subject Performance Trend</div><div class="card-meta">Average score across 4 exams · AY 2025–26</div>
-            <select class="filter-select" style="font-size:0.72rem;margin-left:auto"><option>Class X</option><option>Class IX</option><option>Class XI</option><option>Class XII</option></select>
-          </div>
-          <div class="chart-wrap" style="height:220px"><canvas id="subjTrendChart"></canvas></div>
+          <div class="card-header"><div class="card-title">Top Performers</div><div class="card-meta">Half-Yearly 2025–26 · Overall Rank</div></div>
+          <div style="padding:0 1.25rem 0.75rem" id="topPerformers"></div>
         </div>
-
-        <!-- Performance Heatmap -->
         <div class="card">
-          <div class="card-header"><div class="card-title">Class × Subject Performance Heatmap</div><div class="card-meta">Half-Yearly 2025–26 · Average marks (out of 100)</div></div>
-          <div style="padding:0.5rem 1rem 1rem;overflow-x:auto">
-            <div id="heatmapContainer"></div>
-          </div>
-        </div>
-
-        <!-- Pending Actions -->
-        <div class="card card-flush">
-          <div class="card-padding" style="display:flex;justify-content:space-between;align-items:center">
-            <div><div class="card-title">Pending Actions</div><div class="card-meta">Actions requiring your attention</div></div>
-            <span class="badge badge-red">12 pending</span>
-          </div>
-          <div class="table-wrap">
-            <table class="pending-table">
-              <thead><tr><th>Subject</th><th>Class</th><th>Teacher</th><th>Status</th><th>Due By</th><th>Action</th></tr></thead>
-              <tbody id="pendingTable"></tbody>
-            </table>
-          </div>
+          <div class="card-header"><div class="card-title">Revaluation Requests</div><div class="card-meta">Pending review</div></div>
+          <div style="padding:0 1.25rem" id="revalList"></div>
+          <div style="padding:0.5rem 1.25rem 0.75rem;border-top:1px solid var(--border);margin-top:0.5rem"><a href="revaluation.html" class="btn btn-ghost btn-sm" style="width:100%;justify-content:center">View All Requests</a></div>
         </div>
       </div>
 
-      <div class="dash-right">
-        <!-- Top Performers -->
-        <div class="card">
-          <div class="card-header"><div class="card-title">Top Performers</div><div class="card-meta">Half-Yearly 2025–26 · Overall Rank</div></div>
-          <div style="padding:0 1rem 1rem" id="topPerformers"></div>
-        </div>
-
-        <!-- Upcoming Exams -->
+      <!-- Activity + Upcoming -->
+      <div style="display:flex;flex-direction:column;gap:1.5rem">
         <div class="card">
           <div class="card-header"><div class="card-title">Upcoming Exams</div><div class="card-meta">Next 30 days</div></div>
-          <div style="padding:0 1rem 1rem" id="upcomingExams"></div>
+          <div style="padding:0 1.25rem 0.75rem" id="upcomingExams"></div>
         </div>
-
-        <!-- Revaluation Requests -->
         <div class="card">
-          <div class="card-header"><div class="card-title">Revaluation Requests</div><div class="card-meta">Pending review</div></div>
-          <div style="padding:0 1rem 1rem" id="revalRequests"></div>
-          <div style="padding:0 1rem 1rem;border-top:1px solid var(--border)"><a href="revaluation.html" class="btn btn-ghost btn-sm" style="width:100%;justify-content:center">View All Requests</a></div>
-        </div>
-
-        <!-- GPA Distribution -->
-        <div class="card">
-          <div class="card-header"><div class="card-title">GPA Distribution</div><div class="card-meta">Half-Yearly 2025–26</div></div>
-          <div class="chart-wrap" style="height:160px"><canvas id="gpaDistChart"></canvas></div>
-        </div>
-
-        <!-- Recent Activity -->
-        <div class="card">
-          <div class="card-header"><div class="card-title">Recent Activity</div></div>
-          <div style="padding:0 1rem 1rem" id="recentActivity"></div>
+          <div class="card-header"><div class="card-title">Recent Activity</div><div class="card-meta">Last 24 hours</div></div>
+          <div class="activity-feed" id="activityFeed"></div>
         </div>
       </div>
     </div>
@@ -201,29 +310,24 @@
 <script>
 renderSidebar('exams','exam-dash','../../');
 
+/* ── DATA ── */
 var SUBJECTS = ['Mathematics','Physics','Chemistry','English','Hindi','Biology','Computer Sc.','Economics'];
 var CLASSES = ['IX-A','IX-B','X-A','X-B','XI-A','XI-B','XII-A','XII-B'];
-
 var HEATMAP_DATA = [
-  [82,75,78,88,91,72,85,79],
-  [79,70,74,85,88,68,82,76],
-  [86,80,83,90,93,77,88,84],
-  [83,77,80,87,90,74,85,81],
-  [74,68,72,82,86,65,78,72],
-  [71,65,70,80,83,62,75,69],
-  [88,84,87,92,95,82,91,88],
-  [85,81,84,90,92,79,88,85],
+  [82,75,78,88,91,72,85,79],[79,70,74,85,88,68,82,76],[86,80,83,90,93,77,88,84],
+  [83,77,80,87,90,74,85,81],[74,68,72,82,86,65,78,72],[71,65,70,80,83,62,75,69],
+  [88,84,87,92,95,82,91,88],[85,81,84,90,92,79,88,85]
 ];
-
-var PENDING = [
-  {subj:'Mathematics',cls:'X-A',teacher:'Mr. Rajesh Kumar',status:'Pending Entry',due:'02 Jul',sc:'badge-red'},
-  {subj:'Physics',cls:'X-B',teacher:'Mrs. Priya Nair',status:'Draft Saved',due:'02 Jul',sc:'badge-yellow'},
-  {subj:'Chemistry',cls:'XI-A',teacher:'Mrs. Anita Sharma',status:'Submitted',due:'03 Jul',sc:'badge-blue'},
-  {subj:'English',cls:'IX-A',teacher:'Mr. Arun Menon',status:'Pending Entry',due:'02 Jul',sc:'badge-red'},
-  {subj:'Hindi',cls:'IX-B',teacher:'Mrs. Sunita S.',status:'Under Review',due:'04 Jul',sc:'badge-purple'},
-  {subj:'Biology',cls:'XI-B',teacher:'Mrs. Kavita P.',status:'Pending Entry',due:'02 Jul',sc:'badge-red'},
+var classData = [
+  {cls:'IX',sec:'A',students:50,appeared:49,pass:46,avg:78,top:97},
+  {cls:'IX',sec:'B',students:49,appeared:48,pass:43,avg:74,top:94},
+  {cls:'X',sec:'A',students:52,appeared:52,pass:50,avg:82,top:98},
+  {cls:'X',sec:'B',students:51,appeared:50,pass:47,avg:79,top:95},
+  {cls:'XI',sec:'A',students:48,appeared:47,pass:42,avg:75,top:96},
+  {cls:'XI',sec:'B',students:46,appeared:44,pass:37,avg:71,top:92},
+  {cls:'XII',sec:'A',students:45,appeared:45,pass:44,avg:86,top:99},
+  {cls:'XII',sec:'B',students:44,appeared:43,pass:41,avg:83,top:97},
 ];
-
 var TOPPERS = [
   {rank:1,name:'Aryan Kapoor',cls:'XII-A',score:'98.4%',gpa:'9.8',color:'#F39C12'},
   {rank:2,name:'Sneha Reddy',cls:'XII-B',score:'97.6%',gpa:'9.7',color:'#95A5A6'},
@@ -231,48 +335,69 @@ var TOPPERS = [
   {rank:4,name:'Priya Singh',cls:'XI-A',score:'95.2%',gpa:'9.4',color:'#0A3D62'},
   {rank:5,name:'Dev Agarwal',cls:'XII-B',score:'94.8%',gpa:'9.3',color:'#16A085'},
 ];
-
 var UPCOMING = [
-  {day:'5',mon:'Jul',title:'Annual Exam — XII',sub:'8 subjects · Grades XI–XII',color:'var(--primary)'},
-  {day:'8',mon:'Jul',title:'Mathematics Unit Test III',sub:'Grades VI–VIII',color:'var(--warning)'},
-  {day:'12',mon:'Jul',title:'Practical Exams — XI',sub:'Physics, Chemistry, Biology',color:'var(--success)'},
-  {day:'15',mon:'Jul',title:'PTM + Result Day',sub:'All grades · Parents invited',color:'var(--info)'},
+  {day:'5',mon:'Jul',title:'Annual Exam — Grade XI',sub:'8 subjects · Grades XI',uc:'var(--primary)'},
+  {day:'8',mon:'Jul',title:'Mathematics Unit Test III',sub:'Grades VI–VIII',uc:'var(--warning)'},
+  {day:'12',mon:'Jul',title:'Practical Exams — XI',sub:'Physics, Chemistry, Biology',uc:'var(--success)'},
+  {day:'15',mon:'Jul',title:'PTM + Result Day',sub:'All grades · Parents invited',uc:'var(--info)'},
 ];
-
 var REVAL = [
-  {id:'RV-041',name:'Vikram Nair',cls:'XII-A',subj:'Mathematics',old:62,req:'10 Jul',status:'Pending'},
-  {id:'RV-042',name:'Kritika Shah',cls:'XI-B',subj:'Physics',old:44,req:'10 Jul',status:'Approved'},
-  {id:'RV-043',name:'Aditya Roy',cls:'X-A',subj:'Chemistry',old:31,req:'12 Jul',status:'Pending'},
+  {id:'RV-041',name:'Vikram Nair',cls:'XII-A',subj:'Mathematics',old:62,status:'Pending'},
+  {id:'RV-042',name:'Kritika Shah',cls:'XI-B',subj:'Physics',old:44,status:'Approved'},
+  {id:'RV-043',name:'Aditya Roy',cls:'X-A',subj:'Chemistry',old:31,status:'Pending'},
 ];
-
+var PENDING_ACTIONS = [
+  {subj:'Mathematics',cls:'X-A',teacher:'Mr. Rajesh Kumar',due:'02 Jul',color:'var(--accent)'},
+  {subj:'Physics',cls:'X-B',teacher:'Mrs. Priya Nair',due:'02 Jul',color:'var(--warning)'},
+  {subj:'English',cls:'IX-A',teacher:'Mr. Arun Menon',due:'02 Jul',color:'var(--accent)'},
+  {subj:'Hindi',cls:'IX-B',teacher:'Mrs. Sunita S.',due:'04 Jul',color:'#E67E22'},
+];
 var ACTIVITIES = [
-  {title:'Marks submitted — X-A Mathematics','sub':'Mr. Rajesh Kumar · 42 students','time':'2 hrs ago','color':'var(--success)'},
-  {title:'Marks approved — IX-A English','sub':'Mrs. Rekha (Coordinator)','time':'3 hrs ago','color':'var(--primary)'},
-  {title:'Revaluation request received','sub':'RV-041 — Vikram Nair (XII-A)','time':'4 hrs ago','color':'var(--warning)'},
-  {title:'Annual exam schedule published','sub':'Grades IX–XII · 5–18 Jul 2026','time':'Yesterday','color':'var(--info)'},
-  {title:'Result processing completed','sub':'Half-Yearly — All sections','time':'2 days ago','color':'var(--success)'},
+  {dot:'var(--success)',title:'Marks submitted — X-A Mathematics',meta:'Mr. Rajesh Kumar · 2 hrs ago'},
+  {dot:'var(--primary)',title:'Marks approved — IX-A English',meta:'Mrs. Rekha (Coordinator) · 3 hrs ago'},
+  {dot:'var(--warning)',title:'Revaluation request received — RV-041',meta:'Vikram Nair XII-A · 4 hrs ago'},
+  {dot:'var(--info)',title:'Annual exam schedule published',meta:'Grades IX–XII · 5–18 Jul 2026 · Yesterday'},
+  {dot:'var(--success)',title:'Result processing completed',meta:'Half-Yearly — All sections · 2 days ago'},
 ];
 
-function renderPendingTable() {
-  document.getElementById('pendingTable').innerHTML = PENDING.map(function(r) {
+/* ── RENDER ── */
+function renderClassTable() {
+  var tb = document.getElementById('classTableBody');
+  tb.innerHTML = classData.map(function(r){
+    var pct = Math.round((r.pass/r.appeared)*100);
+    var color = pct>=90?'var(--success)':pct>=75?'var(--warning)':'var(--accent)';
+    var badge = pct>=90?'<span class="badge badge-green">Good</span>':pct>=75?'<span class="badge badge-yellow">Moderate</span>':'<span class="badge badge-red">Alert</span>';
     return '<tr>'
-      +'<td><strong>'+r.subj+'</strong></td>'
-      +'<td><span class="badge badge-blue">'+r.cls+'</span></td>'
-      +'<td style="font-size:0.78rem">'+r.teacher+'</td>'
-      +'<td><span class="badge '+r.sc+'">'+r.status+'</span></td>'
-      +'<td style="font-family:\'IBM Plex Mono\',monospace;font-size:0.75rem">'+r.due+'</td>'
-      +'<td><a href="marks-entry.html" class="btn btn-ghost btn-sm" style="font-size:0.68rem;padding:3px 8px">Enter Marks</a></td>'
+      +'<td><strong>'+r.cls+'</strong></td>'
+      +'<td><span class="badge badge-blue">'+r.sec+'</span></td>'
+      +'<td style="font-family:\'IBM Plex Mono\',monospace;font-size:0.78rem">'+r.students+'</td>'
+      +'<td style="font-family:\'IBM Plex Mono\',monospace;font-size:0.78rem">'+r.appeared+'</td>'
+      +'<td style="font-family:\'IBM Plex Mono\',monospace;font-size:0.78rem;color:var(--success)">'+r.pass+'</td>'
+      +'<td style="font-family:\'IBM Plex Mono\',monospace;font-size:0.78rem;color:var(--accent)">'+(r.appeared-r.pass)+'</td>'
+      +'<td><div style="display:flex;align-items:center;gap:6px"><div class="mini-bar"><div class="mini-fill" style="width:'+pct+'%;background:'+color+'"></div></div><span style="font-size:0.75rem;font-weight:700;color:'+color+';font-family:\'IBM Plex Mono\',monospace">'+pct+'%</span></div></td>'
+      +'<td style="font-family:\'IBM Plex Mono\',monospace;font-size:0.78rem">'+r.avg+'/100</td>'
+      +'<td style="font-family:\'IBM Plex Mono\',monospace;font-size:0.78rem;color:var(--primary)">'+r.top+'</td>'
       +'</tr>';
   }).join('');
 }
 
+function renderPending() {
+  document.getElementById('pendingActionsList').innerHTML = PENDING_ACTIONS.map(function(a){
+    return '<div class="approval-card">'
+      +'<div class="appr-icon" style="background:'+a.color+'"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>'
+      +'<div class="appr-body"><div class="appr-name">'+a.subj+' · <span style="font-weight:400;color:var(--text2);font-size:0.72rem">'+a.cls+'</span></div>'
+      +'<div class="appr-detail">'+a.teacher+' · Due: '+a.due+'</div>'
+      +'<div class="appr-actions"><button class="btn-view-sm" onclick="showToast(\'Opening marks entry…\',\'info\')">Enter Marks</button><button class="btn-reject-sm" onclick="showToast(\'Reminder sent\',\'success\')">Send Reminder</button></div>'
+      +'</div></div>';
+  }).join('');
+}
+
 function renderTopPerformers() {
-  var rankColors = ['#F39C12','#95A5A6','#CD7F32','#0A3D62','#16A085'];
   var rankLabel = ['🥇','🥈','🥉','4th','5th'];
-  document.getElementById('topPerformers').innerHTML = TOPPERS.map(function(p,i) {
+  document.getElementById('topPerformers').innerHTML = TOPPERS.map(function(p,i){
     var inits = p.name.split(' ').map(function(n){return n[0];}).join('');
     return '<div class="performer-row">'
-      +'<div class="perf-rank" style="background:'+rankColors[i]+'20;color:'+rankColors[i]+';font-size:0.9rem">'+rankLabel[i]+'</div>'
+      +'<div class="perf-rank" style="background:'+p.color+'20;color:'+p.color+';font-size:0.9rem">'+rankLabel[i]+'</div>'
       +'<div class="perf-avatar" style="background:'+p.color+'">'+inits+'</div>'
       +'<div style="flex:1"><div class="perf-name">'+p.name+'</div><div class="perf-sub">'+p.cls+' · GPA '+p.gpa+'</div></div>'
       +'<div class="perf-score">'+p.score+'</div>'
@@ -281,92 +406,100 @@ function renderTopPerformers() {
 }
 
 function renderUpcoming() {
-  document.getElementById('upcomingExams').innerHTML = UPCOMING.map(function(e) {
-    return '<div class="ue-item">'
-      +'<div class="ue-date" style="background:'+e.color+'20"><div class="ue-day" style="color:'+e.color+'">'+e.day+'</div><div class="ue-mon">'+e.mon+'</div></div>'
+  document.getElementById('upcomingExams').innerHTML = UPCOMING.map(function(e){
+    return '<div class="ue-item" style="--uc:'+e.uc+'">'
+      +'<div class="ue-date"><div class="ue-day">'+e.day+'</div><div class="ue-mon">'+e.mon+'</div></div>'
       +'<div><div class="ue-title">'+e.title+'</div><div class="ue-sub">'+e.sub+'</div></div>'
       +'</div>';
   }).join('');
 }
 
 function renderReval() {
-  document.getElementById('revalRequests').innerHTML = REVAL.map(function(r) {
+  document.getElementById('revalList').innerHTML = REVAL.map(function(r){
     var sc = r.status==='Approved'?'badge-green':'badge-yellow';
-    return '<div style="display:flex;gap:0.6rem;align-items:center;padding:0.5rem 0;border-bottom:1px solid var(--border)">'
+    return '<div class="reval-item">'
       +'<div style="flex:1"><div style="font-size:0.8rem;font-weight:600">'+r.name+' <span class="badge badge-blue" style="font-size:0.62rem">'+r.cls+'</span></div>'
-      +'<div style="font-size:0.68rem;color:var(--text2)">'+r.subj+' · Old marks: <strong>'+r.old+'/100</strong></div></div>'
+      +'<div style="font-size:0.68rem;color:var(--text2)">'+r.subj+' · Old: <strong>'+r.old+'/100</strong> · '+r.id+'</div></div>'
       +'<span class="badge '+sc+'">'+r.status+'</span>'
       +'</div>';
   }).join('');
 }
 
 function renderActivity() {
-  document.getElementById('recentActivity').innerHTML = ACTIVITIES.map(function(a) {
-    return '<div class="act-item"><div class="act-dot" style="background:'+a.color+'"></div>'
-      +'<div class="act-body"><div class="act-title">'+a.title+'</div><div class="act-sub">'+a.sub+'</div></div>'
-      +'<div class="act-time">'+a.time+'</div>'
-      +'</div>';
+  document.getElementById('activityFeed').innerHTML = ACTIVITIES.map(function(a){
+    return '<div class="act-item"><div class="act-dot" style="background:'+a.dot+'"></div><div class="act-body"><div class="act-title">'+a.title+'</div><div class="act-meta">'+a.meta+'</div></div></div>';
   }).join('');
 }
 
 function renderHeatmap() {
-  var SUBS = ['Maths','Physics','Chem','English','Hindi','Biology','CS','Eco'];
-  var cols = SUBS.length + 1;
-  var grid = '<div class="heatmap-grid" style="grid-template-columns: 60px repeat('+SUBS.length+',1fr)">';
-  // Header row
-  grid += '<div></div>';
-  SUBS.forEach(function(s){ grid += '<div class="hm-header">'+s+'</div>'; });
-  // Data rows
-  CLASSES.forEach(function(cls,ri) {
-    grid += '<div class="hm-row-label">'+cls+'</div>';
-    HEATMAP_DATA[ri].forEach(function(v) {
-      var pct = (v-60)/40; // 60=min, 100=max
-      var r = Math.round(232 + (22-232)*pct);
-      var g = Math.round(80 + (160-80)*pct);
-      var b = Math.round(91 + (133-91)*pct);
-      var bg = 'rgb('+r+','+g+','+b+')';
-      grid += '<div class="hm-cell" style="background:'+bg+';height:32px" title="'+cls+' · '+v+'/100">'+v+'</div>';
+  var SUBS = ['Maths','Physics','Chem','English','Hindi','Bio','CS','Eco'];
+  var html = '<div class="heatmap-grid" style="grid-template-columns:60px repeat('+SUBS.length+',1fr)">';
+  html += '<div></div>';
+  SUBS.forEach(function(s){ html += '<div class="hm-header">'+s+'</div>'; });
+  CLASSES.forEach(function(cls,ri){
+    html += '<div class="hm-row-label">'+cls+'</div>';
+    HEATMAP_DATA[ri].forEach(function(v){
+      var pct = (v-60)/40;
+      var r2 = Math.round(232+(22-232)*pct), g = Math.round(80+(160-80)*pct), b = Math.round(91+(133-91)*pct);
+      html += '<div class="hm-cell" style="background:rgb('+r2+','+g+','+b+');height:30px" title="'+cls+' '+v+'/100">'+v+'</div>';
     });
   });
-  grid += '</div>';
-  document.getElementById('heatmapContainer').innerHTML = grid;
+  html += '</div>';
+  document.getElementById('heatmapContainer').innerHTML = html;
 }
 
-var tc = document.documentElement.getAttribute('data-theme')==='dark'?'#94A3B8':'#6C757D';
-var gc = document.documentElement.getAttribute('data-theme')==='dark'?'rgba(255,255,255,0.06)':'rgba(0,0,0,0.06)';
+/* ── CHARTS ── */
+function getColors() {
+  var dark = document.documentElement.getAttribute('data-theme')==='dark';
+  return { grid: dark?'rgba(255,255,255,0.06)':'rgba(0,0,0,0.06)', text: dark?'#94A3B8':'#6C757D' };
+}
+var charts = [];
+function buildCharts() {
+  var c = getColors();
+  charts.push(new Chart(document.getElementById('subjTrendChart'),{type:'line',data:{labels:['Unit Test I','Unit Test II','Mid-Term','Half-Yearly'],datasets:[
+    {label:'Maths',data:[72,75,79,83],borderColor:'#E8505B',fill:false,tension:0.3,borderWidth:2,pointRadius:3},
+    {label:'Physics',data:[68,71,74,78],borderColor:'#F39C12',fill:false,tension:0.3,borderWidth:2,pointRadius:3},
+    {label:'Chemistry',data:[70,74,77,80],borderColor:'#3498DB',fill:false,tension:0.3,borderWidth:2,pointRadius:3},
+    {label:'English',data:[82,84,87,88],borderColor:'#1ABC9C',fill:false,tension:0.3,borderWidth:2,pointRadius:3},
+    {label:'Biology',data:[65,68,72,76],borderColor:'#9B59B6',fill:false,tension:0.3,borderWidth:2,pointRadius:3},
+  ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',labels:{boxWidth:10,font:{size:10},color:c.text,padding:10}}},scales:{x:{grid:{display:false},ticks:{font:{size:10},color:c.text}},y:{min:50,max:100,grid:{color:c.grid},ticks:{font:{size:10},color:c.text}}}}}));
+  charts.push(new Chart(document.getElementById('approvalDonut'),{type:'doughnut',data:{labels:['Approved','Under Review','Submitted','Draft/Pending','Rejected'],datasets:[{data:[24,6,8,14,2],backgroundColor:['#16A085','#F39C12','#2980B9','#95A5A6','#E8505B'],borderWidth:0,hoverOffset:4}]},options:{responsive:true,maintainAspectRatio:false,cutout:'65%',plugins:{legend:{display:false}}}}));
+  charts.push(new Chart(document.getElementById('gradeDistChart'),{type:'doughnut',data:{labels:['A1','A2','B1','B2','C1','C2','D','F'],datasets:[{data:[142,198,234,186,124,78,42,28],backgroundColor:['#1ABC9C','#2ECC71','#3498DB','#9B59B6','#F39C12','#E67E22','#E74C3C','#95A5A6'],borderWidth:0,hoverOffset:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right',labels:{boxWidth:10,font:{size:9},color:c.text,padding:8}}}}}));
+  charts.push(new Chart(document.getElementById('classPassChart'),{type:'bar',data:{labels:['IX-A','IX-B','X-A','X-B','XI-A','XI-B','XII-A','XII-B'],datasets:[{label:'Pass %',data:[94,90,96,94,89,84,98,95],backgroundColor:function(ctx){var v=ctx.dataset.data[ctx.dataIndex];return v>=90?'rgba(22,160,133,0.75)':v>=80?'rgba(243,156,18,0.75)':'rgba(232,80,91,0.75)';},borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{font:{size:9},color:c.text}},y:{min:70,max:100,grid:{color:c.grid},ticks:{font:{size:9},color:c.text,callback:function(v){return v+'%';}}}}}}));
+  charts.push(new Chart(document.getElementById('gpaDistChart'),{type:'bar',data:{labels:['9-10','8-9','7-8','6-7','5-6','4-5','<4'],datasets:[{label:'Students',data:[142,198,234,186,124,78,70],backgroundColor:['#1ABC9C','#2ECC71','#3498DB','#9B59B6','#F39C12','#E67E22','#E74C3C'],borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{font:{size:9},color:c.text}},y:{grid:{color:c.grid},ticks:{font:{size:9},color:c.text}}}}}));
+}
 
-// Grade Distribution Donut
-new Chart(document.getElementById('gradeDistChart'),{type:'doughnut',data:{labels:['A1','A2','B1','B2','C1','C2','D','F'],datasets:[{data:[142,198,234,186,124,78,42,28],backgroundColor:['#1ABC9C','#2ECC71','#3498DB','#9B59B6','#F39C12','#E67E22','#E74C3C','#95A5A6'],borderWidth:0,hoverOffset:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right',labels:{boxWidth:10,font:{size:9},color:tc,padding:8}}}}});
+function animateCounters() {
+  document.querySelectorAll('[data-count]').forEach(function(el){
+    var target=parseFloat(el.getAttribute('data-count'));
+    var suffix=el.getAttribute('data-suffix')||'';
+    var duration=1200,start=performance.now();
+    function step(now){
+      var progress=Math.min((now-start)/duration,1);
+      var eased=1-Math.pow(1-progress,3);
+      el.textContent=Math.round(target*eased).toLocaleString()+suffix;
+      if(progress<1) requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+  });
+}
 
-// Class Pass % Bar
-new Chart(document.getElementById('classPassChart'),{type:'bar',data:{labels:['IX-A','IX-B','X-A','X-B','XI-A','XI-B','XII-A','XII-B'],datasets:[{label:'Pass %',data:[94,91,96,93,88,85,97,95],backgroundColor:function(ctx){var v=ctx.dataset.data[ctx.dataIndex];return v>=90?'rgba(22,160,133,0.75)':v>=80?'rgba(243,156,18,0.75)':'rgba(232,80,91,0.75)';},borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{font:{size:9},color:tc}},y:{min:70,max:100,grid:{color:gc},ticks:{font:{size:9},color:tc,callback:function(v){return v+'%';}}}}}});
+function showToast(msg,type){var icons={success:'<path d="M9 11l3 3L22 4"/>',error:'<path d="M18 6 6 18M6 6l12 12"/>',info:'<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>',warning:'<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>'};var c=document.getElementById('toastContainer');var t=document.createElement('div');t.className='toast toast-'+type;t.innerHTML='<div class="toast-icon"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">'+icons[type]+'</svg></div><div class="toast-body"><div class="toast-title">'+(type.charAt(0).toUpperCase()+type.slice(1))+'</div><div class="toast-msg">'+msg+'</div></div>';c.appendChild(t);setTimeout(function(){t.classList.add('show');},10);setTimeout(function(){t.classList.remove('show');setTimeout(function(){t.remove();},300);},3500);}
 
-// Approval Status Donut
-new Chart(document.getElementById('approvalChart'),{type:'doughnut',data:{labels:['Approved','Under Review','Submitted','Draft','Rejected'],datasets:[{data:[24,6,8,12,2],backgroundColor:['#16A085','#F39C12','#2980B9','#95A5A6','#E8505B'],borderWidth:0,hoverOffset:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right',labels:{boxWidth:10,font:{size:9},color:tc,padding:8}}}}});
+function updateDashboard(){showToast('Dashboard updated','info');}
 
-// Subject Trend Line
-new Chart(document.getElementById('subjTrendChart'),{type:'line',data:{labels:['Unit Test I','Unit Test II','Mid-Term','Half-Yearly'],datasets:[
-  {label:'Maths',data:[72,75,79,83],borderColor:'#E8505B',fill:false,tension:0.3,borderWidth:2,pointRadius:3},
-  {label:'Physics',data:[68,71,74,78],borderColor:'#F39C12',fill:false,tension:0.3,borderWidth:2,pointRadius:3},
-  {label:'Chemistry',data:[70,74,77,80],borderColor:'#3498DB',fill:false,tension:0.3,borderWidth:2,pointRadius:3},
-  {label:'English',data:[82,84,87,88],borderColor:'#1ABC9C',fill:false,tension:0.3,borderWidth:2,pointRadius:3},
-  {label:'Biology',data:[65,68,72,76],borderColor:'#9B59B6',fill:false,tension:0.3,borderWidth:2,pointRadius:3},
-]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',labels:{boxWidth:10,font:{size:10},color:tc,padding:10}}},scales:{x:{grid:{display:false},ticks:{font:{size:10},color:tc}},y:{min:50,max:100,grid:{color:gc},ticks:{font:{size:10},color:tc}}}}});
-
-// GPA Distribution
-new Chart(document.getElementById('gpaDistChart'),{type:'bar',data:{labels:['9-10','8-9','7-8','6-7','5-6','4-5','<4'],datasets:[{label:'Students',data:[142,198,234,186,124,78,70],backgroundColor:['#1ABC9C','#2ECC71','#3498DB','#9B59B6','#F39C12','#E67E22','#E74C3C'],borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{font:{size:9},color:tc}},y:{grid:{color:gc},ticks:{font:{size:9},color:tc}}}}});
-
-function openModal(id){var m=document.getElementById(id);if(m)m.classList.add('open');}
-function closeModal(id){var m=document.getElementById(id);if(m)m.classList.remove('open');}
-document.addEventListener('click',function(e){if(e.target.classList.contains('modal-backdrop'))e.target.classList.remove('open');});
-function showToast(msg,type){var icons={success:'<path d="M9 11l3 3L22 4"/>',error:'<path d="M18 6 6 18M6 6l12 12"/>',info:'<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>',warning:'<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>'}; var c=document.getElementById('toastContainer');var t=document.createElement('div');t.className='toast toast-'+type;t.innerHTML='<div class="toast-icon"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">'+icons[type]+'</svg></div><div class="toast-body"><div class="toast-title">'+(type.charAt(0).toUpperCase()+type.slice(1))+'</div><div class="toast-msg">'+msg+'</div></div>';c.appendChild(t);setTimeout(function(){t.classList.add('show');},10);setTimeout(function(){t.classList.remove('show');setTimeout(function(){t.remove();},300);},3500);}
-
-renderPendingTable();
+/* ── INIT ── */
+renderClassTable();
+renderPending();
 renderTopPerformers();
 renderUpcoming();
 renderReval();
 renderActivity();
 renderHeatmap();
+buildCharts();
+animateCounters();
+
+new MutationObserver(function(){charts.forEach(function(c){c.update();});}).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
 </script>
 </body>
 </html>
