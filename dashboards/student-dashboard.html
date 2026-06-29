@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Student Dashboard — EduCore SMS</title>
+  <meta name="description" content="Student Dashboard with attendance, grades, timetable and performance analytics">
+  <link rel="stylesheet" href="../css/main.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+</head>
+<body>
+<div class="mobile-overlay" id="mobileOverlay" onclick="closeMobileSidebar()"></div>
+<header class="topbar">
+  <div class="logo-area">
+    <div class="logo-mark"><svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div>
+    <span class="logo-text">EduCore SMS</span>
+  </div>
+  <button class="sidebar-toggle" onclick="toggleSidebar()"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
+  <div class="tb-search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg><input type="text" placeholder="Search…"></div>
+  <div class="tb-right">
+    <div class="tb-date" id="tb-date"></div>
+    <button class="dark-toggle" onclick="toggleDarkMode()">
+      <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/></svg>
+    </button>
+    <div class="dropdown-wrapper">
+      <div class="tb-btn" onclick="toggleNotif(event)" id="notifBtn"><svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg><div class="notif-dot"></div></div>
+      <div class="notif-dropdown" id="notifDropdown">
+        <div class="notif-header"><h4>Notifications</h4><span onclick="markAllRead()">Mark all read</span></div>
+        <div class="notif-item"><div class="notif-icon" style="background:var(--info)"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div><div class="notif-text"><p><strong>Exam Tomorrow</strong> — Math Mid-Term at 9AM</p><span>1 hour ago</span></div><div class="notif-unread"></div></div>
+        <div class="notif-item"><div class="notif-icon" style="background:var(--success)"><svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/></svg></div><div class="notif-text"><p><strong>Assignment Graded</strong> — Science got 92/100</p><span>3 hours ago</span></div><div class="notif-unread"></div></div>
+        <div class="notif-footer"><a href="../communication/notices.html">View all →</a></div>
+      </div>
+    </div>
+    <div class="dropdown-wrapper">
+      <div class="tb-user" onclick="toggleUserDropdown(event)" id="userBtn">
+        <div class="avatar" style="background:linear-gradient(135deg,#16A085,#1abc9c)">PR</div>
+        <div class="tb-user-info"><div class="tb-user-name">Priya Mehta</div><div class="tb-user-role">Student · IX-A</div></div>
+      </div>
+      <div class="user-dropdown" id="userDropdown">
+        <div class="user-dd-header"><div class="user-dd-name">Priya Mehta</div><div class="user-dd-role">Roll No. 14 · Class IX-A</div></div>
+        <a class="user-dd-item" href="../settings/index.html"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/></svg>Profile Settings</a>
+        <a class="user-dd-item danger" href="#"><svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>Logout</a>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="layout" id="layout">
+  <nav class="sidebar" id="sidebar"><div id="sidebar-nav"></div></nav>
+  <main class="main">
+    <div class="page-header">
+      <div>
+        <h1>Student Dashboard</h1>
+        <div class="page-subtitle">Priya Mehta · Class IX-A · Roll No. 14 · Academic Year 2025–26</div>
+      </div>
+      <div class="ph-actions">
+        <button class="btn" onclick="window.print()"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Download Report Card</button>
+        <button class="btn btn-primary"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg>View Timetable</button>
+      </div>
+    </div>
+
+    <!-- Profile Strip -->
+    <div class="card" style="margin-bottom:1.5rem;padding:1.25rem 1.6rem">
+      <div style="display:flex;align-items:center;gap:1.5rem;flex-wrap:wrap">
+        <div class="avatar" style="width:64px;height:64px;font-size:1.2rem;background:linear-gradient(135deg,#16A085,#1abc9c);border-radius:16px">PM</div>
+        <div style="flex:1">
+          <div style="font-family:'Playfair Display',serif;font-size:1.4rem;font-weight:700;color:var(--text)">Priya Mehta</div>
+          <div style="display:flex;gap:1rem;flex-wrap:wrap;margin-top:.35rem">
+            <span class="badge badge-blue">Class IX-A</span>
+            <span class="badge badge-green">Roll: 14</span>
+            <span class="badge badge-purple">Adm: ADM-1248</span>
+            <span class="badge badge-orange">Section: Morning</span>
+          </div>
+        </div>
+        <div style="display:flex;gap:2rem;flex-wrap:wrap">
+          <div style="text-align:center"><div style="font-family:'Playfair Display',serif;font-size:1.6rem;font-weight:700;color:var(--success)">91.4%</div><div class="stat-label">Attendance</div></div>
+          <div style="text-align:center"><div style="font-family:'Playfair Display',serif;font-size:1.6rem;font-weight:700;color:var(--primary)">83.6</div><div class="stat-label">Avg Score</div></div>
+          <div style="text-align:center"><div style="font-family:'Playfair Display',serif;font-size:1.6rem;font-weight:700;color:var(--warning)">A</div><div class="stat-label">Grade</div></div>
+          <div style="text-align:center"><div style="font-family:'Playfair Display',serif;font-size:1.6rem;font-weight:700;color:var(--info)">4</div><div class="stat-label">Rank</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- KPIs -->
+    <div class="kpi-strip kpi-4">
+      <div class="stat-card" style="--c1:#16A085;--c2:#1abc9c">
+        <div class="stat-icon"><svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></div>
+        <div class="stat-label">Attendance</div>
+        <div class="stat-value" style="color:var(--success)">91.4%</div>
+        <div class="stat-change up">161/176 days present</div>
+      </div>
+      <div class="stat-card" style="--c1:#2980B9;--c2:#0A3D62">
+        <div class="stat-icon"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg></div>
+        <div class="stat-label">Pending Assignments</div>
+        <div class="stat-value" style="color:var(--info)">3</div>
+        <div class="stat-change neu">Due in next 5 days</div>
+      </div>
+      <div class="stat-card" style="--c1:#F39C12;--c2:#E67E22">
+        <div class="stat-icon"><svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
+        <div class="stat-label">Fee Status</div>
+        <div class="stat-value" style="color:var(--success);font-size:1.5rem">Paid</div>
+        <div class="stat-change up">April 2026 — ₹8,500</div>
+      </div>
+      <div class="stat-card" style="--c1:#8E44AD;--c2:#9B59B6">
+        <div class="stat-icon"><svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div>
+        <div class="stat-label">Class Rank</div>
+        <div class="stat-value" style="color:var(--purple)">4<sup style="font-size:.9rem">th</sup></div>
+        <div class="stat-change up">▲ 2 positions this term</div>
+      </div>
+    </div>
+
+    <!-- Row 1: Performance Chart + Subjects -->
+    <div class="grid-row g-14-1">
+      <div class="card">
+        <div class="card-header"><div><div class="card-title">Academic Performance</div><div class="card-meta">Term 1 & 2 · 2025–26</div></div></div>
+        <div class="chart-wrap" style="height:200px"><canvas id="perfChart"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-header"><div class="card-title">Subject Scores</div></div>
+        <div class="stat-row"><span class="stat-lbl"><span class="stat-dot" style="background:var(--success)"></span>Mathematics</span><span class="stat-val">88</span></div>
+        <div class="stat-row"><span class="stat-lbl"><span class="stat-dot" style="background:var(--info)"></span>Science</span><span class="stat-val">92</span></div>
+        <div class="stat-row"><span class="stat-lbl"><span class="stat-dot" style="background:var(--warning)"></span>English</span><span class="stat-val">78</span></div>
+        <div class="stat-row"><span class="stat-lbl"><span class="stat-dot" style="background:var(--purple)"></span>Social Studies</span><span class="stat-val">81</span></div>
+        <div class="stat-row"><span class="stat-lbl"><span class="stat-dot" style="background:var(--accent)"></span>Hindi</span><span class="stat-val">74</span></div>
+        <div class="stat-row"><span class="stat-lbl"><span class="stat-dot" style="background:var(--orange)"></span>Computer Sci.</span><span class="stat-val">89</span></div>
+      </div>
+    </div>
+
+    <!-- Row 2: Attendance Chart + Timetable -->
+    <div class="grid-row g-1-1">
+      <div class="card">
+        <div class="card-header"><div class="card-title">Monthly Attendance</div><div class="card-meta">2025–26</div></div>
+        <div class="chart-wrap" style="height:180px"><canvas id="attChart"></canvas></div>
+      </div>
+      <div class="card card-flush">
+        <div class="card-padding">
+          <div class="card-title">Today's Timetable</div>
+          <div class="card-meta" style="margin-top:.15rem">Wednesday · 22 Apr 2026</div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Period</th><th>Subject</th><th>Teacher</th><th>Room</th><th>Time</th></tr></thead>
+            <tbody>
+              <tr><td class="td-mono">P1</td><td><span class="badge badge-blue">Mathematics</span></td><td>Mr. Rajan</td><td>Room 12</td><td class="td-mono">8:00–8:45</td></tr>
+              <tr><td class="td-mono">P2</td><td><span class="badge badge-green">Science</span></td><td>Ms. Preethi</td><td>Lab 2</td><td class="td-mono">8:45–9:30</td></tr>
+              <tr><td class="td-mono">P3</td><td><span class="badge badge-yellow">English</span></td><td>Mr. Thomas</td><td>Room 08</td><td class="td-mono">9:45–10:30</td></tr>
+              <tr><td class="td-mono">P4</td><td><span class="badge badge-purple">Hindi</span></td><td>Ms. Sharma</td><td>Room 06</td><td class="td-mono">10:30–11:15</td></tr>
+              <tr><td class="td-mono">P5</td><td><span class="badge badge-orange">Computer</span></td><td>Mr. Verma</td><td>Lab 1</td><td class="td-mono">11:30–12:15</td></tr>
+              <tr><td class="td-mono">P6</td><td><span class="badge badge-blue">Social St.</span></td><td>Ms. Gupta</td><td>Room 14</td><td class="td-mono">12:15–1:00</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Row 3: Assignments + Upcoming Exams -->
+    <div class="grid-row g-1-1">
+      <div class="card card-flush">
+        <div class="card-padding d-flex justify-between align-center">
+          <div class="card-title">Assignments</div>
+          <span class="badge badge-red">3 Pending</span>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Subject</th><th>Title</th><th>Due Date</th><th>Status</th></tr></thead>
+            <tbody>
+              <tr><td><span class="badge badge-blue">Math</span></td><td>Chapter 8 Problems</td><td class="td-mono">24 Apr</td><td><span class="badge badge-red">Pending</span></td></tr>
+              <tr><td><span class="badge badge-green">Science</span></td><td>Lab Report: Osmosis</td><td class="td-mono">25 Apr</td><td><span class="badge badge-red">Pending</span></td></tr>
+              <tr><td><span class="badge badge-yellow">English</span></td><td>Essay: Climate Change</td><td class="td-mono">26 Apr</td><td><span class="badge badge-red">Pending</span></td></tr>
+              <tr><td><span class="badge badge-purple">Hindi</span></td><td>Poem Recitation</td><td class="td-mono">20 Apr</td><td><span class="badge badge-green">Submitted</span></td></tr>
+              <tr><td><span class="badge badge-orange">Computer</span></td><td>Python Basics</td><td class="td-mono">18 Apr</td><td><span class="badge badge-green">Graded: 92</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="card card-flush">
+        <div class="card-padding"><div class="card-title">Upcoming Exams</div></div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Subject</th><th>Date</th><th>Time</th><th>Hall</th></tr></thead>
+            <tbody>
+              <tr><td><span class="badge badge-blue">Mathematics</span></td><td class="td-mono">01 May</td><td class="td-mono">9:00 AM</td><td>Hall A</td></tr>
+              <tr><td><span class="badge badge-green">Science</span></td><td class="td-mono">03 May</td><td class="td-mono">9:00 AM</td><td>Hall B</td></tr>
+              <tr><td><span class="badge badge-yellow">English</span></td><td class="td-mono">05 May</td><td class="td-mono">9:00 AM</td><td>Hall A</td></tr>
+              <tr><td><span class="badge badge-purple">Hindi</span></td><td class="td-mono">07 May</td><td class="td-mono">9:00 AM</td><td>Hall C</td></tr>
+              <tr><td><span class="badge badge-orange">Social St.</span></td><td class="td-mono">09 May</td><td class="td-mono">9:00 AM</td><td>Hall A</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="../js/app.js"></script>
+<script src="../js/sidebar.js"></script>
+<script>
+renderSidebar('dash', 'student-dash', '../');
+const isDark = () => document.documentElement.getAttribute('data-theme') === 'dark';
+const gc = () => isDark() ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)';
+const tc = () => isDark() ? '#94A3B8' : '#6C757D';
+
+new Chart(document.getElementById('perfChart'), {
+  type: 'line',
+  data: {
+    labels: ['Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec','Jan','Feb','Mar'],
+    datasets: [
+      { label: 'Term 1', data: [78,82,79,null,null,null,null,null,null,null,null,null], borderColor: '#2980B9', backgroundColor: 'rgba(41,128,185,.08)', borderWidth: 2.5, tension: 0.4, pointRadius: 4, pointBackgroundColor: '#2980B9', fill: true },
+      { label: 'Term 2', data: [null,null,null,null,null,80,84,86,82,88,92,83.6], borderColor: '#16A085', backgroundColor: 'rgba(22,160,133,.08)', borderWidth: 2.5, tension: 0.4, pointRadius: 4, pointBackgroundColor: '#16A085', fill: true }
+    ]
+  },
+  options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { color: tc(), boxWidth: 10 } } }, scales: { x: { grid: { display: false }, ticks: { color: tc(), font: { size: 10 } } }, y: { grid: { color: gc() }, ticks: { color: tc(), font: { size: 10 } } } } }
+});
+
+new Chart(document.getElementById('attChart'), {
+  type: 'bar',
+  data: {
+    labels: ['Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec','Jan','Feb','Mar'],
+    datasets: [
+      { label: 'Present', data: [22,20,19,21,22,20,21,19,20,22,18,17], backgroundColor: 'rgba(22,160,133,.8)', borderRadius: 5 },
+      { label: 'Absent',  data: [2,4,3,1,2,4,3,5,4,2,6,7],           backgroundColor: 'rgba(232,80,91,.7)',  borderRadius: 5 }
+    ]
+  },
+  options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { color: tc(), boxWidth: 10, font: { size: 10 } } } }, scales: { x: { stacked: true, grid: { display: false }, ticks: { color: tc(), font: { size: 10 } } }, y: { stacked: true, grid: { color: gc() }, ticks: { color: tc(), font: { size: 10 } } } } }
+});
+</script>
+</body>
+</html>

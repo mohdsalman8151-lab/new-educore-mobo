@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Attendance Reports — EduCore SMS</title>
+  <meta name="description" content="Generate and export comprehensive attendance reports — daily, monthly, class-wise, student-wise, and defaulter reports.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;900&family=IBM+Plex+Mono:wght@400;500;600&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../css/main.css">
+  <link rel="stylesheet" href="../../css/components.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <style>
+    .report-layout { display:grid; grid-template-columns:280px 1fr; gap:1.5rem; }
+    @media(max-width:1000px){ .report-layout{grid-template-columns:1fr;} }
+    .report-sidebar { background:var(--bg2); border:1px solid var(--border); border-radius:var(--radius); padding:1.25rem; height:fit-content; position:sticky; top:calc(var(--topbar-h)+1rem); }
+    .rs-title { font-size:0.75rem; font-weight:700; color:var(--text2); text-transform:uppercase; letter-spacing:0.05em; margin-bottom:0.75rem; padding-bottom:0.5rem; border-bottom:1px solid var(--border); }
+    .rs-item { padding:0.5rem 0.75rem; border-radius:var(--radius-sm); font-size:0.83rem; font-weight:500; color:var(--text2); cursor:pointer; transition:all 0.15s; display:flex; align-items:center; gap:0.5rem; margin-bottom:0.2rem; }
+    .rs-item.active { background:rgba(10,61,98,0.08); color:var(--primary); font-weight:700; }
+    .rs-item:hover:not(.active) { background:var(--bg); }
+    .rs-item svg { width:14px; height:14px; fill:none; stroke:currentColor; stroke-width:2; flex-shrink:0; }
+    .rs-divider { height:1px; background:var(--border); margin:0.75rem 0; }
+    /* Report area */
+    .report-area { }
+    .report-filter-card { background:var(--bg2); border:1px solid var(--border); border-radius:var(--radius); padding:1.25rem; margin-bottom:1.25rem; }
+    .rf-title { font-size:0.85rem; font-weight:700; color:var(--text); margin-bottom:1rem; display:flex; align-items:center; gap:0.5rem; }
+    .rf-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:0.75rem; }
+    @media(max-width:900px){ .rf-grid{grid-template-columns:repeat(2,1fr);} }
+    .rf-actions { display:flex; gap:0.5rem; margin-top:1rem; flex-wrap:wrap; }
+    /* Report preview */
+    .report-preview { background:var(--bg2); border:1px solid var(--border); border-radius:var(--radius); overflow:hidden; }
+    .rp-header { padding:1rem 1.25rem; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; }
+    .rp-title { font-size:0.9rem; font-weight:700; color:var(--text); }
+    .rp-actions { display:flex; gap:0.5rem; }
+    .report-table { width:100%; border-collapse:collapse; }
+    .report-table th { text-align:left; padding:0.65rem 1rem; font-size:0.68rem; text-transform:uppercase; letter-spacing:0.05em; color:var(--text3); border-bottom:2px solid var(--border); background:var(--bg); white-space:nowrap; }
+    .report-table td { padding:0.65rem 1rem; font-size:0.8rem; border-bottom:1px solid var(--border); vertical-align:middle; }
+    .report-table tr:last-child td { border-bottom:none; }
+    .report-table tr:hover td { background:rgba(10,61,98,0.02); }
+    .report-table tfoot td { padding:0.65rem 1rem; font-size:0.82rem; font-weight:700; background:var(--bg); border-top:2px solid var(--border); }
+    .att-bar { width:80px; height:6px; border-radius:3px; background:var(--border); overflow:hidden; display:inline-block; margin-right:6px; vertical-align:middle; }
+    .att-bar-fill { height:100%; border-radius:3px; }
+  </style>
+</head>
+<body>
+<div class="mobile-overlay" id="mobileOverlay" onclick="closeMobileSidebar()"></div>
+<header class="topbar">
+  <div class="logo-area"><div class="logo-mark"><svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div><span class="logo-text">EduCore SMS</span></div>
+  <button class="sidebar-toggle" onclick="toggleSidebar()"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
+  <div class="tb-search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg><input type="text" placeholder="Search reports…"></div>
+  <div class="tb-right">
+    <div class="tb-date" id="tb-date"></div>
+    <button class="dark-toggle" onclick="toggleDarkMode()"><svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg><svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/></svg></button>
+    <div class="dropdown-wrapper"><div class="tb-user" onclick="toggleUserDropdown(event)" id="userBtn"><div class="avatar">SA</div><div class="tb-user-info"><div class="tb-user-name">Super Admin</div><div class="tb-user-role">Administrator</div></div></div><div class="user-dropdown" id="userDropdown"><div class="user-dd-header"><div class="user-dd-name">Super Admin</div><div class="user-dd-role">Administrator</div></div><a class="user-dd-item danger" href="../../index.html"><svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>Logout</a></div></div>
+  </div>
+</header>
+<div class="layout" id="layout">
+  <nav class="sidebar" id="sidebar"><div id="sidebar-nav"></div></nav>
+  <main class="main">
+    <div class="breadcrumb"><a href="../../index.html">Dashboard</a><span class="breadcrumb-sep">›</span><a href="dashboard.html">Attendance</a><span class="breadcrumb-sep">›</span><span>Reports</span></div>
+    <div class="page-header">
+      <div><h1>Attendance Reports</h1><div class="page-subtitle">Generate, preview and export comprehensive attendance reports · Academic Year 2025–26</div></div>
+      <div class="ph-actions">
+        <button class="btn btn-ghost" onclick="window.print()">Print</button>
+        <button class="btn btn-ghost" onclick="exportExcel()">Excel</button>
+        <button class="btn btn-primary" onclick="exportPDF()">PDF</button>
+      </div>
+    </div>
+
+    <div class="report-layout">
+      <!-- Sidebar -->
+      <div class="report-sidebar">
+        <div class="rs-title">Report Type</div>
+        <div class="rs-item active" onclick="selectReport(this,'daily')"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Daily Attendance</div>
+        <div class="rs-item" onclick="selectReport(this,'weekly')"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Weekly Summary</div>
+        <div class="rs-item" onclick="selectReport(this,'monthly')"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Monthly Report</div>
+        <div class="rs-item" onclick="selectReport(this,'yearly')"><svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>Annual Report</div>
+        <div class="rs-divider"></div>
+        <div class="rs-title">By Segment</div>
+        <div class="rs-item" onclick="selectReport(this,'class')"><svg viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>Class-wise Report</div>
+        <div class="rs-item" onclick="selectReport(this,'section')"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>Section-wise Report</div>
+        <div class="rs-item" onclick="selectReport(this,'student')"><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Student-wise Report</div>
+        <div class="rs-item" onclick="selectReport(this,'teacher')"><svg viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/></svg>Teacher-wise Report</div>
+        <div class="rs-item" onclick="selectReport(this,'subject')"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg>Subject-wise Report</div>
+        <div class="rs-divider"></div>
+        <div class="rs-title">Special Reports</div>
+        <div class="rs-item" onclick="selectReport(this,'defaulter')" style="color:var(--accent)"><svg viewBox="0 0 24 24" style="stroke:var(--accent)"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg>Defaulter Report</div>
+        <div class="rs-item" onclick="selectReport(this,'comparative')"><svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>Comparative Report</div>
+        <div class="rs-item" onclick="selectReport(this,'leave')"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Leave Summary</div>
+      </div>
+
+      <!-- Report Area -->
+      <div class="report-area">
+        <!-- Filters -->
+        <div class="report-filter-card">
+          <div class="rf-title">
+            <svg viewBox="0 0 24 24" style="width:16px;height:16px;stroke:var(--primary);fill:none;stroke-width:2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+            <span id="reportTitle">Daily Attendance Report</span>
+          </div>
+          <div class="rf-grid">
+            <div class="form-group"><label class="form-label">Academic Session</label><select class="form-select"><option>2025–26</option><option>2024–25</option></select></div>
+            <div class="form-group"><label class="form-label">Campus</label><select class="form-select"><option>Main Campus</option><option>North Branch</option><option>South Branch</option></select></div>
+            <div class="form-group"><label class="form-label">Grade</label><select class="form-select" id="rGrade"><option value="">All Grades</option><option>I</option><option>II</option><option>III</option><option>IV</option><option>V</option><option>VI</option><option>VII</option><option>VIII</option><option>IX</option><option>X</option><option>XI</option><option>XII</option></select></div>
+            <div class="form-group"><label class="form-label">Section</label><select class="form-select"><option>All Sections</option><option>A</option><option>B</option><option>C</option></select></div>
+            <div class="form-group"><label class="form-label">Date / From</label><input type="date" class="form-input" value="2026-06-29"></div>
+            <div class="form-group"><label class="form-label">To Date</label><input type="date" class="form-input" value="2026-06-29"></div>
+            <div class="form-group"><label class="form-label">Teacher</label><select class="form-select"><option>All Teachers</option><option>Mrs. Sunita Sharma</option><option>Mr. Rajesh Kumar</option><option>Mrs. Priya Nair</option></select></div>
+            <div class="form-group"><label class="form-label">Status Filter</label><select class="form-select"><option>All</option><option>Present</option><option>Absent</option><option>Late</option><option>On Leave</option></select></div>
+          </div>
+          <div class="rf-actions">
+            <button class="btn btn-primary" onclick="generateReport()">
+              <svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+              Generate Report
+            </button>
+            <button class="btn btn-ghost" onclick="showToast('Resetting filters…','info')">Reset Filters</button>
+            <div style="margin-left:auto;display:flex;gap:0.5rem">
+              <button class="btn btn-ghost btn-sm" onclick="exportPDF()">📄 PDF</button>
+              <button class="btn btn-ghost btn-sm" onclick="exportExcel()">📊 Excel</button>
+              <button class="btn btn-ghost btn-sm" onclick="window.print()">🖨 Print</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Report Summary Stats -->
+        <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:0.75rem;margin-bottom:1.25rem" id="reportStats"></div>
+
+        <!-- Chart Preview -->
+        <div class="card" style="margin-bottom:1.25rem">
+          <div class="card-header">
+            <div class="card-title" id="chartTitle">Daily Attendance — 29 Jun 2026</div>
+            <div class="card-meta">Visual summary</div>
+          </div>
+          <div class="chart-wrap" style="height:180px"><canvas id="reportChart"></canvas></div>
+        </div>
+
+        <!-- Table -->
+        <div class="report-preview">
+          <div class="rp-header">
+            <div>
+              <div class="rp-title" id="tableTitle">Daily Attendance Register — 29 Jun 2026</div>
+              <div style="font-size:0.72rem;color:var(--text2);margin-top:2px">All Grades · Main Campus · 1,248 students</div>
+            </div>
+            <div class="rp-actions">
+              <select class="filter-select" style="font-size:0.75rem;padding:4px 8px"><option>Show 25</option><option>Show 50</option><option>Show 100</option><option>Show All</option></select>
+              <button class="btn btn-ghost btn-sm" onclick="exportExcel()">Excel</button>
+              <button class="btn btn-sm btn-primary" onclick="exportPDF()">PDF</button>
+            </div>
+          </div>
+          <div class="table-wrap" id="reportTableWrap"></div>
+          <div style="padding:0.75rem 1rem;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;font-size:0.75rem;color:var(--text2)">
+            <span>Showing 25 of 1,248 records</span>
+            <div style="display:flex;gap:0.35rem">
+              <button class="page-btn">‹</button>
+              <button class="page-btn active">1</button>
+              <button class="page-btn">2</button>
+              <button class="page-btn">3</button>
+              <button class="page-btn">›</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+<div class="toast-container" id="toastContainer"></div>
+<script src="../../js/app.js"></script>
+<script src="../../js/sidebar.js"></script>
+<script>
+renderSidebar('attendance','att-analytics','../../');
+
+var currentReport = 'daily';
+var reportChart = null;
+
+var REPORT_DATA = {
+  daily: {
+    title:'Daily Attendance Report',
+    stats:[{l:'Total Students',v:'1,248',c:'var(--text)'},{l:'Present',v:'1,092',c:'var(--success)'},{l:'Absent',v:'98',c:'var(--accent)'},{l:'Late',v:'58',c:'var(--warning)'},{l:'Att %',v:'87.5%',c:'var(--primary)'}],
+    cols:['Adm No','Student Name','Class','Section','Status','Time In','Remarks','Recorded By'],
+    rows:[
+      ['ADM-0901','Aarav Sharma','IX','A','Present','07:42 AM','–','Mrs. Sunita'],
+      ['ADM-0902','Aisha Khan','IX','A','Present','07:50 AM','–','Mrs. Sunita'],
+      ['ADM-0903','Akash Verma','IX','A','Late','08:22 AM','Bus delay','Mrs. Sunita'],
+      ['ADM-0904','Ananya Gupta','IX','A','Present','07:39 AM','–','Mrs. Sunita'],
+      ['ADM-0905','Arjun Das','IX','A','Absent','–','Not informed','Mrs. Sunita'],
+      ['ADM-0906','Bhavya Nair','IX','A','Present','07:44 AM','–','Mrs. Sunita'],
+      ['ADM-0907','Chirag Patel','IX','A','Present','07:51 AM','–','Mrs. Sunita'],
+      ['ADM-0908','Deepika Reddy','IX','A','Present','07:45 AM','–','Mrs. Sunita'],
+      ['ADM-0909','Dev Agarwal','IX','A','Medical Leave','–','Fever, cert. attached','Mrs. Sunita'],
+      ['ADM-0910','Divya Mehta','IX','A','Present','07:38 AM','–','Mrs. Sunita'],
+      ['ADM-0911','Farhan Sheikh','IX','A','Present','07:52 AM','–','Mrs. Sunita'],
+      ['ADM-0912','Gayatri Iyer','IX','A','Present','07:40 AM','–','Mrs. Sunita'],
+      ['ADM-0913','Harsh Kapoor','IX','A','Casual Leave','–','Family function','Mrs. Sunita'],
+      ['ADM-0914','Ishita Joshi','IX','A','Present','07:47 AM','–','Mrs. Sunita'],
+      ['ADM-0915','Jay Malhotra','IX','A','Present','07:55 AM','–','Mrs. Sunita'],
+      ['ADM-0916','Kavya Pillai','IX','A','Present','07:43 AM','–','Mrs. Sunita'],
+      ['ADM-0917','Kunal Singh','IX','A','Present','07:49 AM','–','Mrs. Sunita'],
+      ['ADM-0918','Lavanya Rao','IX','A','Present','07:41 AM','–','Mrs. Sunita'],
+      ['ADM-0919','Manav Tiwari','IX','A','Late','08:05 AM','Traffic','Mrs. Sunita'],
+      ['ADM-0920','Meera Krishnan','IX','A','Present','07:46 AM','–','Mrs. Sunita'],
+      ['ADM-0921','Mohammed Rizwan','IX','A','Present','07:53 AM','–','Mrs. Sunita'],
+      ['ADM-0922','Neha Sharma','IX','A','Present','07:37 AM','–','Mrs. Sunita'],
+      ['ADM-0923','Nikhil Jain','IX','A','Present','07:48 AM','–','Mrs. Sunita'],
+      ['ADM-0924','Pallavi Desai','IX','A','Present','07:54 AM','–','Mrs. Sunita'],
+      ['ADM-0925','Parth Thakur','IX','A','Present','07:42 AM','–','Mrs. Sunita'],
+    ],
+    footer:['Total','','','','P:30 A:2 L:2 ML:1 CL:1','','','']
+  }
+};
+
+var statusColors = {Present:'badge-green',Absent:'badge-red',Late:'badge-yellow','Medical Leave':'badge-blue','Casual Leave':'badge-purple','On Leave':'badge-blue',Half_Day:'badge-orange'};
+
+function selectReport(el, type) {
+  document.querySelectorAll('.rs-item').forEach(function(i){i.classList.remove('active');});
+  el.classList.add('active');
+  currentReport = type;
+  var titles = {daily:'Daily Attendance Report',weekly:'Weekly Summary Report',monthly:'Monthly Attendance Report',yearly:'Annual Attendance Report',class:'Class-wise Attendance Report',section:'Section-wise Attendance Report',student:'Student-wise Attendance Report',teacher:'Teacher Attendance Report',subject:'Subject-wise Attendance Report',defaulter:'Defaulter Students Report',comparative:'Comparative Attendance Report',leave:'Leave Summary Report'};
+  document.getElementById('reportTitle').textContent = titles[type]||type;
+  generateReport();
+}
+
+function generateReport() {
+  renderStats();
+  renderTable();
+  renderPreviewChart();
+  showToast('Report generated successfully','success');
+}
+
+function renderStats() {
+  var d = REPORT_DATA.daily;
+  var html = d.stats.map(function(s){
+    return '<div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:0.75rem;text-align:center">'
+      +'<div style="font-size:0.65rem;color:var(--text2);text-transform:uppercase;letter-spacing:0.04em">'+s.l+'</div>'
+      +'<div style="font-size:1.4rem;font-weight:700;font-family:\'IBM Plex Mono\',monospace;color:'+s.c+'">'+s.v+'</div>'
+      +'</div>';
+  }).join('');
+  document.getElementById('reportStats').innerHTML = html;
+}
+
+function renderTable() {
+  var d = REPORT_DATA.daily;
+  var html = '<table class="report-table"><thead><tr>'
+    +d.cols.map(function(c){return '<th>'+c+'</th>';}).join('')
+    +'</tr></thead><tbody>';
+  d.rows.forEach(function(r){
+    html += '<tr>'+r.map(function(cell,i){
+      if(i===4) {
+        var bc = statusColors[cell]||'badge-gray';
+        return '<td><span class="badge '+bc+'">'+cell+'</span></td>';
+      }
+      if(i===0) return '<td style="font-family:\'IBM Plex Mono\',monospace;font-size:0.75rem">'+cell+'</td>';
+      return '<td>'+cell+'</td>';
+    }).join('')+'</tr>';
+  });
+  html += '</tbody><tfoot><tr>'+d.footer.map(function(f,i){ return '<td>'+f+'</td>'; }).join('')+'</tr></tfoot></table>';
+  document.getElementById('reportTableWrap').innerHTML = html;
+}
+
+function renderPreviewChart() {
+  if(reportChart) { reportChart.destroy(); }
+  var tc = document.documentElement.getAttribute('data-theme')==='dark'?'#94A3B8':'#6C757D';
+  var gc = document.documentElement.getAttribute('data-theme')==='dark'?'rgba(255,255,255,0.06)':'rgba(0,0,0,0.06)';
+  reportChart = new Chart(document.getElementById('reportChart'),{type:'bar',data:{labels:['Mon 23','Tue 24','Wed 25','Thu 26','Fri 27','Sat 28','Mon 29'],datasets:[{label:'Present',data:[1140,1182,1098,1156,1120,820,1092],backgroundColor:'rgba(22,160,133,0.8)',borderRadius:4},{label:'Absent',data:[72,54,110,72,92,80,98],backgroundColor:'rgba(232,80,91,0.75)',borderRadius:4},{label:'Late',data:[36,12,40,20,36,28,58],backgroundColor:'rgba(243,156,18,0.75)',borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',labels:{boxWidth:10,font:{size:10},color:tc}}},scales:{x:{stacked:false,grid:{display:false},ticks:{font:{size:10},color:tc}},y:{grid:{color:gc},ticks:{font:{size:10},color:tc}}}}});
+}
+
+function exportPDF() { showToast('Generating PDF report… Download will start shortly.','info'); }
+function exportExcel() { showToast('Exporting to Excel… File will be ready in a moment.','info'); }
+function showToast(msg,type){var icons={success:'<path d="M9 11l3 3L22 4"/>',error:'<path d="M18 6 6 18M6 6l12 12"/>',info:'<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>',warning:'<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>'};var c=document.getElementById('toastContainer');var t=document.createElement('div');t.className='toast toast-'+type;t.innerHTML='<div class="toast-icon"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">'+icons[type]+'</svg></div><div class="toast-body"><div class="toast-title">'+(type.charAt(0).toUpperCase()+type.slice(1))+'</div><div class="toast-msg">'+msg+'</div></div>';c.appendChild(t);setTimeout(function(){t.classList.add('show');},10);setTimeout(function(){t.classList.remove('show');setTimeout(function(){t.remove();},300);},3500);}
+
+generateReport();
+</script>
+</body>
+</html>

@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Curriculum Progress Tracking - EduCore SMS</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;900&family=IBM+Plex+Mono:wght@400;500;600&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../css/main.css">
+  <link rel="stylesheet" href="../../css/components.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <style>
+    .prog-track-card {
+      background: var(--bg-card, #fff);
+      border: 1px solid var(--border, #e2e8f0);
+      border-radius: var(--border-radius-lg, 12px);
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+    .flex-selector-bar {
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+      flex-wrap: wrap;
+      margin-bottom: 1rem;
+    }
+  </style>
+</head>
+<body>
+<div class="mobile-overlay" id="mobileOverlay" onclick="closeMobileSidebar()"></div>
+<header class="topbar">
+  <div class="logo-area">
+    <div class="logo-mark"><svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div>
+    <span class="logo-text">EduCore SMS</span>
+  </div>
+  <button class="sidebar-toggle" onclick="toggleSidebar()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round">
+      <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+    </svg>
+  </button>
+  <div class="tb-search">
+    <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+    <input type="text" placeholder="Search curriculum..." id="globalSearch" oninput="searchTableGlobal()">
+  </div>
+  <div class="tb-right">
+    <div class="tb-date" id="tb-date"></div>
+    <button class="dark-toggle" onclick="toggleDarkMode()">
+      <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/></svg>
+    </button>
+    <div class="dropdown-wrapper">
+      <div class="tb-btn" onclick="toggleNotif(event)" id="notifBtn">
+        <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        <div class="notif-dot"></div>
+      </div>
+      <div class="notif-dropdown" id="notifDropdown">
+        <div class="notif-header"><h4>Notifications</h4><span onclick="markAllRead()">Mark all read</span></div>
+        <div class="notif-item">
+          <div class="notif-icon" style="background:var(--warning)"><svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg></div>
+          <div class="notif-text"><p><strong>Fee dues</strong> - 48 students have outstanding dues</p><span>1 hour ago</span></div>
+          <div class="notif-unread"></div>
+        </div>
+        <div class="notif-item">
+          <div class="notif-icon" style="background:var(--info)"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>
+          <div class="notif-text"><p><strong>New admission</strong> - 5 new applications received</p><span>3 hours ago</span></div>
+          <div class="notif-unread"></div>
+        </div>
+        <div class="notif-item">
+          <div class="notif-icon" style="background:var(--success)"><svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/></svg></div>
+          <div class="notif-text"><p><strong>Attendance marked</strong> - All classes updated</p><span>Today 9:00 AM</span></div>
+        </div>
+        <div class="notif-footer"><a href="../../modules/communication/noticeboard.html">View all</a></div>
+      </div>
+    </div>
+    <div class="dropdown-wrapper">
+      <div class="tb-user" onclick="toggleUserDropdown(event)" id="userBtn">
+        <div class="avatar">SA</div>
+        <div class="tb-user-info">
+          <div class="tb-user-name">Super Admin</div>
+          <div class="tb-user-role">Administrator</div>
+        </div>
+      </div>
+      <div class="user-dropdown" id="userDropdown">
+        <div class="user-dd-header"><div class="user-dd-name">Super Admin</div><div class="user-dd-role">Administrator</div></div>
+        <a class="user-dd-item" href="../../modules/settings/school-profile.html">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v2M12 20v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M2 12h2M20 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+          Settings
+        </a>
+        <a class="user-dd-item danger" href="../../index.html">
+          <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+          Logout
+        </a>
+      </div>
+    </div>
+  </div>
+</header>
+<div class="layout" id="layout">
+  <nav class="sidebar" id="sidebar"><div id="sidebar-nav"></div></nav>
+  <main class="main">
+    <div class="breadcrumb">
+      <a href="../../index.html">Dashboard</a>
+      <span class="breadcrumb-sep">&#8250;</span>
+      <span>Curriculum Progress</span>
+    </div>
+    <div class="page-header">
+      <div>
+        <h1>Curriculum Progress Tracking</h1>
+        <div class="page-subtitle">Track syllabus coverage, chapter completion status, and analytics</div>
+      </div>
+      <div class="ph-actions">
+        <button class="btn btn-ghost" onclick="exportData()">
+          <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Export
+        </button>
+        <button class="btn btn-primary" onclick="openAddModal()">
+          <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Add Chapter/Topic
+        </button>
+      </div>
+    </div>
+
+    <!-- Stats Grid -->
+    <div class="stats-grid">
+      <div class='stat-card' style='--c1:#0A3D62;--c2:#1a5276'>
+        <div class='stat-icon'>
+          <svg viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2'>
+            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+          </svg>
+        </div>
+        <div class='stat-body'>
+          <div class='stat-label'>Total Chapters</div>
+          <div class='stat-value' id="statTotal">0</div>
+        </div>
+      </div>
+      <div class='stat-card' style='--c1:#16A085;--c2:#0e6655'>
+        <div class='stat-icon'>
+          <svg viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2'>
+            <path d="M9 11l3 3L22 4"/>
+          </svg>
+        </div>
+        <div class='stat-body'>
+          <div class='stat-label'>Completed</div>
+          <div class='stat-value' id="statCompleted">0</div>
+        </div>
+      </div>
+      <div class='stat-card' style='--c1:#F39C12;--c2:#d68910'>
+        <div class='stat-icon'>
+          <svg viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2'>
+            <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+          </svg>
+        </div>
+        <div class='stat-body'>
+          <div class='stat-label'>In Progress</div>
+          <div class='stat-value' id="statPending">0</div>
+        </div>
+      </div>
+      <div class='stat-card' style='--c1:#8E44AD;--c2:#6c3483'>
+        <div class='stat-icon'>
+          <svg viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2'>
+            <line x1="18" y1="20" x2="18" y2="10"/>
+            <line x1="12" y1="20" x2="12" y2="4"/>
+            <line x1="6" y1="20" x2="6" y2="14"/>
+          </svg>
+        </div>
+        <div class='stat-body'>
+          <div class='stat-label'>Average Completion %</div>
+          <div class='stat-value' id="statAverage">0%</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Selection Bar -->
+    <div class="prog-track-card">
+      <div class="flex-selector-bar">
+        <label style="font-weight:600">Select Class:</label>
+        <select class="filter-select" id="curClassSelect" onchange="onClassChange()" style="min-width: 150px;"></select>
+        
+        <label style="font-weight:600; margin-left: 1rem;">Select Subject:</label>
+        <select class="filter-select" id="curSubjectSelect" onchange="renderChapters()" style="min-width: 180px;"></select>
+      </div>
+
+      <!-- Data Table representing selected syllabus progress -->
+      <div class="table-wrap" style="margin-top: 1rem;">
+        <table id="curriculumTable">
+          <thead>
+            <tr>
+              <th style="width: 35%;">Chapter / Topic Name</th>
+              <th style="width: 35%;">Completion Progress</th>
+              <th>Status</th>
+              <th>Last Updated</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="curriculumBody">
+            <!-- Populated via Javascript -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Charts Row -->
+    <div class="grid-row g-2-1" style="margin-bottom:1rem">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Subject-wise Syllabus Coverage</div>
+          <div class="card-meta">Comparison of average completion % by subject</div>
+        </div>
+        <div class="card-body"><div class="chart-wrap" style="height:260px"><canvas id="mainChart"></canvas></div></div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Syllabus Status Distribution</div>
+          <div class="card-meta">Breakdown of chapters in selected Class</div>
+        </div>
+        <div class="card-body"><div class="chart-wrap" style="height:260px"><canvas id="distChart"></canvas></div></div>
+      </div>
+    </div>
+
+    <!-- Add Modal -->
+    <div class="modal-backdrop" id="chapterModal">
+      <div class="modal">
+        <div class="modal-header">
+          <div class="modal-title" id="modalTitle">Add Chapter</div>
+          <button class="modal-close" onclick="closeModal('chapterModal')"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+        </div>
+        <div class="modal-body">
+          <input type="hidden" id="editChapterId">
+          <div class="form-grid">
+            <div class="form-group form-full">
+              <label class="form-label">Chapter / Unit Name <span class="req">*</span></label>
+              <input type="text" class="form-input" id="chapterName" placeholder="e.g. Unit 1: Real Numbers" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Class <span class="req">*</span></label>
+              <select class="form-select" id="chapterClass" required></select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Subject <span class="req">*</span></label>
+              <select class="form-select" id="chapterSubject" required></select>
+            </div>
+            <div class="form-group form-full">
+              <label class="form-label">Completion Progress (0 - 100%)</label>
+              <div style="display:flex; align-items:center; gap:1rem;">
+                <input type="range" class="form-input" style="flex:1;" id="chapterProgress" min="0" max="100" value="0" oninput="document.getElementById('progVal').innerText = this.value + '%'">
+                <span id="progVal" style="font-weight:600; min-width:40px;">0%</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-ghost" onclick="closeModal('chapterModal')">Cancel</button>
+          <button class="btn btn-primary" onclick="submitChapter()">Save Chapter</button>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<script src="../../js/app.js"></script>
+<script src="../../js/sidebar.js"></script>
+<script>
+renderSidebar('classes', 'syllabus', '../../');
+
+var CURRICULUM_KEY = 'educore-curriculum';
+var defaultCurriculum = [
+  {id: "CUR-1001", classMap: "Class 10-A", subject: "Mathematics", chapterName: "Real Numbers", progress: 100, updated: "2025-06-15", status: "Completed"},
+  {id: "CUR-1002", classMap: "Class 10-A", subject: "Mathematics", chapterName: "Polynomials", progress: 100, updated: "2025-06-20", status: "Completed"},
+  {id: "CUR-1003", classMap: "Class 10-A", subject: "Mathematics", chapterName: "Quadratic Equations", progress: 60, updated: "2025-06-25", status: "In Progress"},
+  {id: "CUR-1004", classMap: "Class 10-A", subject: "Mathematics", chapterName: "Arithmetic Progressions", progress: 0, updated: "2025-06-01", status: "Not Started"},
+  {id: "CUR-1005", classMap: "Class 12-A", subject: "Physics", chapterName: "Electrostatics", progress: 90, updated: "2025-06-26", status: "In Progress"},
+  {id: "CUR-1006", classMap: "Class 12-A", subject: "Physics", chapterName: "Current Electricity", progress: 40, updated: "2025-06-28", status: "In Progress"},
+  {id: "CUR-1007", classMap: "Class 12-A", subject: "Physics", chapterName: "Electromagnetism", progress: 0, updated: "2025-06-02", status: "Not Started"}
+];
+
+var curriculum = [];
+var classList = [];
+var subjectList = [];
+var mainChart, distChart;
+
+function initCurriculum() {
+  // Load classes
+  var storedClasses = localStorage.getItem('educore-classes');
+  if (storedClasses) {
+    classList = JSON.parse(storedClasses).map(c => c.name + '-' + c.section);
+  } else {
+    classList = ["Class 10-A", "Class 10-B", "Class 12-A", "Class 8-A"];
+  }
+
+  // Load subjects
+  var storedSubjects = localStorage.getItem('educore-subjects');
+  if (storedSubjects) {
+    subjectList = JSON.parse(storedSubjects).map(s => s.name);
+  } else {
+    subjectList = ["Mathematics", "Physics", "Chemistry Lab", "English Literature", "Social Science"];
+  }
+
+  // Populate selectors
+  var clSelect = document.getElementById('curClassSelect');
+  var formClSelect = document.getElementById('chapterClass');
+  clSelect.innerHTML = '';
+  formClSelect.innerHTML = '';
+  classList.forEach(function(c) {
+    clSelect.innerHTML += '<option value="'+c+'">'+c+'</option>';
+    formClSelect.innerHTML += '<option value="'+c+'">'+c+'</option>';
+  });
+
+  var formSubSelect = document.getElementById('chapterSubject');
+  formSubSelect.innerHTML = '';
+  subjectList.forEach(function(s) {
+    formSubSelect.innerHTML += '<option value="'+s+'">'+s+'</option>';
+  });
+
+  // Load curriculum data
+  var data = localStorage.getItem(CURRICULUM_KEY);
+  if (!data) {
+    curriculum = defaultCurriculum;
+    localStorage.setItem(CURRICULUM_KEY, JSON.stringify(curriculum));
+  } else {
+    curriculum = JSON.parse(data);
+  }
+
+  onClassChange();
+  initCharts();
+}
+
+function onClassChange() {
+  var selectedClass = document.getElementById('curClassSelect').value;
+  // Find subjects mapped to this class in curriculum list
+  var filteredSubjects = curriculum.filter(c => c.classMap === selectedClass).map(c => c.subject);
+  var uniqueSubs = Array.from(new Set(filteredSubjects));
+  
+  if (uniqueSubs.length === 0) {
+    uniqueSubs = subjectList;
+  }
+
+  var subSelect = document.getElementById('curSubjectSelect');
+  subSelect.innerHTML = '';
+  uniqueSubs.forEach(function(s) {
+    subSelect.innerHTML += '<option value="'+s+'">'+s+'</option>';
+  });
+
+  renderChapters();
+}
+
+function showToast(msg, type) {
+  type = type || 'success';
+  var icons = { 
+    success:'<path d="M9 11l3 3L22 4"/>', 
+    error:'<path d="M18 6 6 18M6 6l12 12"/>', 
+    info:'<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>', 
+    warning:'<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>' 
+  };
+  var c = document.getElementById('toastContainer');
+  var t = document.createElement('div');
+  t.className = 'toast toast-' + type;
+  t.innerHTML = '<div class="toast-icon"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">'+icons[type]+'</svg></div><div class="toast-body"><div class="toast-title">'+(type.charAt(0).toUpperCase()+type.slice(1))+'</div><div class="toast-msg">'+msg+'</div></div>';
+  c.appendChild(t);
+  setTimeout(function(){t.classList.add('show');},10);
+  setTimeout(function(){t.classList.remove('show');setTimeout(function(){t.remove();},300);},3500);
+}
+
+function renderChapters() {
+  var selectedClass = document.getElementById('curClassSelect').value;
+  var selectedSubject = document.getElementById('curSubjectSelect').value;
+  
+  var list = curriculum.filter(c => c.classMap === selectedClass && c.subject === selectedSubject);
+  var body = document.getElementById('curriculumBody');
+  body.innerHTML = '';
+
+  list.forEach(function(ch) {
+    var badgeClass = 'badge-yellow';
+    if (ch.status === 'Completed') badgeClass = 'badge-green';
+    else if (ch.status === 'Not Started') badgeClass = 'badge-gray';
+
+    var tr = document.createElement('tr');
+    tr.innerHTML = '<td><strong>' + ch.chapterName + '</strong></td>' +
+      '<td>' +
+        '<div class="flex" style="gap:.5rem; align-items:center;">' +
+          '<div class="prog-bar" style="flex:1;"><div class="prog-fill" style="width: '+ch.progress+'%"></div></div>' +
+          '<span>'+ch.progress+'%</span>' +
+        '</div>' +
+      '</td>' +
+      '<td><span class="badge '+badgeClass+'">' + ch.status + '</span></td>' +
+      '<td>' + ch.updated + '</td>' +
+      '<td>' +
+        '<div class="row-actions">' +
+          '<button class="btn-icon" onclick="editRow(\''+ch.id+'\')" title="Edit Progress"><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>' +
+          '<button class="btn-icon" onclick="deleteRow(\''+ch.id+'\')" title="Delete"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button>' +
+        '</div>' +
+      '</td>';
+    body.appendChild(tr);
+  });
+
+  updateStats();
+  updateCharts();
+}
+
+function updateStats() {
+  var selectedClass = document.getElementById('curClassSelect').value;
+  var selectedSubject = document.getElementById('curSubjectSelect').value;
+  var list = curriculum.filter(c => c.classMap === selectedClass && c.subject === selectedSubject);
+
+  var total = list.length;
+  var completed = list.filter(ch => ch.status === 'Completed').length;
+  var pending = list.filter(ch => ch.status === 'In Progress').length;
+  var avg = total > 0 ? Math.round(list.reduce((sum, ch) => sum + ch.progress, 0) / total) : 0;
+
+  document.getElementById('statTotal').textContent = total;
+  document.getElementById('statCompleted').textContent = completed;
+  document.getElementById('statPending').textContent = pending;
+  document.getElementById('statAverage').textContent = avg + '%';
+}
+
+function openAddModal() {
+  document.getElementById('modalTitle').textContent = 'Add Chapter / Topic';
+  document.getElementById('editChapterId').value = '';
+  document.getElementById('chapterName').value = '';
+  document.getElementById('chapterClass').value = document.getElementById('curClassSelect').value;
+  document.getElementById('chapterSubject').value = document.getElementById('curSubjectSelect').value;
+  document.getElementById('chapterProgress').value = '0';
+  document.getElementById('progVal').innerText = '0%';
+  openModal('chapterModal');
+}
+
+function editRow(id) {
+  var ch = curriculum.find(x => x.id === id);
+  if (!ch) return;
+
+  document.getElementById('modalTitle').textContent = 'Update Chapter Progress';
+  document.getElementById('editChapterId').value = ch.id;
+  document.getElementById('chapterName').value = ch.chapterName;
+  document.getElementById('chapterClass').value = ch.classMap;
+  document.getElementById('chapterSubject').value = ch.subject;
+  document.getElementById('chapterProgress').value = ch.progress;
+  document.getElementById('progVal').innerText = ch.progress + '%';
+  openModal('chapterModal');
+}
+
+function deleteRow(id) {
+  if (confirm('Are you sure you want to delete this chapter configuration?')) {
+    curriculum = curriculum.filter(x => x.id !== id);
+    localStorage.setItem(CURRICULUM_KEY, JSON.stringify(curriculum));
+    renderChapters();
+    showToast('Chapter deleted', 'error');
+  }
+}
+
+function submitChapter() {
+  var id = document.getElementById('editChapterId').value;
+  var chapterName = document.getElementById('chapterName').value.trim();
+  var classMap = document.getElementById('chapterClass').value;
+  var subject = document.getElementById('chapterSubject').value;
+  var progress = parseInt(document.getElementById('chapterProgress').value);
+
+  if (!chapterName) {
+    showToast('Chapter name is required', 'error');
+    return;
+  }
+
+  var status = 'Not Started';
+  if (progress === 100) status = 'Completed';
+  else if (progress > 0) status = 'In Progress';
+
+  var today = new Date().toISOString().split('T')[0];
+
+  if (id) {
+    var index = curriculum.findIndex(x => x.id === id);
+    if (index > -1) {
+      curriculum[index].chapterName = chapterName;
+      curriculum[index].classMap = classMap;
+      curriculum[index].subject = subject;
+      curriculum[index].progress = progress;
+      curriculum[index].status = status;
+      curriculum[index].updated = today;
+      showToast('Syllabus progress updated');
+    }
+  } else {
+    var newId = 'CUR-' + (Math.floor(Math.random() * 9000) + 1000);
+    curriculum.push({
+      id: newId,
+      classMap: classMap,
+      subject: subject,
+      chapterName: chapterName,
+      progress: progress,
+      status: status,
+      updated: today
+    });
+    showToast('New syllabus chapter added');
+  }
+
+  localStorage.setItem(CURRICULUM_KEY, JSON.stringify(curriculum));
+  closeModal('chapterModal');
+  renderChapters();
+}
+
+function initCharts() {
+  var isDark = function() { return document.documentElement.getAttribute('data-theme') === 'dark'; };
+  var gc = function() { return isDark() ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'; };
+  var tc = function() { return isDark() ? '#94A3B8' : '#6C757D'; };
+
+  mainChart = new Chart(document.getElementById('mainChart'), {
+    type: 'bar',
+    data: {
+      labels: [],
+      datasets: [{
+        label: 'Syllabus Completion %',
+        data: [],
+        backgroundColor: '#0A3D62',
+        borderRadius: 5
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { grid: { display: false }, ticks: { color: tc() } },
+        y: { min: 0, max: 100, grid: { color: gc() }, ticks: { color: tc() } }
+      }
+    }
+  });
+
+  distChart = new Chart(document.getElementById('distChart'), {
+    type: 'doughnut',
+    data: {
+      labels: ['Completed', 'In Progress', 'Not Started'],
+      datasets: [{
+        data: [0, 0, 0],
+        backgroundColor: ['#16A085', '#F39C12', '#94A3B8'],
+        borderWidth: 0
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      cutout: '70%',
+      plugins: {
+        legend: { position: 'bottom', labels: { boxWidth: 10, color: tc(), font: { size: 10 } } }
+      }
+    }
+  });
+}
+
+function updateCharts() {
+  if (!mainChart || !distChart) return;
+  var selectedClass = document.getElementById('curClassSelect').value;
+
+  // 1. Subject-wise syllabus completion average
+  var subjectsInClass = Array.from(new Set(curriculum.filter(c => c.classMap === selectedClass).map(c => c.subject)));
+  if (subjectsInClass.length === 0) subjectsInClass = subjectList;
+
+  var barData = [];
+  subjectsInClass.forEach(sub => {
+    var chs = curriculum.filter(c => c.classMap === selectedClass && c.subject === sub);
+    var avg = chs.length > 0 ? Math.round(chs.reduce((sum, c) => sum + c.progress, 0) / chs.length) : 0;
+    barData.push(avg);
+  });
+
+  mainChart.data.labels = subjectsInClass;
+  mainChart.data.datasets[0].data = barData;
+  mainChart.update();
+
+  // 2. Status distribution for all chapters in selected Class
+  var classChapters = curriculum.filter(c => c.classMap === selectedClass);
+  var completed = classChapters.filter(c => c.status === 'Completed').length;
+  var progress = classChapters.filter(c => c.status === 'In Progress').length;
+  var notStarted = classChapters.filter(c => c.status === 'Not Started').length;
+
+  distChart.data.datasets[0].data = [completed, progress, notStarted];
+  distChart.update();
+}
+
+function searchTableGlobal() {
+  var q = document.getElementById('globalSearch').value.toLowerCase();
+  var selectedClass = document.getElementById('curClassSelect').value;
+  var selectedSubject = document.getElementById('curSubjectSelect').value;
+
+  var list = curriculum.filter(c => c.classMap === selectedClass && c.subject === selectedSubject && c.chapterName.toLowerCase().includes(q));
+  var body = document.getElementById('curriculumBody');
+  body.innerHTML = '';
+
+  list.forEach(function(ch) {
+    var badgeClass = 'badge-yellow';
+    if (ch.status === 'Completed') badgeClass = 'badge-green';
+    else if (ch.status === 'Not Started') badgeClass = 'badge-gray';
+
+    var tr = document.createElement('tr');
+    tr.innerHTML = '<td><strong>' + ch.chapterName + '</strong></td>' +
+      '<td>' +
+        '<div class="flex" style="gap:.5rem; align-items:center;">' +
+          '<div class="prog-bar" style="flex:1;"><div class="prog-fill" style="width: '+ch.progress+'%"></div></div>' +
+          '<span>'+ch.progress+'%</span>' +
+        '</div>' +
+      '</td>' +
+      '<td><span class="badge '+badgeClass+'">' + ch.status + '</span></td>' +
+      '<td>' + ch.updated + '</td>' +
+      '<td>' +
+        '<div class="row-actions">' +
+          '<button class="btn-icon" onclick="editRow(\''+ch.id+'\')" title="Edit Progress"><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>' +
+          '<button class="btn-icon" onclick="deleteRow(\''+ch.id+'\')" title="Delete"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button>' +
+        '</div>' +
+      '</td>';
+    body.appendChild(tr);
+  });
+}
+
+function exportData() {
+  showToast('Exporting curriculum progress to CSV...', 'info');
+  var csv = 'Chapter ID,Class Map,Subject,Chapter Name,Progress %,Status,Last Updated\n';
+  curriculum.forEach(function(c){
+    csv += `"${c.id}","${c.classMap}","${c.subject}","${c.chapterName}","${c.progress}","${c.status}","${c.updated}"\n`;
+  });
+  var blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  var link = document.createElement("a");
+  var url = URL.createObjectURL(blob);
+  link.setAttribute("href", url);
+  link.setAttribute("download", "curriculum_progress.csv");
+  link.style.visibility = 'hidden';
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+  initCurriculum();
+});
+</script>
+</body>
+</html>

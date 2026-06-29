@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Biometric Attendance Integration — EduCore SMS</title>
+  <meta name="description" content="Configure and manage biometric devices, sync logs, and attendance thresholds for automated attendance marking.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;900&family=IBM+Plex+Mono:wght@400;500;600&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../css/main.css">
+  <link rel="stylesheet" href="../../css/components.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <style>
+    .bio-layout { display:grid; grid-template-columns:1fr 340px; gap:1.5rem; }
+    @media(max-width:1100px){ .bio-layout{grid-template-columns:1fr;} }
+    /* Device cards */
+    .device-card { background:var(--bg2); border:1px solid var(--border); border-radius:var(--radius); padding:1.25rem; margin-bottom:1rem; display:flex; gap:1rem; align-items:flex-start; position:relative; transition:box-shadow 0.2s; }
+    .device-card:hover { box-shadow:var(--shadow-sm); }
+    .device-card.online::before { content:''; position:absolute; top:0; left:0; width:4px; height:100%; background:var(--success); border-radius:var(--radius) 0 0 var(--radius); }
+    .device-card.offline::before { content:''; position:absolute; top:0; left:0; width:4px; height:100%; background:var(--accent); border-radius:var(--radius) 0 0 var(--radius); }
+    .device-card.warning::before { content:''; position:absolute; top:0; left:0; width:4px; height:100%; background:var(--warning); border-radius:var(--radius) 0 0 var(--radius); }
+    .device-icon { width:52px; height:52px; border-radius:12px; background:var(--bg); border:1px solid var(--border); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+    .device-icon svg { width:26px; height:26px; fill:none; stroke-width:1.5; }
+    .device-body { flex:1; min-width:0; }
+    .device-name { font-size:0.9rem; font-weight:700; color:var(--text); }
+    .device-sub { font-size:0.72rem; color:var(--text2); font-family:'IBM Plex Mono',monospace; margin-top:2px; }
+    .device-stats { display:flex; gap:1rem; margin-top:0.65rem; flex-wrap:wrap; }
+    .ds-item { }
+    .ds-label { font-size:0.62rem; color:var(--text3); text-transform:uppercase; letter-spacing:0.04em; }
+    .ds-value { font-size:0.82rem; font-weight:600; color:var(--text); font-family:'IBM Plex Mono',monospace; }
+    .device-actions { display:flex; gap:0.4rem; margin-top:0.75rem; flex-wrap:wrap; }
+    .device-status-dot { width:9px; height:9px; border-radius:50%; display:inline-block; margin-right:5px; }
+    .status-online { background:var(--success); box-shadow:0 0 0 3px rgba(22,160,133,0.2); animation:pulse-green 2s infinite; }
+    .status-offline { background:var(--accent); }
+    .status-warning { background:var(--warning); animation:pulse-yellow 2s infinite; }
+    @keyframes pulse-green { 0%,100%{box-shadow:0 0 0 0 rgba(22,160,133,0.4);}50%{box-shadow:0 0 0 5px rgba(22,160,133,0);} }
+    @keyframes pulse-yellow { 0%,100%{box-shadow:0 0 0 0 rgba(243,156,18,0.4);}50%{box-shadow:0 0 0 5px rgba(243,156,18,0);} }
+    /* Sync log */
+    .sync-log-row { display:flex; gap:0.75rem; padding:0.6rem 0; border-bottom:1px solid var(--border); align-items:center; }
+    .sync-log-row:last-child { border-bottom:none; }
+    .sl-icon { width:28px; height:28px; border-radius:6px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+    .sl-icon svg { width:13px; height:13px; fill:none; stroke:#fff; stroke-width:2; }
+    .sl-body { flex:1; min-width:0; }
+    .sl-title { font-size:0.78rem; font-weight:600; color:var(--text); }
+    .sl-meta { font-size:0.68rem; color:var(--text2); font-family:'IBM Plex Mono',monospace; }
+    .sl-count { font-size:0.8rem; font-weight:700; font-family:'IBM Plex Mono',monospace; color:var(--primary); }
+    /* Policy settings */
+    .policy-row { display:flex; justify-content:space-between; align-items:center; padding:0.75rem 0; border-bottom:1px solid var(--border); }
+    .policy-row:last-child { border-bottom:none; }
+    .policy-label { font-size:0.82rem; font-weight:500; color:var(--text); }
+    .policy-sub { font-size:0.7rem; color:var(--text2); margin-top:2px; }
+    /* Toggle switch */
+    .toggle-switch { width:44px; height:24px; background:var(--border); border-radius:12px; position:relative; cursor:pointer; transition:background 0.2s; flex-shrink:0; }
+    .toggle-switch.on { background:var(--success); }
+    .toggle-switch::after { content:''; position:absolute; width:18px; height:18px; border-radius:50%; background:#fff; top:3px; left:3px; transition:transform 0.2s; box-shadow:0 1px 4px rgba(0,0,0,0.2); }
+    .toggle-switch.on::after { transform:translateX(20px); }
+    /* KPI strip */
+    .bio-kpi { display:grid; grid-template-columns:repeat(5,1fr); gap:1rem; margin-bottom:1.5rem; }
+    @media(max-width:1100px){ .bio-kpi{grid-template-columns:repeat(3,1fr);} }
+    .bk-card { background:var(--bg2); border:1px solid var(--border); border-radius:var(--radius); padding:1rem; display:flex; align-items:center; gap:0.75rem; }
+    .bk-icon { width:40px; height:40px; border-radius:10px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+    .bk-icon svg { width:20px; height:20px; fill:none; stroke-width:2; }
+    .bk-label { font-size:0.68rem; color:var(--text2); text-transform:uppercase; letter-spacing:0.04em; }
+    .bk-value { font-size:1.5rem; font-weight:700; font-family:'IBM Plex Mono',monospace; }
+    /* Registration table */
+    .reg-table { width:100%; border-collapse:collapse; }
+    .reg-table th { text-align:left; padding:0.6rem 1rem; font-size:0.68rem; text-transform:uppercase; letter-spacing:0.05em; color:var(--text3); border-bottom:2px solid var(--border); background:var(--bg); }
+    .reg-table td { padding:0.65rem 1rem; font-size:0.8rem; border-bottom:1px solid var(--border); vertical-align:middle; }
+    .reg-table tr:last-child td { border-bottom:none; }
+    .reg-table tr:hover td { background:rgba(10,61,98,0.02); }
+    /* Enrollment progress */
+    .enroll-prog { display:flex; flex-direction:column; gap:0.65rem; }
+    .ep-row { display:flex; align-items:center; gap:0.75rem; font-size:0.78rem; }
+    .ep-label { min-width:100px; color:var(--text2); }
+    .ep-bar { flex:1; height:8px; background:var(--border); border-radius:4px; overflow:hidden; }
+    .ep-fill { height:100%; border-radius:4px; }
+    .ep-pct { min-width:36px; text-align:right; font-weight:700; font-family:'IBM Plex Mono',monospace; font-size:0.72rem; }
+  </style>
+</head>
+<body>
+<div class="mobile-overlay" id="mobileOverlay" onclick="closeMobileSidebar()"></div>
+<header class="topbar">
+  <div class="logo-area">
+    <div class="logo-mark"><svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div>
+    <span class="logo-text">EduCore SMS</span>
+  </div>
+  <button class="sidebar-toggle" onclick="toggleSidebar()"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
+  <div class="tb-search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg><input type="text" placeholder="Search devices, logs…"></div>
+  <div class="tb-right">
+    <div class="tb-date" id="tb-date"></div>
+    <button class="dark-toggle" onclick="toggleDarkMode()"><svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg><svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/></svg></button>
+    <div class="dropdown-wrapper">
+      <div class="tb-user" onclick="toggleUserDropdown(event)" id="userBtn"><div class="avatar">SA</div><div class="tb-user-info"><div class="tb-user-name">Super Admin</div><div class="tb-user-role">Administrator</div></div></div>
+      <div class="user-dropdown" id="userDropdown"><div class="user-dd-header"><div class="user-dd-name">Super Admin</div><div class="user-dd-role">Administrator · EduCore SMS</div></div><a class="user-dd-item danger" href="../../index.html"><svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>Logout</a></div>
+    </div>
+  </div>
+</header>
+<div class="layout" id="layout">
+  <nav class="sidebar" id="sidebar"><div id="sidebar-nav"></div></nav>
+  <main class="main">
+    <div class="breadcrumb"><a href="../../index.html">Dashboard</a><span class="breadcrumb-sep">›</span><a href="dashboard.html">Attendance</a><span class="breadcrumb-sep">›</span><span>Biometric Integration</span></div>
+    <div class="page-header">
+      <div><h1>Biometric Attendance Integration</h1><div class="page-subtitle">Device management, sync logs, enrollment, and attendance policy settings</div></div>
+      <div class="ph-actions">
+        <button class="btn btn-ghost" id="syncAllBtn" onclick="syncAllDevices()">
+          <svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2"><path d="M1 4v6h6M23 20v-6h-6"/><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/></svg>
+          Sync All Devices
+        </button>
+        <button class="btn btn-ghost" onclick="openModal('enrollModal')">Enroll Staff</button>
+        <button class="btn btn-primary" onclick="openModal('addDeviceModal')">
+          <svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Add Device
+        </button>
+      </div>
+    </div>
+
+    <!-- KPI Strip -->
+    <div class="bio-kpi">
+      <div class="bk-card"><div class="bk-icon" style="background:rgba(22,160,133,0.12)"><svg viewBox="0 0 24 24" stroke="var(--success)"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18" stroke-width="3"/></svg></div><div><div class="bk-label">Total Devices</div><div class="bk-value">5</div></div></div>
+      <div class="bk-card"><div class="bk-icon" style="background:rgba(22,160,133,0.12)"><svg viewBox="0 0 24 24" stroke="var(--success)"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div><div><div class="bk-label">Online</div><div class="bk-value" style="color:var(--success)">3</div></div></div>
+      <div class="bk-card"><div class="bk-icon" style="background:rgba(232,80,91,0.12)"><svg viewBox="0 0 24 24" stroke="var(--accent)"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg></div><div><div class="bk-label">Offline</div><div class="bk-value" style="color:var(--accent)">1</div></div></div>
+      <div class="bk-card"><div class="bk-icon" style="background:rgba(41,128,185,0.12)"><svg viewBox="0 0 24 24" stroke="var(--info)"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div><div><div class="bk-label">Enrolled Staff</div><div class="bk-value" style="color:var(--info)">82</div></div></div>
+      <div class="bk-card"><div class="bk-icon" style="background:rgba(243,156,18,0.12)"><svg viewBox="0 0 24 24" stroke="var(--warning)"><path d="M1 4v6h6M23 20v-6h-6"/><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/></svg></div><div><div class="bk-label">Today's Syncs</div><div class="bk-value" style="color:var(--warning)">234</div></div></div>
+    </div>
+
+    <div class="bio-layout">
+      <div>
+        <!-- Devices -->
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
+          <h3 style="font-size:0.95rem;font-weight:700;color:var(--text)">Registered Devices</h3>
+          <div style="display:flex;gap:0.5rem">
+            <select class="filter-select" style="font-size:0.75rem"><option>All Locations</option><option>Main Entrance</option><option>Staff Room</option><option>Secondary Block</option></select>
+          </div>
+        </div>
+        <div id="deviceList"></div>
+
+        <!-- Sync Log Table -->
+        <div class="card card-flush" style="margin-top:1.5rem">
+          <div class="card-padding" style="display:flex;justify-content:space-between;align-items:center">
+            <div><div class="card-title">Sync Activity Log</div><div class="card-meta">Last 24 hours · All devices</div></div>
+            <div style="display:flex;gap:0.5rem;align-items:center">
+              <select class="filter-select" style="font-size:0.75rem"><option>All Devices</option><option>BIO-01</option><option>BIO-02</option><option>BIO-03</option></select>
+              <button class="btn btn-ghost btn-sm" onclick="showToast('Exporting sync log…','info')">Export</button>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table class="reg-table">
+              <thead><tr><th>Time</th><th>Device</th><th>Location</th><th>Records</th><th>Matched</th><th>Errors</th><th>Status</th><th>Action</th></tr></thead>
+              <tbody id="syncLogTable"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Staff Enrollment Status -->
+        <div class="card card-flush" style="margin-top:1.5rem">
+          <div class="card-padding" style="display:flex;justify-content:space-between;align-items:center">
+            <div><div class="card-title">Staff Biometric Enrollment</div><div class="card-meta">86 total staff · 82 enrolled · 4 pending</div></div>
+            <button class="btn btn-ghost btn-sm" onclick="openModal('enrollModal')">+ Enroll</button>
+          </div>
+          <div class="table-wrap">
+            <table class="reg-table">
+              <thead><tr><th>Staff Member</th><th>Emp ID</th><th>Department</th><th>Fingerprint</th><th>Face ID</th><th>Card</th><th>Status</th><th>Action</th></tr></thead>
+              <tbody id="enrollTable"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sidebar Panel -->
+      <div>
+        <!-- Device sync chart -->
+        <div class="card" style="margin-bottom:1rem">
+          <div class="card-header"><div class="card-title">Sync Activity</div><div class="card-meta">Today by hour</div></div>
+          <div class="chart-wrap" style="height:160px"><canvas id="syncChart"></canvas></div>
+        </div>
+
+        <!-- Enrollment Progress -->
+        <div class="card" style="margin-bottom:1rem">
+          <div class="card-header"><div class="card-title">Enrollment by Department</div></div>
+          <div style="padding:0 1rem 1rem">
+            <div class="enroll-prog" id="enrollProg"></div>
+          </div>
+        </div>
+
+        <!-- Attendance Policy -->
+        <div class="card" style="margin-bottom:1rem">
+          <div class="card-header">
+            <div class="card-title">Attendance Policy Settings</div>
+            <button class="btn btn-ghost btn-sm" onclick="savePolicy()">Save</button>
+          </div>
+          <div style="padding:0 1rem 1rem">
+            <div class="policy-row">
+              <div><div class="policy-label">Auto-mark Attendance</div><div class="policy-sub">Mark present on biometric punch-in</div></div>
+              <div class="toggle-switch on" id="tog1" onclick="toggleSwitch('tog1')"></div>
+            </div>
+            <div class="policy-row">
+              <div><div class="policy-label">Late Threshold</div><div class="policy-sub">After check-in time → mark as Late</div></div>
+              <select class="filter-select" style="font-size:0.75rem;padding:4px 8px"><option>07:55 AM</option><option>08:00 AM</option><option>08:10 AM</option><option>08:15 AM</option></select>
+            </div>
+            <div class="policy-row">
+              <div><div class="policy-label">Early Departure Threshold</div><div class="policy-sub">Leaving before end → record ED</div></div>
+              <select class="filter-select" style="font-size:0.75px;font-size:0.75rem;padding:4px 8px"><option>02:30 PM</option><option>02:40 PM</option><option>02:50 PM</option></select>
+            </div>
+            <div class="policy-row">
+              <div><div class="policy-label">Dual Verification</div><div class="policy-sub">Require both fingerprint + PIN</div></div>
+              <div class="toggle-switch" id="tog2" onclick="toggleSwitch('tog2')"></div>
+            </div>
+            <div class="policy-row">
+              <div><div class="policy-label">Alert on Sync Failure</div><div class="policy-sub">Notify admin if device goes offline</div></div>
+              <div class="toggle-switch on" id="tog3" onclick="toggleSwitch('tog3')"></div>
+            </div>
+            <div class="policy-row">
+              <div><div class="policy-label">SMS on Absent Detection</div><div class="policy-sub">Send SMS to parent if absent by 8:30 AM</div></div>
+              <div class="toggle-switch on" id="tog4" onclick="toggleSwitch('tog4')"></div>
+            </div>
+            <div class="policy-row">
+              <div><div class="policy-label">Tolerance Window</div><div class="policy-sub">Duplicate punch tolerance (minutes)</div></div>
+              <select class="filter-select" style="font-size:0.75rem;padding:4px 8px"><option>5 min</option><option>10 min</option><option>15 min</option></select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Device Health -->
+        <div class="card">
+          <div class="card-header"><div class="card-title">Device Health Summary</div></div>
+          <div style="padding:0 1rem 1rem" id="deviceHealth"></div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- Add Device Modal -->
+<div class="modal-backdrop" id="addDeviceModal">
+  <div class="modal" style="max-width:520px">
+    <div class="modal-header"><div class="modal-title">Add Biometric Device</div><button class="modal-close" onclick="closeModal('addDeviceModal')"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
+    <div class="modal-body">
+      <div class="alert alert-info" style="font-size:0.8rem;margin-bottom:1rem"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>Ensure the device is on the same network and TCP/IP communication is enabled.</div>
+      <div class="form-grid">
+        <div class="form-group"><label class="form-label">Device Name <span class="req">*</span></label><input class="form-input" placeholder="e.g. BIO-05 Main Block"></div>
+        <div class="form-group"><label class="form-label">Device Model</label><select class="form-select"><option>ZKTeco F22</option><option>ZKTeco K40</option><option>Suprema BioEntry Plus</option><option>Anviz EP300</option><option>Hikvision DS-K1T804</option></select></div>
+        <div class="form-group"><label class="form-label">IP Address <span class="req">*</span></label><input class="form-input" placeholder="192.168.1.XXX" style="font-family:'IBM Plex Mono',monospace"></div>
+        <div class="form-group"><label class="form-label">Port</label><input class="form-input" value="4370" style="font-family:'IBM Plex Mono',monospace"></div>
+        <div class="form-group"><label class="form-label">Location <span class="req">*</span></label><select class="form-select"><option>Main Entrance</option><option>Staff Room</option><option>Secondary Block</option><option>Admin Block</option><option>Library</option></select></div>
+        <div class="form-group"><label class="form-label">Device Type</label><select class="form-select"><option>Fingerprint + Face</option><option>Fingerprint Only</option><option>Face Recognition</option><option>Card Reader</option></select></div>
+        <div class="form-group form-full"><label class="form-label">Description</label><textarea class="form-textarea" placeholder="Device location and purpose…" rows="2"></textarea></div>
+      </div>
+      <button class="btn btn-ghost" style="margin-top:0.5rem;width:100%;justify-content:center" onclick="testConnection()">🔗 Test Connection</button>
+    </div>
+    <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal('addDeviceModal')">Cancel</button><button class="btn btn-primary" onclick="addDevice()">Register Device</button></div>
+  </div>
+</div>
+
+<!-- Enroll Staff Modal -->
+<div class="modal-backdrop" id="enrollModal">
+  <div class="modal" style="max-width:460px">
+    <div class="modal-header"><div class="modal-title">Staff Biometric Enrollment</div><button class="modal-close" onclick="closeModal('enrollModal')"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
+    <div class="modal-body">
+      <div class="form-group"><label class="form-label">Select Staff Member <span class="req">*</span></label><select class="form-select"><option value="">— Select Staff —</option><option>Mrs. Sunita Sharma (EMP-001)</option><option>Mr. Rajesh Kumar (EMP-002)</option><option>Mr. Srinivas G. (EMP-008) — Not Enrolled</option><option>Mr. Rajan M. (EMP-020) — Not Enrolled</option></select></div>
+      <div class="form-group"><label class="form-label">Device <span class="req">*</span></label><select class="form-select"><option>BIO-01 — Main Entrance</option><option>BIO-02 — Staff Room</option><option>BIO-03 — Admin Block</option></select></div>
+      <div class="form-group"><label class="form-label">Enrollment Type</label>
+        <div style="display:flex;gap:0.75rem;flex-wrap:wrap;margin-top:0.35rem">
+          <label style="display:flex;align-items:center;gap:0.4rem;font-size:0.82rem;cursor:pointer"><input type="checkbox" checked> Fingerprint</label>
+          <label style="display:flex;align-items:center;gap:0.4rem;font-size:0.82rem;cursor:pointer"><input type="checkbox" checked> Face ID</label>
+          <label style="display:flex;align-items:center;gap:0.4rem;font-size:0.82rem;cursor:pointer"><input type="checkbox"> RFID Card</label>
+        </div>
+      </div>
+      <div class="alert alert-info" style="font-size:0.78rem;margin-top:0.75rem"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>Staff member must be physically present at the selected device to complete enrollment.</div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal('enrollModal')">Cancel</button><button class="btn btn-primary" onclick="startEnrollment()">Start Enrollment</button></div>
+  </div>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+<script src="../../js/app.js"></script>
+<script src="../../js/sidebar.js"></script>
+<script>
+renderSidebar('attendance','biometric','../../');
+
+var DEVICES = [
+  {id:'BIO-01',name:'BIO-01 — Main Entrance',model:'ZKTeco F22',ip:'192.168.1.101',port:'4370',location:'Main Entrance Gate',status:'online',lastSync:'09:52 AM',records:234,enrolled:86,battery:'N/A',firmware:'6.60',uptime:'99.2%',temp:'Normal',storage:'42%'},
+  {id:'BIO-02',name:'BIO-02 — Staff Room',model:'ZKTeco K40',ip:'192.168.1.102',port:'4370',location:'Staff Room Block B',status:'online',lastSync:'09:50 AM',records:82,enrolled:82,battery:'N/A',firmware:'6.80',uptime:'98.7%',temp:'Normal',storage:'31%'},
+  {id:'BIO-03',name:'BIO-03 — Admin Block',model:'Suprema BioEntry',ip:'192.168.1.103',port:'51211',location:'Administration Block',status:'warning',lastSync:'08:30 AM',records:0,enrolled:14,battery:'N/A',firmware:'2.4.1',uptime:'87.3%',temp:'High',storage:'78%'},
+  {id:'BIO-04',name:'BIO-04 — Secondary Block',model:'Anviz EP300',ip:'192.168.1.104',port:'5005',location:'Secondary Building Entry',status:'offline',lastSync:'Yesterday 4:20 PM',records:0,enrolled:72,battery:'N/A',firmware:'3.2.0',uptime:'—',temp:'—',storage:'—'},
+  {id:'BIO-05',name:'BIO-05 — Library',model:'Hikvision DS-K1T804',ip:'192.168.1.105',port:'8000',location:'Library Entry',status:'online',lastSync:'09:48 AM',records:18,enrolled:45,battery:'N/A',firmware:'1.2.4',uptime:'97.8%',temp:'Normal',storage:'22%'},
+];
+
+var SYNC_LOGS = [
+  {time:'09:52 AM',device:'BIO-01',location:'Main Entrance',records:234,matched:228,errors:6,status:'Success'},
+  {time:'09:50 AM',device:'BIO-02',location:'Staff Room',records:82,matched:82,errors:0,status:'Success'},
+  {time:'09:48 AM',device:'BIO-05',location:'Library',records:18,matched:17,errors:1,status:'Success'},
+  {time:'09:30 AM',device:'BIO-03',location:'Admin Block',records:0,matched:0,errors:1,status:'Failed'},
+  {time:'08:30 AM',device:'BIO-03',location:'Admin Block',records:12,matched:11,errors:1,status:'Partial'},
+  {time:'08:10 AM',device:'BIO-01',location:'Main Entrance',records:186,matched:182,errors:4,status:'Success'},
+  {time:'07:55 AM',device:'BIO-02',location:'Staff Room',records:64,matched:64,errors:0,status:'Success'},
+  {time:'07:45 AM',device:'BIO-01',location:'Main Entrance',records:142,matched:139,errors:3,status:'Success'},
+];
+
+var ENROLL_STAFF = [
+  {name:'Mrs. Sunita Sharma',empId:'EMP-001',dept:'Mathematics',fp:true,face:true,card:false},
+  {name:'Mr. Rajesh Kumar',empId:'EMP-002',dept:'Physics',fp:true,face:true,card:true},
+  {name:'Mrs. Priya Nair',empId:'EMP-003',dept:'Chemistry',fp:true,face:false,card:false},
+  {name:'Mr. Arun Menon',empId:'EMP-004',dept:'English',fp:true,face:true,card:false},
+  {name:'Mrs. Kavitha S.',empId:'EMP-005',dept:'Biology',fp:true,face:true,card:false},
+  {name:'Mr. Srinivas G.',empId:'EMP-008',dept:'CS',fp:false,face:false,card:false},
+  {name:'Mr. Rajan M.',empId:'EMP-020',dept:'SST',fp:false,face:false,card:false},
+  {name:'Mrs. Rekha S.',empId:'EMP-027',dept:'Admin',fp:true,face:true,card:true},
+];
+
+var ENROLL_DEPT = [
+  {dept:'Teaching Staff',enrolled:68,total:72,color:'#16A085'},
+  {dept:'Non-Teaching',enrolled:14,total:14,color:'#2980B9'},
+  {dept:'Administration',enrolled:8,total:10,color:'#8E44AD'},
+  {dept:'Security',enrolled:4,total:4,color:'#F39C12'},
+];
+
+function renderDevices() {
+  var statusIcon = {online:'status-online',offline:'status-offline',warning:'status-warning'};
+  var statusLabel = {online:'Online',offline:'Offline',warning:'Low Storage / Warning'};
+  var html = DEVICES.map(function(d) {
+    return '<div class="device-card '+d.status+'">'
+      +'<div class="device-icon"><svg viewBox="0 0 24 24" stroke="var(--primary)"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18" stroke-width="3"/></svg></div>'
+      +'<div class="device-body">'
+      +'<div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:2px">'
+      +'<div class="device-name">'+d.name+'</div>'
+      +'<span class="device-status-dot '+statusIcon[d.status]+'"></span>'
+      +'<span style="font-size:0.7rem;font-weight:600;color:'+(d.status==='online'?'var(--success)':d.status==='offline'?'var(--accent)':'var(--warning)')+'">'+statusLabel[d.status]+'</span>'
+      +'</div>'
+      +'<div class="device-sub">'+d.model+' · '+d.ip+':'+d.port+' · '+d.location+'</div>'
+      +'<div class="device-stats">'
+      +'<div class="ds-item"><div class="ds-label">Last Sync</div><div class="ds-value">'+d.lastSync+'</div></div>'
+      +'<div class="ds-item"><div class="ds-label">Today Records</div><div class="ds-value">'+d.records+'</div></div>'
+      +'<div class="ds-item"><div class="ds-label">Enrolled</div><div class="ds-value">'+d.enrolled+'</div></div>'
+      +'<div class="ds-item"><div class="ds-label">Storage</div><div class="ds-value">'+d.storage+'</div></div>'
+      +'<div class="ds-item"><div class="ds-label">Uptime</div><div class="ds-value">'+d.uptime+'</div></div>'
+      +'</div>'
+      +'<div class="device-actions">'
+      +(d.status!=='offline'?'<button class="btn btn-ghost btn-sm" onclick="syncDevice(\''+d.id+'\')"><svg viewBox="0 0 24 24" style="width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2"><path d="M1 4v6h6M23 20v-6h-6"/><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/></svg> Sync</button>':'')
+      +'<button class="btn btn-ghost btn-sm" onclick="pingDevice(\''+d.id+'\')">Ping</button>'
+      +'<button class="btn btn-ghost btn-sm" onclick="showToast(\'Opening settings for '+d.id+'…\',\'info\')">Settings</button>'
+      +(d.status==='offline'?'<button class="btn btn-ghost btn-sm" style="color:var(--accent)" onclick="restartDevice(\''+d.id+'\')">Restart</button>':'')
+      +'</div>'
+      +'</div></div>';
+  }).join('');
+  document.getElementById('deviceList').innerHTML = html;
+}
+
+function renderSyncLog() {
+  var html = SYNC_LOGS.map(function(r) {
+    var sClass = r.status==='Success'?'badge-green':r.status==='Partial'?'badge-yellow':'badge-red';
+    return '<tr>'
+      +'<td style="font-family:\'IBM Plex Mono\',monospace;font-size:0.75rem">'+r.time+'</td>'
+      +'<td><span class="badge badge-blue">'+r.device+'</span></td>'
+      +'<td style="font-size:0.78rem;color:var(--text2)">'+r.location+'</td>'
+      +'<td style="font-family:\'IBM Plex Mono\',monospace;font-size:0.78rem">'+r.records+'</td>'
+      +'<td style="font-family:\'IBM Plex Mono\',monospace;font-size:0.78rem;color:var(--success)">'+r.matched+'</td>'
+      +'<td style="font-family:\'IBM Plex Mono\',monospace;font-size:0.78rem;color:'+(r.errors>0?'var(--accent)':'var(--text3)')+'">'+r.errors+'</td>'
+      +'<td><span class="badge '+sClass+'">'+r.status+'</span></td>'
+      +'<td><button class="btn btn-ghost btn-sm" onclick="showToast(\'Viewing sync details…\',\'info\')" style="font-size:0.68rem;padding:3px 8px">Details</button></td>'
+      +'</tr>';
+  }).join('');
+  document.getElementById('syncLogTable').innerHTML = html;
+}
+
+function renderEnrollTable() {
+  var html = ENROLL_STAFF.map(function(s) {
+    var enrolled = s.fp||s.face||s.card;
+    var icon = function(v){ return '<span style="color:'+(v?'var(--success)':'var(--accent)');return '</span>'; };
+    var tick = function(v){ return v?'<span style="color:var(--success);font-size:1rem">✓</span>':'<span style="color:var(--accent);font-size:1rem">✗</span>'; };
+    return '<tr>'
+      +'<td><strong style="font-size:0.82rem">'+s.name+'</strong></td>'
+      +'<td style="font-family:\'IBM Plex Mono\',monospace;font-size:0.75rem">'+s.empId+'</td>'
+      +'<td style="font-size:0.78rem;color:var(--text2)">'+s.dept+'</td>'
+      +'<td style="text-align:center">'+tick(s.fp)+'</td>'
+      +'<td style="text-align:center">'+tick(s.face)+'</td>'
+      +'<td style="text-align:center">'+tick(s.card)+'</td>'
+      +'<td><span class="badge '+(enrolled?'badge-green':'badge-red')+'">'+(enrolled?'Enrolled':'Not Enrolled')+'</span></td>'
+      +'<td><button class="btn btn-ghost btn-sm" style="font-size:0.68rem;padding:3px 8px" onclick="openModal(\'enrollModal\')">'+(!enrolled?'Enroll':'Re-enroll')+'</button></td>'
+      +'</tr>';
+  }).join('');
+  document.getElementById('enrollTable').innerHTML = html;
+}
+
+function renderEnrollProgress() {
+  var html = ENROLL_DEPT.map(function(d){
+    var pct = Math.round(d.enrolled/d.total*100);
+    return '<div class="ep-row"><div class="ep-label">'+d.dept+'</div>'
+      +'<div class="ep-bar"><div class="ep-fill" style="width:'+pct+'%;background:'+d.color+'"></div></div>'
+      +'<div class="ep-pct" style="color:'+d.color+'">'+pct+'%</div>'
+      +'</div>';
+  }).join('');
+  document.getElementById('enrollProg').innerHTML = html;
+}
+
+function renderDeviceHealth() {
+  var items = DEVICES.map(function(d){
+    var sClass = d.status==='online'?'badge-green':d.status==='offline'?'badge-red':'badge-yellow';
+    return '<div style="display:flex;justify-content:space-between;align-items:center;padding:0.4rem 0;border-bottom:1px solid var(--border);font-size:0.78rem">'
+      +'<span>'+d.id+'</span>'
+      +'<div style="display:flex;gap:0.4rem;align-items:center">'
+      +(d.status!=='offline'?'<span style="color:var(--text2);font-size:0.68rem;font-family:\'IBM Plex Mono\',monospace">'+d.storage+' storage</span>':'')
+      +'<span class="badge '+sClass+'">'+d.status+'</span>'
+      +'</div></div>';
+  }).join('');
+  document.getElementById('deviceHealth').innerHTML = '<div style="padding:0 1rem 1rem">'+items+'</div>';
+}
+
+function toggleSwitch(id) {
+  var el = document.getElementById(id);
+  el.classList.toggle('on');
+}
+function syncDevice(id) { showToast('Syncing '+id+'… fetching attendance records','info'); }
+function pingDevice(id) { showToast(id+' responded in 12ms — device reachable','success'); }
+function restartDevice(id) { showToast('Restart command sent to '+id,'warning'); }
+function syncAllDevices() { showToast('Syncing all 3 online devices…','info'); }
+function testConnection() { showToast('Connection test successful — Device responded in 8ms','success'); }
+function addDevice() { closeModal('addDeviceModal'); showToast('Device registered and connection established','success'); }
+function startEnrollment() { closeModal('enrollModal'); showToast('Enrollment session started. Staff must place finger on device BIO-01','info'); }
+function savePolicy() { showToast('Attendance policy settings saved','success'); }
+
+/* ── CHART ── */
+var tc = document.documentElement.getAttribute('data-theme')==='dark'?'#94A3B8':'#6C757D';
+var gc = document.documentElement.getAttribute('data-theme')==='dark'?'rgba(255,255,255,0.06)':'rgba(0,0,0,0.06)';
+new Chart(document.getElementById('syncChart'),{type:'bar',data:{labels:['6AM','7AM','8AM','9AM','10AM','11AM','12PM','1PM','2PM'],datasets:[{label:'Records Synced',data:[0,142,186,234,12,8,4,0,0],backgroundColor:'rgba(10,61,98,0.75)',borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{font:{size:9},color:tc}},y:{grid:{color:gc},ticks:{font:{size:9},color:tc}}}}});
+
+function openModal(id){ var m=document.getElementById(id);if(m)m.classList.add('open'); }
+function closeModal(id){ var m=document.getElementById(id);if(m)m.classList.remove('open'); }
+document.addEventListener('click',function(e){if(e.target.classList.contains('modal-backdrop'))e.target.classList.remove('open');});
+function showToast(msg,type){var icons={success:'<path d="M9 11l3 3L22 4"/>',error:'<path d="M18 6 6 18M6 6l12 12"/>',info:'<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>',warning:'<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>'};var c=document.getElementById('toastContainer');var t=document.createElement('div');t.className='toast toast-'+type;t.innerHTML='<div class="toast-icon"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">'+icons[type]+'</svg></div><div class="toast-body"><div class="toast-title">'+(type.charAt(0).toUpperCase()+type.slice(1))+'</div><div class="toast-msg">'+msg+'</div></div>';c.appendChild(t);setTimeout(function(){t.classList.add('show');},10);setTimeout(function(){t.classList.remove('show');setTimeout(function(){t.remove();},300);},3500);}
+
+renderDevices();
+renderSyncLog();
+renderEnrollTable();
+renderEnrollProgress();
+renderDeviceHealth();
+</script>
+</body>
+</html>

@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Subject and Syllabus Mapping - EduCore SMS</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;900&family=IBM+Plex+Mono:wght@400;500;600&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../css/main.css">
+  <link rel="stylesheet" href="../../css/components.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+</head>
+<body>
+<div class="mobile-overlay" id="mobileOverlay" onclick="closeMobileSidebar()"></div>
+<header class="topbar">
+  <div class="logo-area">
+    <div class="logo-mark"><svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div>
+    <span class="logo-text">EduCore SMS</span>
+  </div>
+  <button class="sidebar-toggle" onclick="toggleSidebar()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round">
+      <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+    </svg>
+  </button>
+  <div class="tb-search">
+    <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+    <input type="text" placeholder="Search subjects..." id="globalSearch" oninput="searchTableGlobal()">
+  </div>
+  <div class="tb-right">
+    <div class="tb-date" id="tb-date"></div>
+    <button class="dark-toggle" onclick="toggleDarkMode()">
+      <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/></svg>
+    </button>
+    <div class="dropdown-wrapper">
+      <div class="tb-btn" onclick="toggleNotif(event)" id="notifBtn">
+        <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        <div class="notif-dot"></div>
+      </div>
+      <div class="notif-dropdown" id="notifDropdown">
+        <div class="notif-header"><h4>Notifications</h4><span onclick="markAllRead()">Mark all read</span></div>
+        <div class="notif-item">
+          <div class="notif-icon" style="background:var(--warning)"><svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg></div>
+          <div class="notif-text"><p><strong>Fee dues</strong> - 48 students have outstanding dues</p><span>1 hour ago</span></div>
+          <div class="notif-unread"></div>
+        </div>
+        <div class="notif-item">
+          <div class="notif-icon" style="background:var(--info)"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>
+          <div class="notif-text"><p><strong>New admission</strong> - 5 new applications received</p><span>3 hours ago</span></div>
+          <div class="notif-unread"></div>
+        </div>
+        <div class="notif-item">
+          <div class="notif-icon" style="background:var(--success)"><svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/></svg></div>
+          <div class="notif-text"><p><strong>Attendance marked</strong> - All classes updated</p><span>Today 9:00 AM</span></div>
+        </div>
+        <div class="notif-footer"><a href="../../modules/communication/noticeboard.html">View all</a></div>
+      </div>
+    </div>
+    <div class="dropdown-wrapper">
+      <div class="tb-user" onclick="toggleUserDropdown(event)" id="userBtn">
+        <div class="avatar">SA</div>
+        <div class="tb-user-info">
+          <div class="tb-user-name">Super Admin</div>
+          <div class="tb-user-role">Administrator</div>
+        </div>
+      </div>
+      <div class="user-dropdown" id="userDropdown">
+        <div class="user-dd-header"><div class="user-dd-name">Super Admin</div><div class="user-dd-role">Administrator</div></div>
+        <a class="user-dd-item" href="../../modules/settings/school-profile.html">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v2M12 20v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M2 12h2M20 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+          Settings
+        </a>
+        <a class="user-dd-item danger" href="../../index.html">
+          <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+          Logout
+        </a>
+      </div>
+    </div>
+  </div>
+</header>
+<div class="layout" id="layout">
+  <nav class="sidebar" id="sidebar"><div id="sidebar-nav"></div></nav>
+  <main class="main">
+    <div class="breadcrumb">
+      <a href="../../index.html">Dashboard</a>
+      <span class="breadcrumb-sep">&#8250;</span>
+      <span>Subjects Mapping</span>
+    </div>
+    <div class="page-header">
+      <div>
+        <h1>Subjects Mapping</h1>
+        <div class="page-subtitle">Configure syllabus subjects, codes, and map to classes</div>
+      </div>
+      <div class="ph-actions">
+        <button class="btn btn-ghost" onclick="exportData()">
+          <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Export
+        </button>
+        <button class="btn btn-primary" onclick="openAddModal()">
+          <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Add New Subject
+        </button>
+      </div>
+    </div>
+
+    <!-- Stats Grid -->
+    <div class="stats-grid">
+      <div class='stat-card' style='--c1:#0A3D62;--c2:#1a5276'>
+        <div class='stat-icon'>
+          <svg viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2'>
+            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+          </svg>
+        </div>
+        <div class='stat-body'>
+          <div class='stat-label'>Total Subjects</div>
+          <div class='stat-value' id="statTotal">0</div>
+        </div>
+      </div>
+      <div class='stat-card' style='--c1:#16A085;--c2:#0e6655'>
+        <div class='stat-icon'>
+          <svg viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2'>
+            <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+            <line x1="8" y1="21" x2="16" y2="21"/>
+            <line x1="12" y1="17" x2="12" y2="21"/>
+          </svg>
+        </div>
+        <div class='stat-body'>
+          <div class='stat-label'>Theory Only</div>
+          <div class='stat-value' id="statTheory">0</div>
+        </div>
+      </div>
+      <div class='stat-card' style='--c1:#F39C12;--c2:#d68910'>
+        <div class='stat-icon'>
+          <svg viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2'>
+            <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+          </svg>
+        </div>
+        <div class='stat-body'>
+          <div class='stat-label'>Practical/Lab</div>
+          <div class='stat-value' id="statPractical">0</div>
+        </div>
+      </div>
+      <div class='stat-card' style='--c1:#8E44AD;--c2:#6c3483'>
+        <div class='stat-icon'>
+          <svg viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2'>
+            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+            <line x1="9" y1="9" x2="15" y2="15"/>
+            <line x1="15" y1="9" x2="9" y2="15"/>
+          </svg>
+        </div>
+        <div class='stat-body'>
+          <div class='stat-label'>Inactive Subjects</div>
+          <div class='stat-value' id="statInactive">0</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Filters Section -->
+    <div class="filter-bar">
+      <div class="search-box">
+        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input type="text" id="searchInput" placeholder="Search by name or code..." oninput="filterData()">
+      </div>
+      <select class="filter-select" id="typeFilter" onchange="filterData()">
+        <option value="All">All Types</option>
+        <option value="Theory">Theory</option>
+        <option value="Practical">Practical</option>
+        <option value="Theory + Practical">Theory + Practical</option>
+      </select>
+      <select class="filter-select" id="statusFilter" onchange="filterData()">
+        <option value="All">All Statuses</option>
+        <option value="Active">Active</option>
+        <option value="Inactive">Inactive</option>
+      </select>
+      <div class="filter-spacer"></div>
+      <button class="btn btn-ghost btn-sm" onclick="clearFilters()">Clear</button>
+    </div>
+
+    <!-- Data Table -->
+    <div class="table-card">
+      <div class="table-wrap">
+        <table id="dataTable">
+          <thead>
+            <tr>
+              <th><input type="checkbox" class="table-checkbox" id="chkAll" onclick="toggleAll(this)"></th>
+              <th>Subject Code</th>
+              <th>Subject Name</th>
+              <th>Subject Type</th>
+              <th>Class Mapping</th>
+              <th>Total Marks</th>
+              <th>Passing Marks</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody">
+            <!-- Dynamically populated -->
+          </tbody>
+        </table>
+      </div>
+      <div class="table-footer">
+        <span class="table-info" id="tableInfo">Showing 0 records</span>
+      </div>
+    </div>
+
+    <!-- Add/Edit Modal -->
+    <div class="modal-backdrop" id="subjectModal">
+      <div class="modal">
+        <div class="modal-header">
+          <div class="modal-title" id="modalTitle">Add Subject</div>
+          <button class="modal-close" onclick="closeModal('subjectModal')"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+        </div>
+        <div class="modal-body">
+          <input type="hidden" id="editSubjectId">
+          <div class="form-grid">
+            <div class="form-group">
+              <label class="form-label">Subject Name <span class="req">*</span></label>
+              <input type="text" class="form-input" id="subjectName" placeholder="e.g. Mathematics" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Subject Code <span class="req">*</span></label>
+              <input type="text" class="form-input" id="subjectCode" placeholder="e.g. MATH-101" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Subject Type</label>
+              <select class="form-select" id="subjectType">
+                <option value="Theory">Theory</option>
+                <option value="Practical">Practical</option>
+                <option value="Theory + Practical">Theory + Practical</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Class Mapping <span class="req">*</span></label>
+              <input type="text" class="form-input" id="classMap" placeholder="e.g. Class 10" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Total Marks <span class="req">*</span></label>
+              <input type="number" class="form-input" id="totalMarks" min="10" max="200" value="100" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Passing Marks <span class="req">*</span></label>
+              <input type="number" class="form-input" id="passMarks" min="5" max="100" value="33" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Status</label>
+              <select class="form-select" id="subjectStatus">
+                <option value="Active">Active</option>
+                <option value="Inactive">Inactive</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-ghost" onclick="closeModal('subjectModal')">Cancel</button>
+          <button class="btn btn-primary" onclick="submitSubject()">Save Subject</button>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<script src="../../js/app.js"></script>
+<script src="../../js/sidebar.js"></script>
+<script>
+renderSidebar('classes', 'subjects-list', '../../');
+
+var SUBJECTS_KEY = 'educore-subjects';
+var defaultSubjects = [
+  {id: "SUB-1001", name: "Mathematics", code: "MATH-101", type: "Theory", classMap: "Class 10", totalMarks: 100, passMarks: 33, status: "Active"},
+  {id: "SUB-1002", name: "Physics", code: "PHYS-101", type: "Theory + Practical", classMap: "Class 12", totalMarks: 100, passMarks: 33, status: "Active"},
+  {id: "SUB-1003", name: "Chemistry Lab", code: "CHEM-102L", type: "Practical", classMap: "Class 12", totalMarks: 50, passMarks: 18, status: "Active"},
+  {id: "SUB-1004", name: "English Literature", code: "ENGL-101", type: "Theory", classMap: "Class 8", totalMarks: 100, passMarks: 33, status: "Active"},
+  {id: "SUB-1005", name: "Social Science", code: "SOCS-101", type: "Theory", classMap: "Class 10", totalMarks: 100, passMarks: 33, status: "Inactive"}
+];
+
+var subjects = [];
+
+function initSubjects() {
+  var data = localStorage.getItem(SUBJECTS_KEY);
+  if (!data) {
+    subjects = defaultSubjects;
+    localStorage.setItem(SUBJECTS_KEY, JSON.stringify(subjects));
+  } else {
+    subjects = JSON.parse(data);
+  }
+  renderTable();
+}
+
+function showToast(msg, type) {
+  type = type || 'success';
+  var icons = { 
+    success:'<path d="M9 11l3 3L22 4"/>', 
+    error:'<path d="M18 6 6 18M6 6l12 12"/>', 
+    info:'<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>', 
+    warning:'<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>' 
+  };
+  var c = document.getElementById('toastContainer');
+  var t = document.createElement('div');
+  t.className = 'toast toast-' + type;
+  t.innerHTML = '<div class="toast-icon"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">'+icons[type]+'</svg></div><div class="toast-body"><div class="toast-title">'+(type.charAt(0).toUpperCase()+type.slice(1))+'</div><div class="toast-msg">'+msg+'</div></div>';
+  c.appendChild(t);
+  setTimeout(function(){t.classList.add('show');},10);
+  setTimeout(function(){t.classList.remove('show');setTimeout(function(){t.remove();},300);},3500);
+}
+
+function renderTable(dataList) {
+  var list = dataList || subjects;
+  var tb = document.getElementById('tableBody');
+  tb.innerHTML = '';
+  
+  list.forEach(function(s) {
+    var badgeClass = s.status === 'Active' ? 'badge-green' : 'badge-red';
+    var typeBadge = 'badge-blue';
+    if(s.type === 'Practical') typeBadge = 'badge-yellow';
+    else if(s.type === 'Theory + Practical') typeBadge = 'badge-purple';
+
+    var tr = document.createElement('tr');
+    tr.innerHTML = '<td><input type="checkbox" class="table-checkbox row-chk" data-id="'+s.code+'"></td>' +
+      '<td>' + s.code + '</td>' +
+      '<td><strong>' + s.name + '</strong></td>' +
+      '<td><span class="badge ' + typeBadge + '">' + s.type + '</span></td>' +
+      '<td>' + s.classMap + '</td>' +
+      '<td>' + s.totalMarks + '</td>' +
+      '<td>' + s.passMarks + '</td>' +
+      '<td><span class="badge ' + badgeClass + '">' + s.status + '</span></td>' +
+      '<td>' +
+        '<div class="row-actions">' +
+          '<button class="btn-icon" onclick="viewRow(\''+s.code+'\')" title="View"><svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>' +
+          '<button class="btn-icon" onclick="editRow(\''+s.code+'\')" title="Edit"><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>' +
+          '<button class="btn-icon" onclick="deleteRow(\''+s.code+'\')" title="Delete"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button>' +
+        '</div>' +
+      '</td>';
+    tb.appendChild(tr);
+  });
+  
+  document.getElementById('tableInfo').textContent = 'Showing ' + list.length + ' of ' + subjects.length + ' records';
+  updateStats();
+}
+
+function updateStats() {
+  var total = subjects.length;
+  var theory = subjects.filter(s => s.type === 'Theory').length;
+  var practical = subjects.filter(s => s.type === 'Practical' || s.type === 'Theory + Practical').length;
+  var inactive = subjects.filter(s => s.status === 'Inactive').length;
+  
+  document.getElementById('statTotal').textContent = total;
+  document.getElementById('statTheory').textContent = theory;
+  document.getElementById('statPractical').textContent = practical;
+  document.getElementById('statInactive').textContent = inactive;
+}
+
+function searchTableGlobal() {
+  var q = document.getElementById('globalSearch').value.toLowerCase();
+  var filtered = subjects.filter(function(s) {
+    return s.name.toLowerCase().includes(q) || s.code.toLowerCase().includes(q) || s.classMap.toLowerCase().includes(q);
+  });
+  renderTable(filtered);
+}
+
+function filterData() {
+  var q = document.getElementById('searchInput').value.toLowerCase();
+  var type = document.getElementById('typeFilter').value;
+  var status = document.getElementById('statusFilter').value;
+  
+  var filtered = subjects.filter(function(s) {
+    var matchSearch = s.name.toLowerCase().includes(q) || s.code.toLowerCase().includes(q);
+    var matchType = (type === 'All' || s.type === type);
+    var matchStatus = (status === 'All' || s.status === status);
+    return matchSearch && matchType && matchStatus;
+  });
+  
+  renderTable(filtered);
+}
+
+function clearFilters() {
+  document.getElementById('searchInput').value = '';
+  document.getElementById('typeFilter').value = 'All';
+  document.getElementById('statusFilter').value = 'All';
+  document.getElementById('globalSearch').value = '';
+  renderTable();
+}
+
+function toggleAll(cb) {
+  document.querySelectorAll('.row-chk').forEach(function(c){c.checked = cb.checked;});
+}
+
+function openAddModal() {
+  document.getElementById('modalTitle').textContent = 'Add Subject';
+  document.getElementById('editSubjectId').value = '';
+  document.getElementById('subjectName').value = '';
+  document.getElementById('subjectCode').value = '';
+  document.getElementById('subjectType').value = 'Theory';
+  document.getElementById('classMap').value = '';
+  document.getElementById('totalMarks').value = '100';
+  document.getElementById('passMarks').value = '33';
+  document.getElementById('subjectStatus').value = 'Active';
+  openModal('subjectModal');
+}
+
+function editRow(code) {
+  var s = subjects.find(x => x.code === code);
+  if (!s) return;
+  
+  document.getElementById('modalTitle').textContent = 'Edit Subject: ' + s.name;
+  document.getElementById('editSubjectId').value = s.code; // use code as key
+  document.getElementById('subjectName').value = s.name;
+  document.getElementById('subjectCode').value = s.code;
+  document.getElementById('subjectType').value = s.type;
+  document.getElementById('classMap').value = s.classMap;
+  document.getElementById('totalMarks').value = s.totalMarks;
+  document.getElementById('passMarks').value = s.passMarks;
+  document.getElementById('subjectStatus').value = s.status;
+  
+  openModal('subjectModal');
+}
+
+function viewRow(code) {
+  var s = subjects.find(x => x.code === code);
+  if (!s) return;
+  alert('Subject Details:\n\nCode: ' + s.code + '\nName: ' + s.name + '\nType: ' + s.type + '\nClass Mapping: ' + s.classMap + '\nTotal Marks: ' + s.totalMarks + '\nPassing Marks: ' + s.passMarks + '\nStatus: ' + s.status);
+}
+
+function deleteRow(code) {
+  if (confirm('Are you sure you want to delete subject ' + code + '?')) {
+    subjects = subjects.filter(x => x.code !== code);
+    localStorage.setItem(SUBJECTS_KEY, JSON.stringify(subjects));
+    renderTable();
+    showToast('Subject ' + code + ' deleted successfully', 'error');
+  }
+}
+
+function submitSubject() {
+  var id = document.getElementById('editSubjectId').value;
+  var name = document.getElementById('subjectName').value.trim();
+  var code = document.getElementById('subjectCode').value.trim();
+  var type = document.getElementById('subjectType').value;
+  var classMap = document.getElementById('classMap').value.trim();
+  var totalMarks = parseInt(document.getElementById('totalMarks').value);
+  var passMarks = parseInt(document.getElementById('passMarks').value);
+  var status = document.getElementById('subjectStatus').value;
+  
+  if (!name || !code || !classMap || isNaN(totalMarks) || isNaN(passMarks)) {
+    showToast('Please fill all required fields', 'error');
+    return;
+  }
+  
+  if (id) {
+    // Edit Mode (using old code as key)
+    var index = subjects.findIndex(x => x.code === id);
+    if (index > -1) {
+      subjects[index].name = name;
+      subjects[index].code = code;
+      subjects[index].type = type;
+      subjects[index].classMap = classMap;
+      subjects[index].totalMarks = totalMarks;
+      subjects[index].passMarks = passMarks;
+      subjects[index].status = status;
+      showToast('Subject mapping updated successfully');
+    }
+  } else {
+    // Check duplication of code
+    if (subjects.some(x => x.code === code)) {
+      showToast('Subject code already exists', 'error');
+      return;
+    }
+    // Create Mode
+    subjects.push({
+      name: name,
+      code: code,
+      type: type,
+      classMap: classMap,
+      totalMarks: totalMarks,
+      passMarks: passMarks,
+      status: status
+    });
+    showToast('New subject mapping created');
+  }
+  
+  localStorage.setItem(SUBJECTS_KEY, JSON.stringify(subjects));
+  closeModal('subjectModal');
+  renderTable();
+}
+
+function exportData() {
+  showToast('Exporting subjects mapping to CSV...', 'info');
+  var csv = 'Subject Code,Subject Name,Subject Type,Class Mapping,Total Marks,Passing Marks,Status\n';
+  subjects.forEach(function(s){
+    csv += `"${s.code}","${s.name}","${s.type}","${s.classMap}","${s.totalMarks}","${s.passMarks}","${s.status}"\n`;
+  });
+  var blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  var link = document.createElement("a");
+  var url = URL.createObjectURL(blob);
+  link.setAttribute("href", url);
+  link.setAttribute("download", "subject_mappings.csv");
+  link.style.visibility = 'hidden';
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+  initSubjects();
+});
+</script>
+</body>
+</html>

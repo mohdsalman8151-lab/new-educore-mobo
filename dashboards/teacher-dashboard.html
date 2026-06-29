@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Teacher Dashboard — EduCore SMS</title>
+  <link rel="stylesheet" href="../css/main.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+</head>
+<body>
+<div class="mobile-overlay" id="mobileOverlay" onclick="closeMobileSidebar()"></div>
+<header class="topbar">
+  <div class="logo-area"><div class="logo-mark"><svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div><span class="logo-text">EduCore SMS</span></div>
+  <button class="sidebar-toggle" onclick="toggleSidebar()"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
+  <div class="tb-search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg><input type="text" placeholder="Search classes, students…"></div>
+  <div class="tb-right">
+    <div class="tb-date" id="tb-date"></div>
+    <button class="dark-toggle" onclick="toggleDarkMode()"><svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg><svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/></svg></button>
+    <div class="dropdown-wrapper">
+      <div class="tb-btn" onclick="toggleNotif(event)" id="notifBtn"><svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg><div class="notif-dot"></div></div>
+      <div class="notif-dropdown" id="notifDropdown">
+        <div class="notif-header"><h4>Notifications</h4><span onclick="markAllRead()">Mark all read</span></div>
+        <div class="notif-item"><div class="notif-icon" style="background:var(--warning)"><svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg></div><div class="notif-text"><p><strong>Exam papers</strong> — Submit by Friday 5 PM</p><span>2 hours ago</span></div><div class="notif-unread"></div></div>
+        <div class="notif-item"><div class="notif-icon" style="background:var(--info)"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div><div class="notif-text"><p><strong>New message</strong> — From Principal Sharma</p><span>4 hours ago</span></div><div class="notif-unread"></div></div>
+        <div class="notif-footer"><a href="../communication/notices.html">View all →</a></div>
+      </div>
+    </div>
+    <div class="dropdown-wrapper">
+      <div class="tb-user" onclick="toggleUserDropdown(event)" id="userBtn">
+        <div class="avatar" style="background:linear-gradient(135deg,#2980B9,#1a5276)">RJ</div>
+        <div class="tb-user-info"><div class="tb-user-name">Mr. Rajan Kumar</div><div class="tb-user-role">Mathematics Teacher</div></div>
+      </div>
+      <div class="user-dropdown" id="userDropdown">
+        <div class="user-dd-header"><div class="user-dd-name">Mr. Rajan Kumar</div><div class="user-dd-role">Mathematics · Grade IX–XII</div></div>
+        <a class="user-dd-item" href="../settings/index.html"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/></svg>Profile Settings</a>
+        <a class="user-dd-item danger" href="#"><svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>Logout</a>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="layout" id="layout">
+  <nav class="sidebar" id="sidebar"><div id="sidebar-nav"></div></nav>
+  <main class="main">
+    <div class="page-header">
+      <div><h1>Teacher Dashboard</h1><div class="page-subtitle">Mr. Rajan Kumar · Mathematics · Academic Year 2025–26</div></div>
+      <div class="ph-actions">
+        <button class="btn" onclick="location.href='../teachers/attendance.html'"><svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/></svg>Mark Attendance</button>
+        <button class="btn btn-primary" onclick="location.href='../academic/exams.html'"><svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>New Exam</button>
+      </div>
+    </div>
+
+    <!-- Profile Strip -->
+    <div class="card" style="margin-bottom:1.5rem;padding:1.25rem 1.6rem">
+      <div style="display:flex;align-items:center;gap:1.5rem;flex-wrap:wrap">
+        <div class="avatar" style="width:64px;height:64px;font-size:1.2rem;background:linear-gradient(135deg,#2980B9,#1a5276);border-radius:16px">RK</div>
+        <div style="flex:1">
+          <div style="font-family:'Playfair Display',serif;font-size:1.4rem;font-weight:700;color:var(--text)">Mr. Rajan Kumar</div>
+          <div style="display:flex;gap:.75rem;flex-wrap:wrap;margin-top:.35rem">
+            <span class="badge badge-blue">Mathematics</span>
+            <span class="badge badge-green">EMP-0042</span>
+            <span class="badge badge-purple">Grade IX–XII</span>
+            <span class="badge badge-orange">8 yrs experience</span>
+          </div>
+        </div>
+        <div style="display:flex;gap:2rem;flex-wrap:wrap">
+          <div style="text-align:center"><div style="font-family:'Playfair Display',serif;font-size:1.6rem;font-weight:700;color:var(--success)">96%</div><div class="stat-label">Attendance</div></div>
+          <div style="text-align:center"><div style="font-family:'Playfair Display',serif;font-size:1.6rem;font-weight:700;color:var(--primary)">248</div><div class="stat-label">Students</div></div>
+          <div style="text-align:center"><div style="font-family:'Playfair Display',serif;font-size:1.6rem;font-weight:700;color:var(--warning)">6</div><div class="stat-label">Classes</div></div>
+          <div style="text-align:center"><div style="font-family:'Playfair Display',serif;font-size:1.6rem;font-weight:700;color:var(--info)">4.8★</div><div class="stat-label">Rating</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- KPIs -->
+    <div class="kpi-strip kpi-4">
+      <div class="stat-card" style="--c1:#2980B9;--c2:#0A3D62">
+        <div class="stat-icon"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div>
+        <div class="stat-label">Total Students</div>
+        <div class="stat-value" data-count="248">0</div>
+        <div class="stat-change up">Across 6 classes</div>
+      </div>
+      <div class="stat-card" style="--c1:#16A085;--c2:#0e6655">
+        <div class="stat-icon"><svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/></svg></div>
+        <div class="stat-label">Assignments Graded</div>
+        <div class="stat-value" style="color:var(--success)" data-count="42">0</div>
+        <div class="stat-change up">8 pending review</div>
+      </div>
+      <div class="stat-card" style="--c1:#F39C12;--c2:#d68910">
+        <div class="stat-icon"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
+        <div class="stat-label">Classes Today</div>
+        <div class="stat-value" style="color:var(--warning)" data-count="5">0</div>
+        <div class="stat-change neu">3 completed · 2 remaining</div>
+      </div>
+      <div class="stat-card" style="--c1:#E8505B;--c2:#8E44AD">
+        <div class="stat-icon"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg></div>
+        <div class="stat-label">Exams This Month</div>
+        <div class="stat-value" data-count="3">0</div>
+        <div class="stat-change neu">Mid-term series</div>
+      </div>
+    </div>
+
+    <!-- Row 1: My Classes + Performance -->
+    <div class="grid-row g-1-1">
+      <div class="card card-flush">
+        <div class="card-padding d-flex justify-between align-center">
+          <div class="card-title">My Classes</div>
+          <span class="badge badge-blue">6 Active</span>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Class</th><th>Students</th><th>Avg Score</th><th>Attendance</th><th>Action</th></tr></thead>
+            <tbody>
+              <tr><td><span class="badge badge-blue">IX-A</span></td><td>42</td><td><span class="badge badge-green">84.2</span></td><td>92%</td><td><a href="../students/attendance.html" class="btn btn-sm btn-primary">Attend</a></td></tr>
+              <tr><td><span class="badge badge-purple">IX-B</span></td><td>40</td><td><span class="badge badge-green">81.6</span></td><td>89%</td><td><a href="../students/attendance.html" class="btn btn-sm btn-primary">Attend</a></td></tr>
+              <tr><td><span class="badge badge-orange">X-A</span></td><td>44</td><td><span class="badge badge-yellow">78.9</span></td><td>91%</td><td><a href="../students/attendance.html" class="btn btn-sm btn-primary">Attend</a></td></tr>
+              <tr><td><span class="badge badge-blue">X-B</span></td><td>41</td><td><span class="badge badge-yellow">76.4</span></td><td>87%</td><td><a href="../students/attendance.html" class="btn btn-sm btn-primary">Attend</a></td></tr>
+              <tr><td><span class="badge badge-green">XI-Sci</span></td><td>38</td><td><span class="badge badge-green">82.1</span></td><td>94%</td><td><a href="../students/attendance.html" class="btn btn-sm btn-primary">Attend</a></td></tr>
+              <tr><td><span class="badge badge-red">XII-Sci</span></td><td>43</td><td><span class="badge badge-green">85.7</span></td><td>96%</td><td><a href="../students/attendance.html" class="btn btn-sm btn-primary">Attend</a></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header"><div class="card-title">Class Performance</div><div class="card-meta">Average Math Score</div></div>
+        <div class="chart-wrap" style="height:220px"><canvas id="classPerf"></canvas></div>
+      </div>
+    </div>
+
+    <!-- Row 2: Today Schedule + Pending Tasks -->
+    <div class="grid-row g-1-1">
+      <div class="card">
+        <div class="card-header"><div class="card-title">Today's Schedule</div><div class="card-meta">Wednesday · 22 Apr 2026</div></div>
+        <div class="timeline-item"><div class="tl-icon" style="background:rgba(22,160,133,.1);color:var(--success);border-color:var(--success)"><svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/></svg></div><div class="tl-content"><div class="tl-title">IX-A Mathematics — P1 <span class="badge badge-green" style="margin-left:.5rem">Done</span></div><div class="tl-time">8:00–8:45 · Room 12</div></div></div>
+        <div class="timeline-item"><div class="tl-icon" style="background:rgba(22,160,133,.1);color:var(--success);border-color:var(--success)"><svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/></svg></div><div class="tl-content"><div class="tl-title">X-A Mathematics — P2 <span class="badge badge-green" style="margin-left:.5rem">Done</span></div><div class="tl-time">8:45–9:30 · Room 08</div></div></div>
+        <div class="timeline-item"><div class="tl-icon" style="background:rgba(243,156,18,.1);color:var(--warning);border-color:var(--warning)"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div><div class="tl-content"><div class="tl-title">IX-B Mathematics — P3 <span class="badge badge-yellow" style="margin-left:.5rem">Now</span></div><div class="tl-time">9:45–10:30 · Room 14</div></div></div>
+        <div class="timeline-item"><div class="tl-icon" style="color:var(--text2)"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div><div class="tl-content"><div class="tl-title">XI-Science Mathematics — P5</div><div class="tl-time">11:30–12:15 · Room 20</div></div></div>
+        <div class="timeline-item"><div class="tl-icon" style="color:var(--text2)"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div><div class="tl-content"><div class="tl-title">XII-Science Mathematics — P6</div><div class="tl-time">12:15–1:00 · Room 22</div></div></div>
+      </div>
+      <div class="card">
+        <div class="card-header"><div class="card-title">Pending Tasks</div><span class="badge badge-red">8 Tasks</span></div>
+        <div class="stat-row"><span class="stat-lbl"><span class="stat-dot" style="background:var(--accent)"></span>Grade IX-B Assignments</span><span class="badge badge-red">Due Today</span></div>
+        <div class="stat-row"><span class="stat-lbl"><span class="stat-dot" style="background:var(--warning)"></span>X-A Mid-term Paper</span><span class="badge badge-yellow">Due Fri</span></div>
+        <div class="stat-row"><span class="stat-lbl"><span class="stat-dot" style="background:var(--warning)"></span>XII-Sci Marks Upload</span><span class="badge badge-yellow">Due Fri</span></div>
+        <div class="stat-row"><span class="stat-lbl"><span class="stat-dot" style="background:var(--info)"></span>Leave Application Review</span><span class="badge badge-blue">Pending</span></div>
+        <div class="stat-row"><span class="stat-lbl"><span class="stat-dot" style="background:var(--info)"></span>Syllabus Update — Ch 9</span><span class="badge badge-blue">Next Week</span></div>
+        <div style="margin-top:1rem">
+          <div class="chart-wrap" style="height:110px"><canvas id="taskChart"></canvas></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Row 3: Leave + Payroll -->
+    <div class="grid-row g-1-1">
+      <div class="card">
+        <div class="card-header"><div class="card-title">Leave Balance</div><a href="../teachers/leave.html" style="font-size:.73rem;font-family:'IBM Plex Mono',monospace;color:var(--primary);font-weight:600">Apply →</a></div>
+        <div class="stat-row"><span class="stat-lbl"><span class="stat-dot" style="background:var(--success)"></span>Casual Leave</span><span class="stat-val">8 / 12 remaining</span></div>
+        <div class="stat-row"><span class="stat-lbl"><span class="stat-dot" style="background:var(--info)"></span>Medical Leave</span><span class="stat-val">15 / 15 remaining</span></div>
+        <div class="stat-row"><span class="stat-lbl"><span class="stat-dot" style="background:var(--warning)"></span>Earned Leave</span><span class="stat-val">22 / 30 remaining</span></div>
+        <div class="stat-row"><span class="stat-lbl"><span class="stat-dot" style="background:var(--accent)"></span>Leaves Taken (YTD)</span><span class="stat-val">7 days</span></div>
+      </div>
+      <div class="card">
+        <div class="card-header"><div class="card-title">Payroll Summary</div><a href="../teachers/payroll.html" style="font-size:.73rem;font-family:'IBM Plex Mono',monospace;color:var(--primary);font-weight:600">Details →</a></div>
+        <div class="stat-row"><span class="stat-lbl"><span class="stat-dot" style="background:var(--success)"></span>Basic Salary</span><span class="stat-val">₹52,000</span></div>
+        <div class="stat-row"><span class="stat-lbl"><span class="stat-dot" style="background:var(--info)"></span>HRA + DA</span><span class="stat-val">₹18,500</span></div>
+        <div class="stat-row"><span class="stat-lbl"><span class="stat-dot" style="background:var(--warning)"></span>Deductions</span><span class="stat-val">₹6,200</span></div>
+        <div class="stat-row"><span class="stat-lbl"><span class="stat-dot" style="background:var(--success)"></span>Net Pay (Apr)</span><span class="stat-val" style="color:var(--success);font-size:1rem">₹64,300</span></div>
+        <div style="margin-top:.75rem"><span class="badge badge-green">Credited · 01 Apr 2026</span></div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="../js/app.js"></script>
+<script src="../js/sidebar.js"></script>
+<script>
+renderSidebar('dash','teacher-dash','../');
+const isDark = () => document.documentElement.getAttribute('data-theme') === 'dark';
+const gc = () => isDark() ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)';
+const tc = () => isDark() ? '#94A3B8' : '#6C757D';
+
+new Chart(document.getElementById('classPerf'), {
+  type: 'bar',
+  data: {
+    labels: ['IX-A','IX-B','X-A','X-B','XI-Sci','XII-Sci'],
+    datasets: [{ label: 'Avg Score', data: [84.2,81.6,78.9,76.4,82.1,85.7], backgroundColor: ['#16A085','#2980B9','#F39C12','#E8505B','#8E44AD','#E67E22'], borderRadius: 8 }]
+  },
+  options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { grid: { display: false }, ticks: { color: tc(), font: { size: 10 } } }, y: { min: 60, grid: { color: gc() }, ticks: { color: tc(), font: { size: 10 } } } } }
+});
+
+new Chart(document.getElementById('taskChart'), {
+  type: 'doughnut',
+  data: { labels: ['Completed','Pending','Overdue'], datasets: [{ data: [14,6,2], backgroundColor: ['#16A085','#F39C12','#E8505B'], borderWidth: 0 }] },
+  options: { responsive: true, maintainAspectRatio: false, cutout: '65%', plugins: { legend: { position: 'right', labels: { boxWidth: 10, font: { size: 9 }, color: tc() } } } }
+});
+</script>
+</body>
+</html>

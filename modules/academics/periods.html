@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Period Scheduling and Substitutes - EduCore SMS</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;900&family=IBM+Plex+Mono:wght@400;500;600&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../css/main.css">
+  <link rel="stylesheet" href="../../css/components.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+</head>
+<body>
+<div class="mobile-overlay" id="mobileOverlay" onclick="closeMobileSidebar()"></div>
+<header class="topbar">
+  <div class="logo-area">
+    <div class="logo-mark"><svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div>
+    <span class="logo-text">EduCore SMS</span>
+  </div>
+  <button class="sidebar-toggle" onclick="toggleSidebar()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round">
+      <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+    </svg>
+  </button>
+  <div class="tb-search">
+    <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+    <input type="text" placeholder="Search periods..." id="globalSearch" oninput="searchTableGlobal()">
+  </div>
+  <div class="tb-right">
+    <div class="tb-date" id="tb-date"></div>
+    <button class="dark-toggle" onclick="toggleDarkMode()">
+      <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/></svg>
+    </button>
+    <div class="dropdown-wrapper">
+      <div class="tb-btn" onclick="toggleNotif(event)" id="notifBtn">
+        <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        <div class="notif-dot"></div>
+      </div>
+      <div class="notif-dropdown" id="notifDropdown">
+        <div class="notif-header"><h4>Notifications</h4><span onclick="markAllRead()">Mark all read</span></div>
+        <div class="notif-item">
+          <div class="notif-icon" style="background:var(--warning)"><svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg></div>
+          <div class="notif-text"><p><strong>Fee dues</strong> - 48 students have outstanding dues</p><span>1 hour ago</span></div>
+          <div class="notif-unread"></div>
+        </div>
+        <div class="notif-item">
+          <div class="notif-icon" style="background:var(--info)"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>
+          <div class="notif-text"><p><strong>New admission</strong> - 5 new applications received</p><span>3 hours ago</span></div>
+          <div class="notif-unread"></div>
+        </div>
+        <div class="notif-item">
+          <div class="notif-icon" style="background:var(--success)"><svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/></svg></div>
+          <div class="notif-text"><p><strong>Attendance marked</strong> - All classes updated</p><span>Today 9:00 AM</span></div>
+        </div>
+        <div class="notif-footer"><a href="../../modules/communication/noticeboard.html">View all</a></div>
+      </div>
+    </div>
+    <div class="dropdown-wrapper">
+      <div class="tb-user" onclick="toggleUserDropdown(event)" id="userBtn">
+        <div class="avatar">SA</div>
+        <div class="tb-user-info">
+          <div class="tb-user-name">Super Admin</div>
+          <div class="tb-user-role">Administrator</div>
+        </div>
+      </div>
+      <div class="user-dropdown" id="userDropdown">
+        <div class="user-dd-header"><div class="user-dd-name">Super Admin</div><div class="user-dd-role">Administrator</div></div>
+        <a class="user-dd-item" href="../../modules/settings/school-profile.html">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v2M12 20v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M2 12h2M20 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+          Settings
+        </a>
+        <a class="user-dd-item danger" href="../../index.html">
+          <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+          Logout
+        </a>
+      </div>
+    </div>
+  </div>
+</header>
+<div class="layout" id="layout">
+  <nav class="sidebar" id="sidebar"><div id="sidebar-nav"></div></nav>
+  <main class="main">
+    <div class="breadcrumb">
+      <a href="../../index.html">Dashboard</a>
+      <span class="breadcrumb-sep">&#8250;</span>
+      <span>Period Scheduling & Substitutes</span>
+    </div>
+    <div class="page-header">
+      <div>
+        <h1>Period Scheduling & Substitutes</h1>
+        <div class="page-subtitle">Configure daily periods duration, breaks, and handle teacher substitutions</div>
+      </div>
+      <div class="ph-actions">
+        <button class="btn btn-ghost" onclick="exportData()">
+          <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Export
+        </button>
+        <button class="btn btn-primary" onclick="openAddModal()">
+          <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Add Period Slot
+        </button>
+      </div>
+    </div>
+
+    <!-- Stats Grid -->
+    <div class="stats-grid">
+      <div class='stat-card' style='--c1:#0A3D62;--c2:#1a5276'>
+        <div class='stat-icon'>
+          <svg viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2'>
+            <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+          </svg>
+        </div>
+        <div class='stat-body'>
+          <div class='stat-label'>Total Periods</div>
+          <div class='stat-value' id="statTotal">0</div>
+        </div>
+      </div>
+      <div class='stat-card' style='--c1:#16A085;--c2:#0e6655'>
+        <div class='stat-icon'>
+          <svg viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2'>
+            <path d="M9 11l3 3L22 4"/>
+          </svg>
+        </div>
+        <div class='stat-body'>
+          <div class='stat-label'>Active Slots</div>
+          <div class='stat-value' id="statActive">0</div>
+        </div>
+      </div>
+      <div class='stat-card' style='--c1:#F39C12;--c2:#d68910'>
+        <div class='stat-icon'>
+          <svg viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2'>
+            <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+          </svg>
+        </div>
+        <div class='stat-body'>
+          <div class='stat-label'>Substitutions Active</div>
+          <div class='stat-value' id="statSubstitutions">0</div>
+        </div>
+      </div>
+      <div class='stat-card' style='--c1:#8E44AD;--c2:#6c3483'>
+        <div class='stat-icon'>
+          <svg viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2'>
+            <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+          </svg>
+        </div>
+        <div class='stat-body'>
+          <div class='stat-label'>Recess / Breaks</div>
+          <div class='stat-value' id="statBreaks">0</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Filters Section -->
+    <div class="filter-bar">
+      <div class="search-box">
+        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input type="text" id="searchInput" placeholder="Search by name..." oninput="filterData()">
+      </div>
+      <select class="filter-select" id="breakFilter" onchange="filterData()">
+        <option value="All">All Types</option>
+        <option value="Yes">Breaks Only</option>
+        <option value="No">Class Periods Only</option>
+      </select>
+      <select class="filter-select" id="statusFilter" onchange="filterData()">
+        <option value="All">All Statuses</option>
+        <option value="Active">Active</option>
+        <option value="Scheduled">Scheduled</option>
+        <option value="Completed">Completed</option>
+        <option value="Cancelled">Cancelled</option>
+      </select>
+      <div class="filter-spacer"></div>
+      <button class="btn btn-ghost btn-sm" onclick="clearFilters()">Clear</button>
+    </div>
+
+    <!-- Data Table -->
+    <div class="table-card">
+      <div class="table-wrap">
+        <table id="dataTable">
+          <thead>
+            <tr>
+              <th><input type="checkbox" class="table-checkbox" id="chkAll" onclick="toggleAll(this)"></th>
+              <th>Period ID</th>
+              <th>Period Name</th>
+              <th>Start Time</th>
+              <th>End Time</th>
+              <th>Duration</th>
+              <th>Is Break</th>
+              <th>Teacher Substitution</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody">
+            <!-- Dynamically populated -->
+          </tbody>
+        </table>
+      </div>
+      <div class="table-footer">
+        <span class="table-info" id="tableInfo">Showing 0 records</span>
+      </div>
+    </div>
+
+    <!-- Add/Edit Modal -->
+    <div class="modal-backdrop" id="periodModal">
+      <div class="modal">
+        <div class="modal-header">
+          <div class="modal-title" id="modalTitle">Add Period Slot</div>
+          <button class="modal-close" onclick="closeModal('periodModal')"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+        </div>
+        <div class="modal-body">
+          <input type="hidden" id="editPeriodId">
+          <div class="form-grid">
+            <div class="form-group">
+              <label class="form-label">Period Name <span class="req">*</span></label>
+              <input type="text" class="form-input" id="periodName" placeholder="e.g. Period 1" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Is Break / Recess?</label>
+              <select class="form-select" id="periodIsBreak">
+                <option value="No">No</option>
+                <option value="Yes">Yes</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Start Time <span class="req">*</span></label>
+              <input type="time" class="form-input" id="startTime" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">End Time <span class="req">*</span></label>
+              <input type="time" class="form-input" id="endTime" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Duration (e.g. 45 Mins)</label>
+              <input type="text" class="form-input" id="periodDuration" placeholder="e.g. 45 Mins">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Substitution Teacher Status</label>
+              <input type="text" class="form-input" id="periodSub" placeholder="e.g. Mr. Vinay Kumar (Sub for Mr. Suresh)">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Status</label>
+              <select class="form-select" id="periodStatus">
+                <option value="Active">Active</option>
+                <option value="Scheduled">Scheduled</option>
+                <option value="Completed">Completed</option>
+                <option value="Cancelled">Cancelled</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-ghost" onclick="closeModal('periodModal')">Cancel</button>
+          <button class="btn btn-primary" onclick="submitPeriod()">Save Slot</button>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<script src="../../js/app.js"></script>
+<script src="../../js/sidebar.js"></script>
+<script>
+renderSidebar('classes', 'classes', '../../');
+
+var PERIODS_KEY = 'educore-periods';
+var defaultPeriods = [
+  {id: "PER-1001", name: "Period 1", start: "08:30", end: "09:15", duration: "45 Mins", isBreak: "No", substitution: "None (Mrs. Anita Desai)", status: "Active"},
+  {id: "PER-1002", name: "Period 2", start: "09:15", end: "10:00", duration: "45 Mins", isBreak: "No", substitution: "Mr. Vinay Kumar (Sub for Mr. Suresh)", status: "Active"},
+  {id: "PER-1003", name: "Short Break", start: "10:00", end: "10:30", duration: "30 Mins", isBreak: "Yes", substitution: "N/A", status: "Active"},
+  {id: "PER-1004", name: "Period 3", start: "10:30", end: "11:15", duration: "45 Mins", isBreak: "No", substitution: "None (Dr. Rakesh Sen)", status: "Scheduled"}
+];
+
+var periods = [];
+
+function initPeriods() {
+  var data = localStorage.getItem(PERIODS_KEY);
+  if (!data) {
+    periods = defaultPeriods;
+    localStorage.setItem(PERIODS_KEY, JSON.stringify(periods));
+  } else {
+    periods = JSON.parse(data);
+  }
+  renderTable();
+}
+
+function showToast(msg, type) {
+  type = type || 'success';
+  var icons = { 
+    success:'<path d="M9 11l3 3L22 4"/>', 
+    error:'<path d="M18 6 6 18M6 6l12 12"/>', 
+    info:'<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>', 
+    warning:'<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>' 
+  };
+  var c = document.getElementById('toastContainer');
+  var t = document.createElement('div');
+  t.className = 'toast toast-' + type;
+  t.innerHTML = '<div class="toast-icon"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">'+icons[type]+'</svg></div><div class="toast-body"><div class="toast-title">'+(type.charAt(0).toUpperCase()+type.slice(1))+'</div><div class="toast-msg">'+msg+'</div></div>';
+  c.appendChild(t);
+  setTimeout(function(){t.classList.add('show');},10);
+  setTimeout(function(){t.classList.remove('show');setTimeout(function(){t.remove();},300);},3500);
+}
+
+function renderTable(dataList) {
+  var list = dataList || periods;
+  var tb = document.getElementById('tableBody');
+  tb.innerHTML = '';
+  
+  list.forEach(function(p) {
+    var badgeClass = 'badge-blue';
+    if (p.status === 'Active') badgeClass = 'badge-green';
+    else if (p.status === 'Completed') badgeClass = 'badge-gray';
+    else if (p.status === 'Cancelled') badgeClass = 'badge-red';
+
+    var tr = document.createElement('tr');
+    tr.innerHTML = '<td><input type="checkbox" class="table-checkbox row-chk" data-id="'+p.id+'"></td>' +
+      '<td>' + p.id + '</td>' +
+      '<td><strong>' + p.name + '</strong></td>' +
+      '<td>' + p.start + '</td>' +
+      '<td>' + p.end + '</td>' +
+      '<td>' + (p.duration || 'N/A') + '</td>' +
+      '<td>' + p.isBreak + '</td>' +
+      '<td>' + (p.substitution || 'None') + '</td>' +
+      '<td><span class="badge ' + badgeClass + '">' + p.status + '</span></td>' +
+      '<td>' +
+        '<div class="row-actions">' +
+          '<button class="btn-icon" onclick="editRow(\''+p.id+'\')" title="Edit"><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>' +
+          '<button class="btn-icon" onclick="deleteRow(\''+p.id+'\')" title="Delete"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button>' +
+        '</div>' +
+      '</td>';
+    tb.appendChild(tr);
+  });
+  
+  document.getElementById('tableInfo').textContent = 'Showing ' + list.length + ' of ' + periods.length + ' records';
+  updateStats();
+}
+
+function updateStats() {
+  var total = periods.length;
+  var active = periods.filter(p => p.status === 'Active').length;
+  var subs = periods.filter(p => p.substitution && p.substitution !== 'N/A' && !p.substitution.startsWith('None')).length;
+  var breaks = periods.filter(p => p.isBreak === 'Yes').length;
+  
+  document.getElementById('statTotal').textContent = total;
+  document.getElementById('statActive').textContent = active;
+  document.getElementById('statSubstitutions').textContent = subs;
+  document.getElementById('statBreaks').textContent = breaks;
+}
+
+function searchTableGlobal() {
+  var q = document.getElementById('globalSearch').value.toLowerCase();
+  var filtered = periods.filter(function(p) {
+    return p.name.toLowerCase().includes(q) || p.substitution.toLowerCase().includes(q) || p.id.toLowerCase().includes(q);
+  });
+  renderTable(filtered);
+}
+
+function filterData() {
+  var q = document.getElementById('searchInput').value.toLowerCase();
+  var isBreak = document.getElementById('breakFilter').value;
+  var status = document.getElementById('statusFilter').value;
+  
+  var filtered = periods.filter(function(p) {
+    var matchSearch = p.name.toLowerCase().includes(q) || p.substitution.toLowerCase().includes(q);
+    var matchBreak = (isBreak === 'All' || p.isBreak === isBreak);
+    var matchStatus = (status === 'All' || p.status === status);
+    return matchSearch && matchBreak && matchStatus;
+  });
+  
+  renderTable(filtered);
+}
+
+function clearFilters() {
+  document.getElementById('searchInput').value = '';
+  document.getElementById('breakFilter').value = 'All';
+  document.getElementById('statusFilter').value = 'All';
+  document.getElementById('globalSearch').value = '';
+  renderTable();
+}
+
+function toggleAll(cb) {
+  document.querySelectorAll('.row-chk').forEach(function(c){c.checked = cb.checked;});
+}
+
+function openAddModal() {
+  document.getElementById('modalTitle').textContent = 'Add Period Slot';
+  document.getElementById('editPeriodId').value = '';
+  document.getElementById('periodName').value = '';
+  document.getElementById('periodIsBreak').value = 'No';
+  document.getElementById('startTime').value = '';
+  document.getElementById('endTime').value = '';
+  document.getElementById('periodDuration').value = '45 Mins';
+  document.getElementById('periodSub').value = '';
+  document.getElementById('periodStatus').value = 'Active';
+  openModal('periodModal');
+}
+
+function editRow(id) {
+  var p = periods.find(x => x.id === id);
+  if (!p) return;
+  
+  document.getElementById('modalTitle').textContent = 'Edit Period Slot: ' + p.name;
+  document.getElementById('editPeriodId').value = p.id;
+  document.getElementById('periodName').value = p.name;
+  document.getElementById('periodIsBreak').value = p.isBreak;
+  document.getElementById('startTime').value = p.start;
+  document.getElementById('endTime').value = p.end;
+  document.getElementById('periodDuration').value = p.duration || '';
+  document.getElementById('periodSub').value = p.substitution || '';
+  document.getElementById('periodStatus').value = p.status;
+  
+  openModal('periodModal');
+}
+
+function deleteRow(id) {
+  if (confirm('Delete daily period configuration ' + id + '?')) {
+    periods = periods.filter(x => x.id !== id);
+    localStorage.setItem(PERIODS_KEY, JSON.stringify(periods));
+    renderTable();
+    showToast('Period config deleted', 'error');
+  }
+}
+
+function submitPeriod() {
+  var id = document.getElementById('editPeriodId').value;
+  var name = document.getElementById('periodName').value.trim();
+  var isBreak = document.getElementById('periodIsBreak').value;
+  var start = document.getElementById('startTime').value;
+  var end = document.getElementById('endTime').value;
+  var duration = document.getElementById('periodDuration').value.trim();
+  var substitution = document.getElementById('periodSub').value.trim();
+  var status = document.getElementById('periodStatus').value;
+  
+  if (!name || !start || !end) {
+    showToast('Please fill all required fields', 'error');
+    return;
+  }
+  
+  if (id) {
+    var index = periods.findIndex(x => x.id === id);
+    if (index > -1) {
+      periods[index].name = name;
+      periods[index].isBreak = isBreak;
+      periods[index].start = start;
+      periods[index].end = end;
+      periods[index].duration = duration;
+      periods[index].substitution = substitution;
+      periods[index].status = status;
+      showToast('Period updated successfully');
+    }
+  } else {
+    var newId = 'PER-' + (Math.floor(Math.random() * 9000) + 1000);
+    periods.push({
+      id: newId,
+      name: name,
+      isBreak: isBreak,
+      start: start,
+      end: end,
+      duration: duration,
+      substitution: substitution,
+      status: status
+    });
+    showToast('New daily period configured');
+  }
+  
+  localStorage.setItem(PERIODS_KEY, JSON.stringify(periods));
+  closeModal('periodModal');
+  renderTable();
+}
+
+function exportData() {
+  showToast('Exporting periods configuration to CSV...', 'info');
+  var csv = 'ID,Period Name,Start Time,End Time,Duration,Is Break,Substitution Teacher,Status\n';
+  periods.forEach(function(p){
+    csv += `"${p.id}","${p.name}","${p.start}","${p.end}","${p.duration}","${p.isBreak}","${p.substitution || ''}","${p.status}"\n`;
+  });
+  var blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  var link = document.createElement("a");
+  var url = URL.createObjectURL(blob);
+  link.setAttribute("href", url);
+  link.setAttribute("download", "daily_periods_timing.csv");
+  link.style.visibility = 'hidden';
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+  initPeriods();
+});
+</script>
+</body>
+</html>

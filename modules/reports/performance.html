@@ -1,0 +1,207 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Class Performance Comparison - EduCore SMS</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;900&family=IBM+Plex+Mono:wght@400;500;600&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../css/main.css">
+  <link rel="stylesheet" href="../../css/components.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+</head>
+<body>
+<div class="mobile-overlay" id="mobileOverlay" onclick="closeMobileSidebar()"></div>
+<header class="topbar">
+  <div class="logo-area">
+    <div class="logo-mark"><svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div>
+    <span class="logo-text">EduCore SMS</span>
+  </div>
+  <button class="sidebar-toggle" onclick="toggleSidebar()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round">
+      <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+    </svg>
+  </button>
+  <div class="tb-search">
+    <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+    <input type="text" placeholder="Search anything..." id="globalSearch">
+  </div>
+  <div class="tb-right">
+    <div class="tb-date" id="tb-date"></div>
+    <button class="dark-toggle" onclick="toggleDarkMode()">
+      <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/></svg>
+    </button>
+    <div class="dropdown-wrapper">
+      <div class="tb-btn" onclick="toggleNotif(event)" id="notifBtn">
+        <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        <div class="notif-dot"></div>
+      </div>
+      <div class="notif-dropdown" id="notifDropdown">
+        <div class="notif-header"><h4>Notifications</h4><span onclick="markAllRead()">Mark all read</span></div>
+        <div class="notif-item">
+          <div class="notif-icon" style="background:var(--warning)"><svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg></div>
+          <div class="notif-text"><p><strong>Fee dues</strong> - 48 students have outstanding dues</p><span>1 hour ago</span></div>
+          <div class="notif-unread"></div>
+        </div>
+        <div class="notif-item">
+          <div class="notif-icon" style="background:var(--info)"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>
+          <div class="notif-text"><p><strong>New admission</strong> - 5 new applications received</p><span>3 hours ago</span></div>
+          <div class="notif-unread"></div>
+        </div>
+        <div class="notif-item">
+          <div class="notif-icon" style="background:var(--success)"><svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/></svg></div>
+          <div class="notif-text"><p><strong>Attendance marked</strong> - All classes updated</p><span>Today 9:00 AM</span></div>
+        </div>
+        <div class="notif-footer"><a href="../../modules/communication/noticeboard.html">View all</a></div>
+      </div>
+    </div>
+    <div class="dropdown-wrapper">
+      <div class="tb-user" onclick="toggleUserDropdown(event)" id="userBtn">
+        <div class="avatar">SA</div>
+        <div class="tb-user-info">
+          <div class="tb-user-name">Super Admin</div>
+          <div class="tb-user-role">Administrator</div>
+        </div>
+      </div>
+      <div class="user-dropdown" id="userDropdown">
+        <div class="user-dd-header"><div class="user-dd-name">Super Admin</div><div class="user-dd-role">Administrator</div></div>
+        <a class="user-dd-item" href="../../modules/settings/school-profile.html">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v2M12 20v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M2 12h2M20 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+          Settings
+        </a>
+        <a class="user-dd-item danger" href="../../index.html">
+          <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+          Logout
+        </a>
+      </div>
+    </div>
+  </div>
+</header>
+<div class="layout" id="layout">
+  <nav class="sidebar" id="sidebar"><div id="sidebar-nav"></div></nav>
+  <main class="main">
+    <div class="breadcrumb">
+      <a href="../../index.html">Dashboard</a>
+      <span class="breadcrumb-sep">&#8250;</span>
+      <span>Class Performance Comparison</span>
+    </div>
+    <div class="page-header">
+      <div><h1>Class Performance Comparison</h1><div class="page-subtitle">Class Performance Comparison - Academic Year 2025-26</div></div>
+      <div class="ph-actions">
+        <select class="filter-select" onchange="refreshCharts()">
+          <option>This Month</option><option>Last 3 Months</option><option>This Year</option>
+        </select>
+        <button class="btn btn-ghost" onclick="exportPDF()">
+          <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          Export PDF
+        </button>
+        <button class="btn btn-primary" onclick="window.print()">
+          <svg viewBox="0 0 24 24"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+          Print
+        </button>
+      </div>
+    </div>
+    <div class="stats-grid"><div class='stat-card' style='--c1:#0A3D62;--c2:#1a5276'><div class='stat-icon'><svg viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2'><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg></div><div class='stat-body'><div class='stat-label'>Total Records</div><div class='stat-value' data-count='270'>270</div><div class='stat-change up'>+8 this month</div></div></div><div class='stat-card' style='--c1:#16A085;--c2:#0e6655'><div class='stat-icon'><svg viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2'><path d="M9 11l3 3L22 4"/></svg></div><div class='stat-body'><div class='stat-label'>Active</div><div class='stat-value' data-count='1055'>1055</div><div class='stat-change up'>of total records</div></div></div><div class='stat-card' style='--c1:#F39C12;--c2:#d68910'><div class='stat-icon'><svg viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2'><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div><div class='stat-body'><div class='stat-label'>Pending</div><div class='stat-value' data-count='101'>101</div><div class='stat-change down'>Need attention</div></div></div><div class='stat-card' style='--c1:#8E44AD;--c2:#6c3483'><div class='stat-icon'><svg viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2'><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div><div class='stat-body'><div class='stat-label'>This Month</div><div class='stat-value' data-count='176'>176</div><div class='stat-change neu'>New entries</div></div></div></div>
+    <div class="grid-row g-2-1" style="margin-bottom:1rem">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Monthly Trend</div>
+          <div class="card-meta">Last 12 months</div>
+        </div>
+        <div class="card-body"><div class="chart-wrap" style="height:260px"><canvas id="mainChart"></canvas></div></div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Distribution</div>
+          <div class="card-meta">By category</div>
+        </div>
+        <div class="card-body"><div class="chart-wrap" style="height:260px"><canvas id="distChart"></canvas></div></div>
+      </div>
+    </div>
+    <div class="grid-row g-1-1" style="margin-bottom:1rem">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Comparative Analysis</div>
+          <div class="card-meta">Current vs Previous Year</div>
+        </div>
+        <div class="card-body"><div class="chart-wrap" style="height:200px"><canvas id="compChart"></canvas></div></div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Summary</div>
+          <div class="card-meta">Quick statistics</div>
+        </div>
+        <div class="card-body">
+          <div class="stat-row"><span class="stat-lbl"><span class="stat-dot" style="background:var(--primary)"></span>Category A</span><span class="stat-val">1,011 (48%)</span></div>
+          <div class="stat-row"><span class="stat-lbl"><span class="stat-dot" style="background:var(--success)"></span>Category B</span><span class="stat-val">714 (34%)</span></div>
+          <div class="stat-row"><span class="stat-lbl"><span class="stat-dot" style="background:var(--warning)"></span>Category C</span><span class="stat-val">391 (18%)</span></div>
+          <div class="stat-row"><span class="stat-lbl"><span class="stat-dot" style="background:var(--accent)"></span>Total</span><span class="stat-val">2,116</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="table-card">
+      <div class="card-header"><div class="card-title">Detailed Breakdown</div><div class="card-meta">Last 6 months</div></div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Category</th><th>Jan</th><th>Feb</th><th>Mar</th><th>Apr</th><th>May</th><th>Jun</th><th>Total</th><th>Change</th></tr></thead>
+          <tbody>
+            <tr><td><strong>Category A</strong></td><td>142</td><td>158</td><td>163</td><td>171</td><td>185</td><td>192</td><td><strong>1,011</strong></td><td><span class="badge badge-green">+12.4%</span></td></tr>
+            <tr><td><strong>Category B</strong></td><td>98</td><td>112</td><td>108</td><td>121</td><td>134</td><td>141</td><td><strong>714</strong></td><td><span class="badge badge-green">+8.7%</span></td></tr>
+            <tr><td><strong>Category C</strong></td><td>55</td><td>61</td><td>58</td><td>67</td><td>72</td><td>78</td><td><strong>391</strong></td><td><span class="badge badge-yellow">+3.2%</span></td></tr>
+            <tr><td><strong>Total</strong></td><td><strong>295</strong></td><td><strong>331</strong></td><td><strong>329</strong></td><td><strong>359</strong></td><td><strong>391</strong></td><td><strong>411</strong></td><td><strong>2,116</strong></td><td><span class="badge badge-green">+9.5%</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+</div>
+<div class="toast-container" id="toastContainer"></div>
+<script src="../../js/app.js"></script>
+<script src="../../js/sidebar.js"></script>
+<script>
+renderSidebar('reports','rpt-att','../../');
+function showToast(msg, type) {
+  type = type || 'success';
+  var icons = { success:'<path d="M9 11l3 3L22 4"/>', error:'<path d="M18 6 6 18M6 6l12 12"/>', info:'<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>', warning:'<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>' };
+  var c = document.getElementById('toastContainer');
+  var t = document.createElement('div');
+  t.className = 'toast toast-' + type;
+  t.innerHTML = '<div class="toast-icon"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">'+icons[type]+'</svg></div><div class="toast-body"><div class="toast-title">'+(type.charAt(0).toUpperCase()+type.slice(1))+'</div><div class="toast-msg">'+msg+'</div></div>';
+  c.appendChild(t);
+  setTimeout(function(){t.classList.add('show');},10);
+  setTimeout(function(){t.classList.remove('show');setTimeout(function(){t.remove();},300);},3500);
+}
+function openModal(id) { var m=document.getElementById(id); if(m) m.classList.add('open'); }
+function closeModal(id) { var m=document.getElementById(id); if(m) m.classList.remove('open'); }
+document.addEventListener('click', function(e) { if(e.target.classList.contains('modal-backdrop')) e.target.classList.remove('open'); });
+var isDark=function(){return document.documentElement.getAttribute('data-theme')==='dark';};
+var gc=function(){return isDark()?'rgba(255,255,255,0.06)':'rgba(0,0,0,0.06)';};
+var tc=function(){return isDark()?'#94A3B8':'#6C757D';};
+var mChart = new Chart(document.getElementById('mainChart'),{
+  type:'bar',
+  data:{labels:['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],
+    datasets:[{label:'This Year',data:[295,331,329,359,391,411,388,422,445,398,467,502],backgroundColor:'#0A3D62',borderRadius:5},
+              {label:'Last Year',data:[260,290,310,330,360,380,355,400,415,372,440,475],backgroundColor:'rgba(10,61,98,0.25)',borderRadius:5}]},
+  options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{boxWidth:10,color:tc(),font:{size:10}}}},
+    scales:{x:{grid:{display:false},ticks:{color:tc(),font:{size:10}}},y:{grid:{color:gc()},ticks:{color:tc(),font:{size:10}}}}}
+});
+var dChart = new Chart(document.getElementById('distChart'),{
+  type:'doughnut',
+  data:{labels:['Category A','Category B','Category C','Other'],
+    datasets:[{data:[48,34,13,5],backgroundColor:['#0A3D62','#16A085','#F39C12','#E8505B'],borderWidth:0}]},
+  options:{responsive:true,maintainAspectRatio:false,cutout:'68%',
+    plugins:{legend:{position:'bottom',labels:{boxWidth:10,font:{size:10},color:tc()}}}}
+});
+var cChart = new Chart(document.getElementById('compChart'),{
+  type:'line',
+  data:{labels:['Jan','Feb','Mar','Apr','May','Jun'],
+    datasets:[{label:'2025-26',data:[295,331,329,359,391,411],borderColor:'#0A3D62',backgroundColor:'rgba(10,61,98,0.1)',fill:true,tension:0.4,pointRadius:4},
+              {label:'2024-25',data:[260,290,310,330,360,380],borderColor:'#16A085',backgroundColor:'rgba(22,160,133,0.1)',fill:true,tension:0.4,pointRadius:4}]},
+  options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{boxWidth:10,font:{size:10},color:tc()}}},
+    scales:{x:{grid:{display:false},ticks:{color:tc(),font:{size:10}}},y:{grid:{color:gc()},ticks:{color:tc(),font:{size:10}}}}}
+});
+function refreshCharts(){showToast('Updating charts...','info');}
+function exportPDF(){showToast('Generating PDF...','info');}
+</script>
+</body>
+</html>

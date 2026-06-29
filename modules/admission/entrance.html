@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Entrance Test Management — EduCore SMS Admission</title>
+  <meta name="description" content="Manage admission entrance tests, scheduling and results for EduCore School">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;900&family=IBM+Plex+Mono:wght@400;500;600&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../css/main.css">
+  <link rel="stylesheet" href="../../css/components.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+</head>
+<body>
+<div class="mobile-overlay" id="mobileOverlay" onclick="closeMobileSidebar()"></div>
+<header class="topbar">
+  <div class="logo-area">
+    <div class="logo-mark"><svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div>
+    <span class="logo-text">EduCore SMS</span>
+  </div>
+  <button class="sidebar-toggle" onclick="toggleSidebar()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round">
+      <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+    </svg>
+  </button>
+  <div class="tb-search">
+    <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+    <input type="text" placeholder="Search entrance test or candidate name..." id="globalSearch">
+  </div>
+  <div class="tb-right">
+    <div class="tb-date" id="tb-date"></div>
+    <button class="dark-toggle" onclick="toggleDarkMode()">
+      <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/></svg>
+    </button>
+    <div class="dropdown-wrapper">
+      <div class="tb-btn" onclick="toggleNotif(event)" id="notifBtn">
+        <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        <div class="notif-dot"></div>
+      </div>
+      <div class="notif-dropdown" id="notifDropdown">
+        <div class="notif-header"><h4>Notifications</h4><span onclick="markAllRead()">Mark all read</span></div>
+        <div class="notif-item">
+          <div class="notif-icon" style="background:var(--info)"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg></div>
+          <div class="notif-text"><p><strong>Entrance Test</strong> scheduled for 15 Jun 2026 — 84 candidates registered</p><span>1 hour ago</span></div>
+          <div class="notif-unread"></div>
+        </div>
+        <div class="notif-footer"><a href="../../modules/communication/noticeboard.html">View all</a></div>
+      </div>
+    </div>
+    <div class="dropdown-wrapper">
+      <div class="tb-user" onclick="toggleUserDropdown(event)" id="userBtn">
+        <div class="avatar">SA</div>
+        <div class="tb-user-info"><div class="tb-user-name">Super Admin</div><div class="tb-user-role">Administrator</div></div>
+      </div>
+      <div class="user-dropdown" id="userDropdown">
+        <div class="user-dd-header"><div class="user-dd-name">Super Admin</div><div class="user-dd-role">Administrator · EduCore SMS</div></div>
+        <a class="user-dd-item danger" href="../../index.html"><svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>Logout</a>
+      </div>
+    </div>
+  </div>
+</header>
+<div class="layout" id="layout">
+  <nav class="sidebar" id="sidebar"><div id="sidebar-nav"></div></nav>
+  <main class="main">
+    <div class="breadcrumb">
+      <a href="../../index.html">Dashboard</a><span class="breadcrumb-sep">&#8250;</span>
+      <span>Admission</span><span class="breadcrumb-sep">&#8250;</span>
+      <span>Entrance Test</span>
+    </div>
+    <div class="page-header">
+      <div>
+        <h1>Entrance Test Management</h1>
+        <div class="page-subtitle">Academic Year 2026–27 · Schedule, conduct and evaluate entrance assessments</div>
+      </div>
+      <div class="ph-actions">
+        <button class="btn btn-ghost" onclick="exportData()">
+          <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Export Results
+        </button>
+        <button class="btn btn-primary" onclick="openModal('scheduleModal')">
+          <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Schedule Test
+        </button>
+      </div>
+    </div>
+
+    <!-- KPI Strip -->
+    <div class="stats-grid">
+      <div class="stat-card" style="--c1:#0A3D62;--c2:#1a5276">
+        <div class="stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div>
+        <div class="stat-body"><div class="stat-label">Registered Candidates</div><div class="stat-value" data-count="184">184</div><div class="stat-change up">2026–27 intake</div></div>
+      </div>
+      <div class="stat-card" style="--c1:#16A085;--c2:#0e6655">
+        <div class="stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M9 11l3 3L22 4"/></svg></div>
+        <div class="stat-body"><div class="stat-label">Passed / Qualified</div><div class="stat-value" data-count="143">143</div><div class="stat-change up">▲ 77.7% pass rate</div></div>
+      </div>
+      <div class="stat-card" style="--c1:#E8505B;--c2:#c0392b">
+        <div class="stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg></div>
+        <div class="stat-body"><div class="stat-label">Not Qualified</div><div class="stat-value" data-count="41">41</div><div class="stat-change down">22.3% below cutoff</div></div>
+      </div>
+      <div class="stat-card" style="--c1:#8E44AD;--c2:#6c3483">
+        <div class="stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
+        <div class="stat-body"><div class="stat-label">Upcoming Tests</div><div class="stat-value" data-count="2">2</div><div class="stat-change neu">Next: 15 Jun 2026</div></div>
+      </div>
+    </div>
+
+    <!-- Upcoming Tests Section -->
+    <div class="grid-row" style="grid-template-columns:1.4fr 1fr;margin-bottom:1.5rem">
+      <div class="card card-flush">
+        <div class="card-padding">
+          <div class="card-title" style="margin-bottom:1rem">Scheduled Entrance Tests</div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Test Name</th><th>Class</th><th>Date & Time</th><th>Venue</th><th>Registered</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody>
+              <tr>
+                <td><div class="td-name">Admission Test — Batch A</div><div class="td-sub">English, Math, General Knowledge</div></td>
+                <td><span class="badge badge-blue">Class VI–VIII</span></td>
+                <td class="td-mono">15 Jun 2026<br><small>09:00 AM</small></td>
+                <td>Main Hall — Block A</td>
+                <td><strong>84</strong> candidates</td>
+                <td><span class="badge badge-info">Upcoming</span></td>
+                <td><button class="btn btn-sm btn-primary" onclick="showToast('Opening test details...','info')">Manage</button></td>
+              </tr>
+              <tr>
+                <td><div class="td-name">Admission Test — Batch B</div><div class="td-sub">Science, Math, Reasoning</div></td>
+                <td><span class="badge badge-purple">Class IX–XI</span></td>
+                <td class="td-mono">22 Jun 2026<br><small>09:30 AM</small></td>
+                <td>Science Lab Hall</td>
+                <td><strong>56</strong> candidates</td>
+                <td><span class="badge badge-info">Upcoming</span></td>
+                <td><button class="btn btn-sm btn-primary" onclick="showToast('Opening test details...','info')">Manage</button></td>
+              </tr>
+              <tr>
+                <td><div class="td-name">Nursery–UKG Assessment</div><div class="td-sub">Oral interaction + activity</div></td>
+                <td><span class="badge badge-green">Nursery–UKG</span></td>
+                <td class="td-mono">10 Jun 2026<br><small>10:00 AM</small></td>
+                <td>Junior Wing Room 1</td>
+                <td><strong>44</strong> candidates</td>
+                <td><span class="badge badge-green">Completed</span></td>
+                <td><button class="btn btn-sm" onclick="showToast('Viewing results...','info')">Results</button></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Score Distribution</div>
+          <div class="card-meta">Class VI–VIII Batch A</div>
+        </div>
+        <div class="chart-wrap" style="height:200px">
+          <canvas id="scoreChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Candidate Results Table -->
+    <div class="filter-bar">
+      <div class="search-box">
+        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input type="text" id="searchInput" placeholder="Search by name or roll no..." oninput="searchTable()">
+      </div>
+      <select class="filter-select" onchange="filterTable()">
+        <option value="">All Tests</option>
+        <option>Batch A — Class VI–VIII</option>
+        <option>Batch B — Class IX–XI</option>
+        <option>Nursery–UKG</option>
+      </select>
+      <select class="filter-select" id="resultFilter" onchange="filterTable()">
+        <option value="">All Results</option>
+        <option>Qualified</option>
+        <option>Not Qualified</option>
+        <option>Absent</option>
+        <option>Pending</option>
+      </select>
+      <div class="filter-spacer"></div>
+      <button class="btn btn-ghost btn-sm" onclick="clearFilters()">Clear</button>
+    </div>
+
+    <div class="table-card">
+      <div class="table-wrap">
+        <table id="dataTable">
+          <thead>
+            <tr>
+              <th><input type="checkbox" class="table-checkbox" id="chkAll" onclick="toggleAll(this)"></th>
+              <th>Roll No</th>
+              <th>Candidate Name</th>
+              <th>Class Sought</th>
+              <th>Test Date</th>
+              <th>English</th>
+              <th>Math</th>
+              <th>GK / Science</th>
+              <th>Total (/150)</th>
+              <th>%</th>
+              <th>Result</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody">
+            <tr>
+              <td><input type="checkbox" class="table-checkbox row-chk"></td>
+              <td class="td-mono">ET-001</td>
+              <td><div class="td-name">Aarav Sharma</div></td>
+              <td><span class="badge badge-blue">Class VI</span></td>
+              <td class="td-mono">10 Jun 2026</td>
+              <td>46/50</td><td>48/50</td><td>44/50</td>
+              <td><strong>138</strong></td>
+              <td style="color:var(--success);font-weight:700">92%</td>
+              <td><span class="badge badge-green">Qualified</span></td>
+              <td><button class="btn btn-sm" onclick="showToast('Opening result card...','info')">View</button></td>
+            </tr>
+            <tr>
+              <td><input type="checkbox" class="table-checkbox row-chk"></td>
+              <td class="td-mono">ET-002</td>
+              <td><div class="td-name">Priya Mehta</div></td>
+              <td><span class="badge badge-blue">Class VI</span></td>
+              <td class="td-mono">10 Jun 2026</td>
+              <td>38/50</td><td>42/50</td><td>35/50</td>
+              <td><strong>115</strong></td>
+              <td style="color:var(--success);font-weight:700">76.7%</td>
+              <td><span class="badge badge-green">Qualified</span></td>
+              <td><button class="btn btn-sm" onclick="showToast('Opening result card...','info')">View</button></td>
+            </tr>
+            <tr>
+              <td><input type="checkbox" class="table-checkbox row-chk"></td>
+              <td class="td-mono">ET-003</td>
+              <td><div class="td-name">Rohan Kumar</div></td>
+              <td><span class="badge badge-orange">Class VII</span></td>
+              <td class="td-mono">10 Jun 2026</td>
+              <td>29/50</td><td>31/50</td><td>27/50</td>
+              <td><strong>87</strong></td>
+              <td style="color:var(--warning);font-weight:700">58%</td>
+              <td><span class="badge badge-red">Not Qualified</span></td>
+              <td><button class="btn btn-sm" onclick="showToast('Opening result card...','info')">View</button></td>
+            </tr>
+            <tr>
+              <td><input type="checkbox" class="table-checkbox row-chk"></td>
+              <td class="td-mono">ET-004</td>
+              <td><div class="td-name">Ananya Reddy</div></td>
+              <td><span class="badge badge-orange">Class VIII</span></td>
+              <td class="td-mono">10 Jun 2026</td>
+              <td>44/50</td><td>47/50</td><td>46/50</td>
+              <td><strong>137</strong></td>
+              <td style="color:var(--success);font-weight:700">91.3%</td>
+              <td><span class="badge badge-green">Qualified</span></td>
+              <td><button class="btn btn-sm" onclick="showToast('Opening result card...','info')">View</button></td>
+            </tr>
+            <tr>
+              <td><input type="checkbox" class="table-checkbox row-chk"></td>
+              <td class="td-mono">ET-005</td>
+              <td><div class="td-name">Diya Patel</div></td>
+              <td><span class="badge badge-blue">Class VI</span></td>
+              <td class="td-mono">10 Jun 2026</td>
+              <td>—</td><td>—</td><td>—</td>
+              <td><strong>—</strong></td>
+              <td>—</td>
+              <td><span class="badge badge-yellow">Absent</span></td>
+              <td><button class="btn btn-sm" onclick="showToast('Candidate was absent','warning')">View</button></td>
+            </tr>
+            <tr>
+              <td><input type="checkbox" class="table-checkbox row-chk"></td>
+              <td class="td-mono">ET-006</td>
+              <td><div class="td-name">Arjun Verma</div></td>
+              <td><span class="badge badge-orange">Class VII</span></td>
+              <td class="td-mono">10 Jun 2026</td>
+              <td>35/50</td><td>38/50</td><td>34/50</td>
+              <td><strong>107</strong></td>
+              <td style="color:var(--success);font-weight:700">71.3%</td>
+              <td><span class="badge badge-green">Qualified</span></td>
+              <td><button class="btn btn-sm" onclick="showToast('Opening result card...','info')">View</button></td>
+            </tr>
+            <tr>
+              <td><input type="checkbox" class="table-checkbox row-chk"></td>
+              <td class="td-mono">ET-007</td>
+              <td><div class="td-name">Sana Khan</div></td>
+              <td><span class="badge badge-orange">Class VIII</span></td>
+              <td class="td-mono">10 Jun 2026</td>
+              <td>40/50</td><td>43/50</td><td>41/50</td>
+              <td><strong>124</strong></td>
+              <td style="color:var(--success);font-weight:700">82.7%</td>
+              <td><span class="badge badge-green">Qualified</span></td>
+              <td><button class="btn btn-sm" onclick="showToast('Opening result card...','info')">View</button></td>
+            </tr>
+            <tr>
+              <td><input type="checkbox" class="table-checkbox row-chk"></td>
+              <td class="td-mono">ET-008</td>
+              <td><div class="td-name">Mihir Gupta</div></td>
+              <td><span class="badge badge-blue">Class VI</span></td>
+              <td class="td-mono">10 Jun 2026</td>
+              <td>22/50</td><td>25/50</td><td>20/50</td>
+              <td><strong>67</strong></td>
+              <td style="color:var(--accent);font-weight:700">44.7%</td>
+              <td><span class="badge badge-red">Not Qualified</span></td>
+              <td><button class="btn btn-sm" onclick="showToast('Opening result card...','info')">View</button></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="table-footer">
+        <span class="table-info" id="tableInfo">Showing 8 of 44 results</span>
+        <div class="pagination">
+          <button class="page-btn"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
+          <button class="page-btn active">1</button>
+          <button class="page-btn">2</button>
+          <button class="page-btn">3</button>
+          <button class="page-btn"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Schedule Test Modal -->
+    <div class="modal-backdrop" id="scheduleModal">
+      <div class="modal" style="max-width:600px">
+        <div class="modal-header">
+          <div class="modal-title">Schedule New Entrance Test</div>
+          <button class="modal-close" onclick="closeModal('scheduleModal')"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+        </div>
+        <div class="modal-body">
+          <div class="form-grid">
+            <div class="form-group form-full"><label class="form-label">Test Name <span class="req">*</span></label><input type="text" class="form-input" placeholder="e.g., Admission Test — Batch C"></div>
+            <div class="form-group"><label class="form-label">For Class <span class="req">*</span></label><select class="form-select" required><option value="">Select Class Range</option><option>Nursery – UKG</option><option>Class I – V</option><option>Class VI – VIII</option><option>Class IX – X</option><option>Class XI – XII</option></select></div>
+            <div class="form-group"><label class="form-label">Test Date <span class="req">*</span></label><input type="date" class="form-input" required></div>
+            <div class="form-group"><label class="form-label">Start Time <span class="req">*</span></label><input type="time" class="form-input" value="09:00" required></div>
+            <div class="form-group"><label class="form-label">Duration</label><select class="form-select"><option>1 hour</option><option>1.5 hours</option><option>2 hours</option><option>2.5 hours</option><option>3 hours</option></select></div>
+            <div class="form-group"><label class="form-label">Venue</label><input type="text" class="form-input" placeholder="Hall / Room name"></div>
+            <div class="form-group"><label class="form-label">Max Capacity</label><input type="number" class="form-input" placeholder="e.g., 100"></div>
+            <div class="form-group"><label class="form-label">Cutoff Score (%)</label><input type="number" class="form-input" placeholder="e.g., 60" min="0" max="100"></div>
+            <div class="form-group form-full"><label class="form-label">Subjects / Assessment Areas</label><input type="text" class="form-input" placeholder="e.g., English, Mathematics, General Knowledge"></div>
+            <div class="form-group form-full"><label class="form-label">Instructions for Candidates</label><textarea class="form-textarea" placeholder="Special instructions to display on admit card..."></textarea></div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-ghost" onclick="closeModal('scheduleModal')">Cancel</button>
+          <button class="btn btn-primary" onclick="saveTest()">Schedule Test</button>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+<div class="toast-container" id="toastContainer"></div>
+<script src="../../js/app.js"></script>
+<script src="../../js/sidebar.js"></script>
+<script>
+renderSidebar('admission-mod','adm-entrance','../../');
+function showToast(msg, type) {
+  type = type || 'success';
+  var icons = { success:'<path d="M9 11l3 3L22 4"/>', error:'<path d="M18 6 6 18M6 6l12 12"/>', info:'<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>', warning:'<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>' };
+  var c = document.getElementById('toastContainer');
+  var t = document.createElement('div');
+  t.className = 'toast toast-' + type;
+  t.innerHTML = '<div class="toast-icon"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">'+icons[type]+'</svg></div><div class="toast-body"><div class="toast-title">'+(type.charAt(0).toUpperCase()+type.slice(1))+'</div><div class="toast-msg">'+msg+'</div></div>';
+  c.appendChild(t);
+  setTimeout(function(){t.classList.add('show');},10);
+  setTimeout(function(){t.classList.remove('show');setTimeout(function(){t.remove();},300);},3500);
+}
+function openModal(id) { var m=document.getElementById(id); if(m) m.classList.add('open'); }
+function closeModal(id) { var m=document.getElementById(id); if(m) m.classList.remove('open'); }
+document.addEventListener('click', function(e) { if(e.target.classList.contains('modal-backdrop')) e.target.classList.remove('open'); });
+function searchTable() {
+  var q = document.getElementById('searchInput').value.toLowerCase();
+  var rows = document.querySelectorAll('#tableBody tr');
+  var v = 0;
+  rows.forEach(function(r){ var s=r.textContent.toLowerCase().includes(q); r.style.display=s?'':'none'; if(s)v++; });
+  document.getElementById('tableInfo').textContent = 'Showing '+v+' of 44 results';
+}
+function filterTable() { searchTable(); }
+function clearFilters() { document.getElementById('searchInput').value=''; searchTable(); }
+function toggleAll(cb) { document.querySelectorAll('.row-chk').forEach(function(c){c.checked=cb.checked;}); }
+function saveTest() { closeModal('scheduleModal'); showToast('Entrance test scheduled successfully! Admit cards can now be generated.','success'); }
+function exportData() { showToast('Preparing results export...','info'); }
+
+// Score distribution chart
+var ctx = document.getElementById('scoreChart');
+var isDark = function(){ return document.documentElement.getAttribute('data-theme')==='dark'; };
+var scoreChart = new Chart(ctx, {
+  type: 'bar',
+  data: {
+    labels: ['0–40%','41–50%','51–60%','61–70%','71–80%','81–90%','91–100%'],
+    datasets: [{
+      label: 'Candidates',
+      data: [4, 7, 10, 12, 15, 18, 12],
+      backgroundColor: ['#E8505B','#E8505B','#F39C12','#F39C12','#16A085','#16A085','#0A3D62'],
+      borderRadius: 6, borderSkipped: false
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { display: false } },
+    scales: {
+      x: { grid: { display: false }, ticks: { font: { size: 10 }, color: isDark()?'#94A3B8':'#6C757D' } },
+      y: { grid: { color: isDark()?'rgba(255,255,255,0.06)':'rgba(0,0,0,0.06)' }, ticks: { font: { size: 10 }, color: isDark()?'#94A3B8':'#6C757D' } }
+    }
+  }
+});
+</script>
+</body>
+</html>

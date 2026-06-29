@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mark Student Attendance — EduCore SMS</title>
+  <meta name="description" content="Mark daily student attendance by class and section with period-wise tracking, bulk actions, and real-time status.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;900&family=IBM+Plex+Mono:wght@400;500;600&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../css/main.css">
+  <link rel="stylesheet" href="../../css/components.css">
+  <style>
+    /* Period Tabs */
+    .period-tabs { display:flex; gap:0.35rem; flex-wrap:wrap; margin-bottom:1.25rem; background:var(--bg2); padding:0.5rem; border-radius:var(--radius-sm); border:1px solid var(--border); }
+    .period-tab { padding:5px 14px; border-radius:6px; font-size:0.75rem; font-weight:600; border:none; cursor:pointer; background:transparent; color:var(--text2); transition:all 0.18s; font-family:'IBM Plex Mono',monospace; }
+    .period-tab.active { background:var(--primary); color:#fff; box-shadow:0 2px 8px rgba(10,61,98,0.25); }
+    .period-tab:hover:not(.active) { background:var(--bg); color:var(--primary); }
+    /* Filters */
+    .att-filter-bar { display:flex; gap:0.75rem; flex-wrap:wrap; align-items:center; background:var(--bg2); padding:1rem 1.25rem; border-radius:var(--radius); border:1px solid var(--border); margin-bottom:1.25rem; }
+    .att-filter-bar .filter-label { font-size:0.72rem; font-weight:600; color:var(--text2); white-space:nowrap; }
+    .att-filter-bar select, .att-filter-bar input[type=date] { padding:6px 10px; border-radius:6px; border:1px solid var(--border); background:var(--bg); color:var(--text); font-size:0.8rem; font-family:'DM Sans',sans-serif; }
+    .att-filter-bar select:focus, .att-filter-bar input:focus { outline:none; border-color:var(--primary); }
+    /* Student Grid */
+    .student-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(340px,1fr)); gap:1rem; }
+    .student-card { background:var(--bg2); border:2px solid var(--border); border-radius:var(--radius); padding:0.9rem 1rem; display:flex; gap:0.85rem; align-items:flex-start; transition:border-color 0.18s, box-shadow 0.18s; position:relative; }
+    .student-card.att-present { border-color:var(--success); background:rgba(22,160,133,0.04); }
+    .student-card.att-absent  { border-color:var(--accent);  background:rgba(232,80,91,0.04); }
+    .student-card.att-late    { border-color:var(--warning); background:rgba(243,156,18,0.04); }
+    .student-card.att-medical { border-color:var(--info);    background:rgba(41,128,185,0.04); }
+    .student-card.att-casual  { border-color:var(--purple);  background:rgba(142,68,173,0.04); }
+    .student-card.att-halfday { border-color:var(--orange);  background:rgba(230,126,34,0.04); }
+    .student-card.att-excused { border-color:var(--text3);   background:rgba(154,163,176,0.04); }
+    .s-avatar { width:44px; height:44px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:0.78rem; font-weight:700; color:#fff; flex-shrink:0; }
+    .s-body { flex:1; min-width:0; }
+    .s-name { font-size:0.87rem; font-weight:700; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .s-meta { font-size:0.7rem; color:var(--text2); font-family:'IBM Plex Mono',monospace; }
+    .s-tags { display:flex; gap:0.35rem; margin-top:0.4rem; flex-wrap:wrap; }
+    .s-tag { font-size:0.62rem; padding:2px 7px; border-radius:20px; font-weight:600; }
+    .att-btn-row { display:flex; gap:0.3rem; flex-wrap:wrap; margin-top:0.55rem; }
+    .att-btn { padding:4px 9px; border-radius:5px; font-size:0.68rem; font-weight:700; border:1.5px solid transparent; cursor:pointer; transition:all 0.15s; font-family:'DM Sans',sans-serif; }
+    .att-btn.P  { border-color:var(--success); color:var(--success); background:transparent; }
+    .att-btn.A  { border-color:var(--accent);  color:var(--accent);  background:transparent; }
+    .att-btn.L  { border-color:var(--warning); color:var(--warning); background:transparent; }
+    .att-btn.ML { border-color:var(--info);    color:var(--info);    background:transparent; }
+    .att-btn.CL { border-color:var(--purple);  color:var(--purple);  background:transparent; }
+    .att-btn.HD { border-color:var(--orange);  color:var(--orange);  background:transparent; }
+    .att-btn.EX { border-color:var(--text3);   color:var(--text3);   background:transparent; }
+    .att-btn.selected { color:#fff !important; }
+    .att-btn.P.selected  { background:var(--success); }
+    .att-btn.A.selected  { background:var(--accent); }
+    .att-btn.L.selected  { background:var(--warning); }
+    .att-btn.ML.selected { background:var(--info); }
+    .att-btn.CL.selected { background:var(--purple); }
+    .att-btn.HD.selected { background:var(--orange); }
+    .att-btn.EX.selected { background:var(--text3); }
+    .att-btn:hover { opacity:0.85; }
+    .s-status-badge { position:absolute; top:0.6rem; right:0.7rem; font-size:0.6rem; padding:2px 8px; border-radius:20px; font-weight:700; }
+    .remarks-input { width:100%; margin-top:0.4rem; padding:4px 8px; border-radius:5px; border:1px solid var(--border); background:var(--bg); color:var(--text); font-size:0.72rem; font-family:'DM Sans',sans-serif; }
+    .remarks-input:focus { outline:none; border-color:var(--primary); }
+    /* Summary bar */
+    .att-summary-bar { display:flex; gap:1rem; background:var(--bg2); border:1px solid var(--border); border-radius:var(--radius-sm); padding:0.75rem 1.25rem; margin-bottom:1rem; flex-wrap:wrap; }
+    .att-sum-item { display:flex; align-items:center; gap:0.4rem; font-size:0.8rem; }
+    .att-sum-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+    .att-sum-label { color:var(--text2); }
+    .att-sum-count { font-weight:700; font-family:'IBM Plex Mono',monospace; }
+    /* Bulk action bar */
+    .bulk-bar { position:sticky; bottom:1rem; z-index:100; background:var(--primary); border-radius:var(--radius); padding:0.85rem 1.25rem; display:flex; gap:0.75rem; align-items:center; box-shadow:var(--shadow-lg); flex-wrap:wrap; }
+    .bulk-bar-label { color:rgba(255,255,255,0.7); font-size:0.8rem; flex:1; }
+    .bulk-btn { padding:7px 16px; border-radius:7px; font-size:0.78rem; font-weight:600; border:none; cursor:pointer; transition:all 0.15s; }
+    .bulk-btn-light { background:rgba(255,255,255,0.15); color:#fff; border:1px solid rgba(255,255,255,0.25); }
+    .bulk-btn-light:hover { background:rgba(255,255,255,0.25); }
+    .bulk-btn-success { background:var(--success); color:#fff; }
+    .bulk-btn-danger  { background:var(--accent);  color:#fff; }
+    .bulk-btn-primary { background:#fff; color:var(--primary); font-weight:700; }
+    /* Lock overlay */
+    .lock-overlay { display:none; position:absolute; inset:0; background:rgba(var(--bg2-rgb,255,255,255),0.7); border-radius:var(--radius); z-index:10; align-items:center; justify-content:center; flex-direction:column; gap:0.5rem; backdrop-filter:blur(2px); }
+    .lock-overlay.show { display:flex; }
+  </style>
+</head>
+<body>
+<div class="mobile-overlay" id="mobileOverlay" onclick="closeMobileSidebar()"></div>
+<header class="topbar">
+  <div class="logo-area">
+    <div class="logo-mark"><svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div>
+    <span class="logo-text">EduCore SMS</span>
+  </div>
+  <button class="sidebar-toggle" onclick="toggleSidebar()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round">
+      <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+    </svg>
+  </button>
+  <div class="tb-search">
+    <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+    <input type="text" placeholder="Search students…" id="globalSearch" oninput="filterStudents()">
+  </div>
+  <div class="tb-right">
+    <div class="tb-date" id="tb-date"></div>
+    <button class="dark-toggle" onclick="toggleDarkMode()">
+      <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/></svg>
+    </button>
+    <div class="dropdown-wrapper">
+      <div class="tb-btn" onclick="toggleNotif(event)" id="notifBtn">
+        <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        <div class="notif-dot"></div>
+      </div>
+      <div class="notif-dropdown" id="notifDropdown">
+        <div class="notif-header"><h4>Notifications</h4><span onclick="markAllRead()">Mark all read</span></div>
+        <div class="notif-item">
+          <div class="notif-icon" style="background:var(--warning)"><svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg></div>
+          <div class="notif-text"><p><strong>Attendance window</strong> — Today's attendance must be submitted by 10:30 AM</p><span>8:45 AM</span></div>
+          <div class="notif-unread"></div>
+        </div>
+        <div class="notif-footer"><a href="alerts.html">View all →</a></div>
+      </div>
+    </div>
+    <div class="dropdown-wrapper">
+      <div class="tb-user" onclick="toggleUserDropdown(event)" id="userBtn">
+        <div class="avatar">SS</div>
+        <div class="tb-user-info"><div class="tb-user-name">Mrs. Sunita Sharma</div><div class="tb-user-role">Class Teacher · IX-A</div></div>
+      </div>
+      <div class="user-dropdown" id="userDropdown">
+        <div class="user-dd-header"><div class="user-dd-name">Mrs. Sunita Sharma</div><div class="user-dd-role">Class Teacher · EduCore SMS</div></div>
+        <a class="user-dd-item danger" href="../../index.html"><svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>Logout</a>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="layout" id="layout">
+  <nav class="sidebar" id="sidebar"><div id="sidebar-nav"></div></nav>
+  <main class="main">
+    <div class="breadcrumb">
+      <a href="../../index.html">Dashboard</a><span class="breadcrumb-sep">›</span>
+      <a href="dashboard.html">Attendance</a><span class="breadcrumb-sep">›</span>
+      <span>Mark Student Attendance</span>
+    </div>
+    <div class="page-header">
+      <div>
+        <h1>Mark Student Attendance</h1>
+        <div class="page-subtitle">Daily Attendance Register · Academic Year 2025–26 · Term II</div>
+      </div>
+      <div class="ph-actions">
+        <button class="btn btn-ghost" onclick="copyPreviousDay()">
+          <svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          Copy Previous Day
+        </button>
+        <button class="btn btn-ghost" onclick="saveDraft()">
+          <svg viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+          Save Draft
+        </button>
+        <button class="btn btn-primary" onclick="openSubmitModal()">
+          <svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+          Submit Attendance
+        </button>
+      </div>
+    </div>
+
+    <!-- Filter Bar -->
+    <div class="att-filter-bar">
+      <div><span class="filter-label">Session</span>
+        <select id="fSession"><option>2025–26</option><option>2024–25</option></select>
+      </div>
+      <div><span class="filter-label">Campus</span>
+        <select id="fCampus"><option>Main Campus</option><option>North Branch</option><option>South Branch</option></select>
+      </div>
+      <div><span class="filter-label">Grade</span>
+        <select id="fGrade" onchange="renderGrid()">
+          <option value="IX">IX</option><option value="X">X</option><option value="XI">XI</option><option value="XII">XII</option>
+          <option value="VIII">VIII</option><option value="VII">VII</option>
+        </select>
+      </div>
+      <div><span class="filter-label">Section</span>
+        <select id="fSection" onchange="renderGrid()"><option value="A">A</option><option value="B">B</option><option value="C">C</option></select>
+      </div>
+      <div><span class="filter-label">Date</span>
+        <input type="date" id="fDate" value="2026-06-29">
+      </div>
+      <div><span class="filter-label">Subject</span>
+        <select id="fSubject"><option>All (Daily)</option><option>Mathematics</option><option>Physics</option><option>Chemistry</option><option>English</option><option>Hindi</option><option>Computer Sc.</option></select>
+      </div>
+      <div style="margin-left:auto;display:flex;gap:0.5rem">
+        <button class="btn btn-ghost btn-sm" onclick="exportAttendance()">
+          <svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Export
+        </button>
+        <button class="btn btn-ghost btn-sm" onclick="window.print()">Print</button>
+      </div>
+    </div>
+
+    <!-- Period Tabs -->
+    <div class="period-tabs" id="periodTabs"></div>
+
+    <!-- Info banner for submitted attendance -->
+    <div id="submittedBanner" style="display:none;padding:0.7rem 1rem;background:rgba(22,160,133,0.08);border:1px solid rgba(22,160,133,0.3);border-radius:var(--radius-sm);margin-bottom:1rem;font-size:0.82rem;color:var(--text);display:none;align-items:center;gap:0.75rem">
+      <svg viewBox="0 0 24 24" style="width:16px;height:16px;stroke:var(--success);fill:none;stroke-width:2;flex-shrink:0"><path d="M9 11l3 3L22 4"/></svg>
+      Attendance submitted at 9:08 AM by Mrs. Sunita Sharma. To make changes, <a href="#" onclick="requestCorrection()" style="color:var(--primary);font-weight:600">request correction →</a>
+    </div>
+
+    <!-- Summary Bar -->
+    <div class="att-summary-bar">
+      <div class="att-sum-item"><div class="att-sum-dot" style="background:var(--text3)"></div><span class="att-sum-label">Total:</span><span class="att-sum-count" id="sumTotal">0</span></div>
+      <div class="att-sum-item"><div class="att-sum-dot" style="background:var(--success)"></div><span class="att-sum-label">Present:</span><span class="att-sum-count" id="sumPresent" style="color:var(--success)">0</span></div>
+      <div class="att-sum-item"><div class="att-sum-dot" style="background:var(--accent)"></div><span class="att-sum-label">Absent:</span><span class="att-sum-count" id="sumAbsent" style="color:var(--accent)">0</span></div>
+      <div class="att-sum-item"><div class="att-sum-dot" style="background:var(--warning)"></div><span class="att-sum-label">Late:</span><span class="att-sum-count" id="sumLate" style="color:var(--warning)">0</span></div>
+      <div class="att-sum-item"><div class="att-sum-dot" style="background:var(--info)"></div><span class="att-sum-label">Med. Leave:</span><span class="att-sum-count" id="sumML" style="color:var(--info)">0</span></div>
+      <div class="att-sum-item"><div class="att-sum-dot" style="background:var(--purple)"></div><span class="att-sum-label">CL:</span><span class="att-sum-count" id="sumCL" style="color:var(--purple)">0</span></div>
+      <div class="att-sum-item" style="margin-left:auto">
+        <span class="att-sum-label">Attendance %:</span>
+        <span class="att-sum-count" id="sumPct" style="font-size:1rem;color:var(--primary)">–</span>
+      </div>
+    </div>
+
+    <!-- Bulk Actions -->
+    <div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-bottom:1rem;align-items:center">
+      <span style="font-size:0.78rem;color:var(--text2);font-weight:600">Bulk Mark:</span>
+      <button class="btn btn-ghost btn-sm" style="border-color:var(--success);color:var(--success)" onclick="markAll('P')">✓ All Present</button>
+      <button class="btn btn-ghost btn-sm" style="border-color:var(--accent);color:var(--accent)" onclick="markAll('A')">✗ All Absent</button>
+      <button class="btn btn-ghost btn-sm" style="border-color:var(--warning);color:var(--warning)" onclick="markAll('L')">⏱ All Late</button>
+      <button class="btn btn-ghost btn-sm" onclick="clearAll()">✕ Clear All</button>
+      <div style="margin-left:auto;display:flex;gap:0.5rem;align-items:center">
+        <input type="text" placeholder="Search students…" id="studentSearch" oninput="filterStudents()" class="form-input" style="padding:6px 12px;font-size:0.8rem;width:200px">
+      </div>
+    </div>
+
+    <!-- Student Grid -->
+    <div class="student-grid" id="studentGrid"></div>
+
+    <!-- Bulk Bar -->
+    <div class="bulk-bar" id="bulkBar">
+      <svg viewBox="0 0 24 24" style="width:20px;height:20px;stroke:#fff;fill:none;stroke-width:2"><path d="M9 11l3 3L22 4"/></svg>
+      <span class="bulk-bar-label" id="bulkLabel">0 of 35 students marked</span>
+      <button class="bulk-btn bulk-btn-light" onclick="saveDraft()">💾 Save Draft</button>
+      <button class="bulk-btn bulk-btn-success" onclick="openSubmitModal()">Submit Attendance →</button>
+    </div>
+  </main>
+</div>
+
+<!-- Submit Confirmation Modal -->
+<div class="modal-backdrop" id="submitModal">
+  <div class="modal" style="max-width:500px">
+    <div class="modal-header">
+      <div class="modal-title">Submit Attendance — IX-A</div>
+      <button class="modal-close" onclick="closeModal('submitModal')"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <div class="alert alert-info" style="margin-bottom:1rem">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        Please review the summary before submitting. Once submitted, changes require coordinator approval.
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;margin-bottom:1rem" id="submitSummary"></div>
+      <div class="form-group">
+        <label class="form-label">Remarks (optional)</label>
+        <textarea class="form-textarea" id="submitRemarks" placeholder="E.g. School event — Assembly held, 5 students arrived after prayer..." rows="2"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('submitModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="submitAttendance()">
+        <svg viewBox="0 0 24 24" style="width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2"><path d="M9 11l3 3L22 4"/></svg>
+        Confirm & Submit
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Student Detail Drawer -->
+<div class="modal-backdrop" id="detailModal">
+  <div class="modal" style="max-width:480px">
+    <div class="modal-header">
+      <div class="modal-title" id="detailModalTitle">Student Details</div>
+      <button class="modal-close" onclick="closeModal('detailModal')"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="modal-body" id="detailModalBody"></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('detailModal')">Close</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+<script src="../../js/app.js"></script>
+<script src="../../js/sidebar.js"></script>
+<script>
+renderSidebar('attendance','student-att','../../');
+
+/* ── 35 REALISTIC STUDENTS — CLASS IX-A ── */
+var STUDENTS = [
+  {id:1,adm:'ADM-0901',roll:'01',name:'Aarav Sharma',gender:'M',house:'Red',parentPhone:'+91 98765 43210',parentName:'Rajesh Sharma',prevAtt:91},
+  {id:2,adm:'ADM-0902',roll:'02',name:'Aisha Khan',gender:'F',house:'Blue',parentPhone:'+91 98234 56789',parentName:'Imran Khan',prevAtt:88},
+  {id:3,adm:'ADM-0903',roll:'03',name:'Akash Verma',gender:'M',house:'Green',parentPhone:'+91 97654 32198',parentName:'Suresh Verma',prevAtt:74},
+  {id:4,adm:'ADM-0904',roll:'04',name:'Ananya Gupta',gender:'F',house:'Yellow',parentPhone:'+91 96543 21987',parentName:'Amit Gupta',prevAtt:96},
+  {id:5,adm:'ADM-0905',roll:'05',name:'Arjun Das',gender:'M',house:'Red',parentPhone:'+91 95432 19876',parentName:'Biplab Das',prevAtt:82},
+  {id:6,adm:'ADM-0906',roll:'06',name:'Bhavya Nair',gender:'F',house:'Blue',parentPhone:'+91 94321 98765',parentName:'Suresh Nair',prevAtt:89},
+  {id:7,adm:'ADM-0907',roll:'07',name:'Chirag Patel',gender:'M',house:'Green',parentPhone:'+91 93219 87654',parentName:'Mahesh Patel',prevAtt:78},
+  {id:8,adm:'ADM-0908',roll:'08',name:'Deepika Reddy',gender:'F',house:'Yellow',parentPhone:'+91 92198 76543',parentName:'Krishna Reddy',prevAtt:92},
+  {id:9,adm:'ADM-0909',roll:'09',name:'Dev Agarwal',gender:'M',house:'Red',parentPhone:'+91 91987 65432',parentName:'Sanjay Agarwal',prevAtt:68},
+  {id:10,adm:'ADM-0910',roll:'10',name:'Divya Mehta',gender:'F',house:'Blue',parentPhone:'+91 90876 54321',parentName:'Rakesh Mehta',prevAtt:94},
+  {id:11,adm:'ADM-0911',roll:'11',name:'Farhan Sheikh',gender:'M',house:'Green',parentPhone:'+91 89765 43210',parentName:'Yusuf Sheikh',prevAtt:85},
+  {id:12,adm:'ADM-0912',roll:'12',name:'Gayatri Iyer',gender:'F',house:'Yellow',parentPhone:'+91 88654 32109',parentName:'Ramesh Iyer',prevAtt:97},
+  {id:13,adm:'ADM-0913',roll:'13',name:'Harsh Kapoor',gender:'M',house:'Red',parentPhone:'+91 87543 21098',parentName:'Deepak Kapoor',prevAtt:76},
+  {id:14,adm:'ADM-0914',roll:'14',name:'Ishita Joshi',gender:'F',house:'Blue',parentPhone:'+91 86432 10987',parentName:'Neeraj Joshi',prevAtt:90},
+  {id:15,adm:'ADM-0915',roll:'15',name:'Jay Malhotra',gender:'M',house:'Green',parentPhone:'+91 85321 09876',parentName:'Vikas Malhotra',prevAtt:83},
+  {id:16,adm:'ADM-0916',roll:'16',name:'Kavya Pillai',gender:'F',house:'Yellow',parentPhone:'+91 84210 98765',parentName:'Suresh Pillai',prevAtt:91},
+  {id:17,adm:'ADM-0917',roll:'17',name:'Kunal Singh',gender:'M',house:'Red',parentPhone:'+91 83109 87654',parentName:'Harpal Singh',prevAtt:72},
+  {id:18,adm:'ADM-0918',roll:'18',name:'Lavanya Rao',gender:'F',house:'Blue',parentPhone:'+91 82098 76543',parentName:'Venkatesan Rao',prevAtt:95},
+  {id:19,adm:'ADM-0919',roll:'19',name:'Manav Tiwari',gender:'M',house:'Green',parentPhone:'+91 81987 65432',parentName:'Alok Tiwari',prevAtt:80},
+  {id:20,adm:'ADM-0920',roll:'20',name:'Meera Krishnan',gender:'F',house:'Yellow',parentPhone:'+91 80876 54321',parentName:'Gopal Krishnan',prevAtt:93},
+  {id:21,adm:'ADM-0921',roll:'21',name:'Mohammed Rizwan',gender:'M',house:'Red',parentPhone:'+91 79765 43210',parentName:'Abdul Rizwan',prevAtt:87},
+  {id:22,adm:'ADM-0922',roll:'22',name:'Neha Sharma',gender:'F',house:'Blue',parentPhone:'+91 78654 32109',parentName:'Pradeep Sharma',prevAtt:99},
+  {id:23,adm:'ADM-0923',roll:'23',name:'Nikhil Jain',gender:'M',house:'Green',parentPhone:'+91 77543 21098',parentName:'Pankaj Jain',prevAtt:84},
+  {id:24,adm:'ADM-0924',roll:'24',name:'Pallavi Desai',gender:'F',house:'Yellow',parentPhone:'+91 76432 10987',parentName:'Sunil Desai',prevAtt:77},
+  {id:25,adm:'ADM-0925',roll:'25',name:'Parth Thakur',gender:'M',house:'Red',parentPhone:'+91 75321 09876',parentName:'Vikram Thakur',prevAtt:88},
+  {id:26,adm:'ADM-0926',roll:'26',name:'Pooja Mishra',gender:'F',house:'Blue',parentPhone:'+91 74210 98765',parentName:'Rakesh Mishra',prevAtt:86},
+  {id:27,adm:'ADM-0927',roll:'27',name:'Prateek Bose',gender:'M',house:'Green',parentPhone:'+91 73109 87654',parentName:'Subhash Bose',prevAtt:79},
+  {id:28,adm:'ADM-0928',roll:'28',name:'Priya Menon',gender:'F',house:'Yellow',parentPhone:'+91 72098 76543',parentName:'Anand Menon',prevAtt:93},
+  {id:29,adm:'ADM-0929',roll:'29',name:'Rahul Chauhan',gender:'M',house:'Red',parentPhone:'+91 71987 65432',parentName:'Dinesh Chauhan',prevAtt:61},
+  {id:30,adm:'ADM-0930',roll:'30',name:'Riya Banerjee',gender:'F',house:'Blue',parentPhone:'+91 70876 54321',parentName:'Amitabh Banerjee',prevAtt:92},
+  {id:31,adm:'ADM-0931',roll:'31',name:'Rohan Kulkarni',gender:'M',house:'Green',parentPhone:'+91 69765 43210',parentName:'Suresh Kulkarni',prevAtt:85},
+  {id:32,adm:'ADM-0932',roll:'32',name:'Sakshi Dubey',gender:'F',house:'Yellow',parentPhone:'+91 68654 32109',parentName:'Vinod Dubey',prevAtt:90},
+  {id:33,adm:'ADM-0933',roll:'33',name:'Siddharth Roy',gender:'M',house:'Red',parentPhone:'+91 67543 21098',parentName:'Debasis Roy',prevAtt:82},
+  {id:34,adm:'ADM-0934',roll:'34',name:'Sneha Patil',gender:'F',house:'Blue',parentPhone:'+91 66432 10987',parentName:'Ashok Patil',prevAtt:94},
+  {id:35,adm:'ADM-0935',roll:'35',name:'Vikram Nair',gender:'M',house:'Green',parentPhone:'+91 65321 09876',parentName:'Rajendran Nair',prevAtt:75},
+];
+
+var houseColors = {Red:'#E8505B',Blue:'#2980B9',Green:'#16A085',Yellow:'#F39C12'};
+var avatarColors = ['#0A3D62','#E8505B','#16A085','#8E44AD','#F39C12','#2980B9','#E67E22'];
+var attendance = {}; // id -> status code
+var currentPeriod = 'Daily';
+
+/* ── PERIOD TABS ── */
+var periods = ['Daily','P-1','P-2','P-3','P-4','P-5','P-6','P-7','P-8'];
+var periodTimes = ['','7:45–8:35','8:35–9:25','9:25–10:15','10:35–11:25','11:25–12:15','12:15–1:05','1:30–2:10','2:10–2:50'];
+function renderPeriodTabs() {
+  var el = document.getElementById('periodTabs');
+  el.innerHTML = periods.map(function(p,i){
+    return '<button class="period-tab'+(p===currentPeriod?' active':'')+(i>0?' ':'')
+      +'" onclick="setPeriod(\''+p+'\')">'+p+(periodTimes[i]?'<br><span style="font-size:0.6rem;font-weight:400">'+periodTimes[i]+'</span>':'')+'</button>';
+  }).join('');
+}
+function setPeriod(p) { currentPeriod=p; renderPeriodTabs(); showToast('Period set to '+p,'info'); }
+
+/* ── STATUS CODES ── */
+var STATUS = {
+  P:  {label:'Present',  short:'P',  cls:'att-present', badgeClass:'badge-green',  color:'var(--success)'},
+  A:  {label:'Absent',   short:'A',  cls:'att-absent',  badgeClass:'badge-red',    color:'var(--accent)'},
+  L:  {label:'Late',     short:'L',  cls:'att-late',    badgeClass:'badge-yellow', color:'var(--warning)'},
+  ML: {label:'Med. Leave',short:'ML',cls:'att-medical', badgeClass:'badge-blue',   color:'var(--info)'},
+  CL: {label:'Cas. Leave',short:'CL',cls:'att-casual',  badgeClass:'badge-purple', color:'var(--purple)'},
+  HD: {label:'Half Day', short:'HD', cls:'att-halfday', badgeClass:'badge-orange', color:'var(--orange)'},
+  EX: {label:'Excused',  short:'EX', cls:'att-excused', badgeClass:'badge-gray',   color:'var(--text3)'},
+};
+
+function markStudent(id, code) {
+  attendance[id] = code;
+  var card = document.getElementById('sc-'+id);
+  if(card) {
+    // Reset classes
+    Object.values(STATUS).forEach(function(s){ card.classList.remove(s.cls); });
+    if(code) { card.classList.add(STATUS[code].cls); }
+    // Update badge
+    var badge = card.querySelector('.s-status-badge');
+    if(badge) {
+      if(code) {
+        badge.textContent = STATUS[code].short;
+        badge.className = 's-status-badge badge '+STATUS[code].badgeClass;
+        badge.style.display='';
+      } else {
+        badge.style.display='none';
+      }
+    }
+    // Highlight active button
+    card.querySelectorAll('.att-btn').forEach(function(b){
+      b.classList.remove('selected');
+      if(b.getAttribute('data-code')===code) b.classList.add('selected');
+    });
+  }
+  updateSummary();
+}
+
+function updateSummary() {
+  var counts = {P:0,A:0,L:0,ML:0,CL:0,HD:0,EX:0,unmarked:0};
+  STUDENTS.forEach(function(s){
+    var st = attendance[s.id];
+    if(st && counts[st]!==undefined) counts[st]++;
+    else if(!st) counts.unmarked++;
+  });
+  document.getElementById('sumTotal').textContent = STUDENTS.length;
+  document.getElementById('sumPresent').textContent = counts.P;
+  document.getElementById('sumAbsent').textContent = counts.A;
+  document.getElementById('sumLate').textContent = counts.L;
+  document.getElementById('sumML').textContent = counts.ML;
+  document.getElementById('sumCL').textContent = counts.CL;
+  var marked = counts.P+counts.A+counts.L+counts.ML+counts.CL+counts.HD+counts.EX;
+  var pct = marked>0?Math.round((counts.P/STUDENTS.length)*100)+'%':'–';
+  document.getElementById('sumPct').textContent = pct;
+  var label = marked+' of '+STUDENTS.length+' students marked';
+  var bl = document.getElementById('bulkLabel'); if(bl) bl.textContent=label;
+}
+
+function markAll(code) {
+  STUDENTS.forEach(function(s){ markStudent(s.id, code); });
+  showToast('All students marked as '+STATUS[code].label, 'success');
+}
+function clearAll() {
+  STUDENTS.forEach(function(s){ attendance[s.id]=null; markStudent(s.id, null); });
+  showToast('Attendance cleared','info');
+}
+
+/* ── RENDER STUDENT GRID ── */
+function renderGrid() {
+  var grid = document.getElementById('studentGrid');
+  var q = (document.getElementById('studentSearch')||{value:''}).value.toLowerCase();
+  grid.innerHTML = '';
+  STUDENTS.forEach(function(s, idx) {
+    if(q && !s.name.toLowerCase().includes(q) && !s.roll.includes(q) && !s.adm.toLowerCase().includes(q)) return;
+    var color = avatarColors[idx%avatarColors.length];
+    var initials = s.name.split(' ').slice(0,2).map(function(n){return n[0]}).join('');
+    var st = attendance[s.id]||null;
+    var stCls = st?STATUS[st].cls:'';
+    var warn = s.prevAtt<75?' ⚠':'';
+    var prevColor = s.prevAtt<75?'var(--accent)':s.prevAtt<85?'var(--warning)':'var(--success)';
+    var div = document.createElement('div');
+    div.className = 'student-card '+stCls;
+    div.id = 'sc-'+s.id;
+    div.innerHTML = '<div class="s-avatar" style="background:'+color+'">'+initials+'</div>'
+      +'<div class="s-body">'
+      +'<div class="s-name">'+s.name+'<span style="font-size:0.65rem;font-weight:400;color:var(--text3);font-family:\'IBM Plex Mono\',monospace"> #'+s.roll+'</span></div>'
+      +'<div class="s-meta">'+s.adm+' · '+s.gender+' · House: '+s.house+'</div>'
+      +'<div class="s-tags">'
+      +'<span class="s-tag" style="background:color-mix(in srgb,'+houseColors[s.house]+' 15%,transparent);color:'+houseColors[s.house]+'">'+s.house+'</span>'
+      +'<span class="s-tag" style="background:rgba(0,0,0,0.05);color:var(--text2)">YTD: <span style="color:'+prevColor+';font-weight:700">'+s.prevAtt+'%'+warn+'</span></span>'
+      +'</div>'
+      +'<div class="att-btn-row">'
+      +['P','A','L','ML','CL','HD','EX'].map(function(code){
+        return '<button class="att-btn '+code+(st===code?' selected':'')+'" data-code="'+code+'" onclick="markStudent('+s.id+',\''+code+'\')" title="'+STATUS[code].label+'">'+STATUS[code].short+'</button>';
+      }).join('')
+      +'</div>'
+      +'<input class="remarks-input" placeholder="Remarks…" id="rem-'+s.id+'">'
+      +'</div>'
+      +'<span class="s-status-badge badge '+(st?STATUS[st].badgeClass:'')+'" style="'+(st?'':'display:none')+'">'+(st?STATUS[st].short:'')+'</span>'
+      +'<button style="position:absolute;bottom:0.6rem;right:0.7rem;background:none;border:none;font-size:0.65rem;color:var(--primary);cursor:pointer;font-weight:600" onclick="viewStudent('+s.id+')">Profile</button>';
+    grid.appendChild(div);
+  });
+  updateSummary();
+}
+
+function filterStudents() { renderGrid(); }
+
+function viewStudent(id) {
+  var s = STUDENTS.find(function(x){return x.id===id;});
+  var prevColor = s.prevAtt<75?'var(--accent)':s.prevAtt<85?'var(--warning)':'var(--success)';
+  document.getElementById('detailModalTitle').textContent = s.name+' · '+s.adm;
+  document.getElementById('detailModalBody').innerHTML = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem">'
+    +'<div class="form-group"><label class="form-label">Admission No</label><div style="font-family:\'IBM Plex Mono\',monospace;font-size:0.85rem">'+s.adm+'</div></div>'
+    +'<div class="form-group"><label class="form-label">Roll No</label><div style="font-family:\'IBM Plex Mono\',monospace;font-size:0.85rem">'+s.roll+'</div></div>'
+    +'<div class="form-group"><label class="form-label">Gender</label><div>'+s.gender+'</div></div>'
+    +'<div class="form-group"><label class="form-label">House</label><div style="color:'+houseColors[s.house]+';font-weight:600">'+s.house+'</div></div>'
+    +'<div class="form-group"><label class="form-label">Parent/Guardian</label><div>'+s.parentName+'</div></div>'
+    +'<div class="form-group"><label class="form-label">Contact</label><div style="font-family:\'IBM Plex Mono\',monospace;font-size:0.82rem">'+s.parentPhone+'</div></div>'
+    +'<div class="form-group form-full"><label class="form-label">YTD Attendance</label><div style="display:flex;align-items:center;gap:0.75rem">'
+    +'<div style="flex:1;height:8px;background:var(--border);border-radius:4px"><div style="height:100%;border-radius:4px;background:'+prevColor+';width:'+s.prevAtt+'%"></div></div>'
+    +'<span style="font-weight:700;font-family:\'IBM Plex Mono\',monospace;color:'+prevColor+'">'+s.prevAtt+'%</span></div></div>'
+    +(s.prevAtt<75?'<div class="form-group form-full"><div class="alert alert-error" style="font-size:0.78rem"><svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg>Below 75% — Attendance Warning Issued. Parent notified.</div></div>':'')
+    +'</div>';
+  openModal('detailModal');
+}
+
+function openSubmitModal() {
+  var counts = {P:0,A:0,L:0,ML:0,CL:0,HD:0,EX:0};
+  STUDENTS.forEach(function(s){ var st=attendance[s.id]; if(st&&counts[st]!==undefined) counts[st]++; });
+  var total = STUDENTS.length;
+  var html = [
+    {label:'Total Students',val:total,color:'var(--text)'},
+    {label:'Present',val:counts.P,color:'var(--success)'},
+    {label:'Absent',val:counts.A,color:'var(--accent)'},
+    {label:'Late Arrival',val:counts.L,color:'var(--warning)'},
+    {label:'Medical Leave',val:counts.ML,color:'var(--info)'},
+    {label:'Casual Leave',val:counts.CL,color:'var(--purple)'},
+    {label:'Half Day',val:counts.HD,color:'var(--orange)'},
+    {label:'Excused',val:counts.EX,color:'var(--text3)'},
+    {label:'Attendance %',val:counts.P>0?Math.round((counts.P/total)*100)+'%':'0%',color:'var(--primary)'},
+  ].map(function(r){
+    return '<div style="background:var(--bg);border-radius:8px;padding:0.6rem 0.8rem;border:1px solid var(--border)">'
+      +'<div style="font-size:0.68rem;color:var(--text2);text-transform:uppercase;letter-spacing:0.04em">'+r.label+'</div>'
+      +'<div style="font-size:1.25rem;font-weight:700;color:'+r.color+';font-family:\'IBM Plex Mono\',monospace">'+r.val+'</div>'
+      +'</div>';
+  }).join('');
+  document.getElementById('submitSummary').innerHTML = html;
+  openModal('submitModal');
+}
+
+function submitAttendance() {
+  closeModal('submitModal');
+  showToast('Attendance submitted successfully for IX-A · 29 Jun 2026','success');
+  var b = document.getElementById('submittedBanner');
+  if(b){ b.style.display='flex'; }
+  setTimeout(function(){ document.querySelectorAll('.att-btn').forEach(function(b){b.disabled=true;}); },500);
+}
+
+function saveDraft() { showToast('Attendance saved as draft. Not yet submitted.','info'); }
+function copyPreviousDay() { markAll('P'); showToast('Previous day\'s attendance copied (all Present). Adjust as needed.','info'); }
+function requestCorrection() { showToast('Correction request sent to Coordinator Mrs. Rekha.','info'); }
+function exportAttendance() { showToast('Exporting attendance as Excel…','info'); }
+
+function openModal(id){ var m=document.getElementById(id);if(m)m.classList.add('open'); }
+function closeModal(id){ var m=document.getElementById(id);if(m)m.classList.remove('open'); }
+document.addEventListener('click',function(e){if(e.target.classList.contains('modal-backdrop'))e.target.classList.remove('open');});
+function showToast(msg,type){var icons={success:'<path d="M9 11l3 3L22 4"/>',error:'<path d="M18 6 6 18M6 6l12 12"/>',info:'<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>',warning:'<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>'};var c=document.getElementById('toastContainer');var t=document.createElement('div');t.className='toast toast-'+type;t.innerHTML='<div class="toast-icon"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">'+icons[type]+'</svg></div><div class="toast-body"><div class="toast-title">'+(type.charAt(0).toUpperCase()+type.slice(1))+'</div><div class="toast-msg">'+msg+'</div></div>';c.appendChild(t);setTimeout(function(){t.classList.add('show');},10);setTimeout(function(){t.classList.remove('show');setTimeout(function(){t.remove();},300);},3500);}
+
+renderPeriodTabs();
+renderGrid();
+</script>
+</body>
+</html>

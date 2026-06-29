@@ -1,0 +1,196 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Progress Card and Report Access - EduCore SMS</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;900&family=IBM+Plex+Mono:wght@400;500;600&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../css/main.css">
+  <link rel="stylesheet" href="../../css/components.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+</head>
+<body>
+<div class="mobile-overlay" id="mobileOverlay" onclick="closeMobileSidebar()"></div>
+<header class="topbar">
+  <div class="logo-area">
+    <div class="logo-mark"><svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div>
+    <span class="logo-text">EduCore SMS</span>
+  </div>
+  <button class="sidebar-toggle" onclick="toggleSidebar()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round">
+      <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+    </svg>
+  </button>
+  <div class="tb-search">
+    <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+    <input type="text" placeholder="Search anything..." id="globalSearch">
+  </div>
+  <div class="tb-right">
+    <div class="tb-date" id="tb-date"></div>
+    <button class="dark-toggle" onclick="toggleDarkMode()">
+      <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/></svg>
+    </button>
+    <div class="dropdown-wrapper">
+      <div class="tb-btn" onclick="toggleNotif(event)" id="notifBtn">
+        <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        <div class="notif-dot"></div>
+      </div>
+      <div class="notif-dropdown" id="notifDropdown">
+        <div class="notif-header"><h4>Notifications</h4><span onclick="markAllRead()">Mark all read</span></div>
+        <div class="notif-item">
+          <div class="notif-icon" style="background:var(--warning)"><svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg></div>
+          <div class="notif-text"><p><strong>Fee dues</strong> - 48 students have outstanding dues</p><span>1 hour ago</span></div>
+          <div class="notif-unread"></div>
+        </div>
+        <div class="notif-item">
+          <div class="notif-icon" style="background:var(--info)"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>
+          <div class="notif-text"><p><strong>New admission</strong> - 5 new applications received</p><span>3 hours ago</span></div>
+          <div class="notif-unread"></div>
+        </div>
+        <div class="notif-item">
+          <div class="notif-icon" style="background:var(--success)"><svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/></svg></div>
+          <div class="notif-text"><p><strong>Attendance marked</strong> - All classes updated</p><span>Today 9:00 AM</span></div>
+        </div>
+        <div class="notif-footer"><a href="../../modules/communication/noticeboard.html">View all</a></div>
+      </div>
+    </div>
+    <div class="dropdown-wrapper">
+      <div class="tb-user" onclick="toggleUserDropdown(event)" id="userBtn">
+        <div class="avatar">SA</div>
+        <div class="tb-user-info">
+          <div class="tb-user-name">Super Admin</div>
+          <div class="tb-user-role">Administrator</div>
+        </div>
+      </div>
+      <div class="user-dropdown" id="userDropdown">
+        <div class="user-dd-header"><div class="user-dd-name">Super Admin</div><div class="user-dd-role">Administrator</div></div>
+        <a class="user-dd-item" href="../../modules/settings/school-profile.html">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v2M12 20v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M2 12h2M20 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+          Settings
+        </a>
+        <a class="user-dd-item danger" href="../../index.html">
+          <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+          Logout
+        </a>
+      </div>
+    </div>
+  </div>
+</header>
+<div class="layout" id="layout">
+  <nav class="sidebar" id="sidebar"><div id="sidebar-nav"></div></nav>
+  <main class="main">
+    <div class="breadcrumb">
+      <a href="../../index.html">Dashboard</a>
+      <span class="breadcrumb-sep">&#8250;</span>
+      <span>Progress Card and Report Access</span>
+    </div>
+    <div class="page-header">
+      <div><h1>Progress Card and Report Access</h1><div class="page-subtitle">Progress Card and Report Access - Academic Year 2025-26</div></div>
+      <div class="ph-actions">
+        <button class="btn btn-ghost" onclick="exportData()">
+          <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Export
+        </button>
+        <button class="btn btn-primary" onclick="openModal('addModal')">
+          <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Add New
+        </button>
+      </div>
+    </div>
+    <div class="stats-grid"><div class='stat-card' style='--c1:#0A3D62;--c2:#1a5276'><div class='stat-icon'><svg viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2'><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div><div class='stat-body'><div class='stat-label'>Total Records</div><div class='stat-value' data-count='511'>511</div><div class='stat-change up'>+8 this month</div></div></div><div class='stat-card' style='--c1:#16A085;--c2:#0e6655'><div class='stat-icon'><svg viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2'><path d="M9 11l3 3L22 4"/></svg></div><div class='stat-body'><div class='stat-label'>Active</div><div class='stat-value' data-count='376'>376</div><div class='stat-change up'>of total records</div></div></div><div class='stat-card' style='--c1:#F39C12;--c2:#d68910'><div class='stat-icon'><svg viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2'><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div><div class='stat-body'><div class='stat-label'>Pending</div><div class='stat-value' data-count='112'>112</div><div class='stat-change down'>Need attention</div></div></div><div class='stat-card' style='--c1:#8E44AD;--c2:#6c3483'><div class='stat-icon'><svg viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2'><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div><div class='stat-body'><div class='stat-label'>This Month</div><div class='stat-value' data-count='122'>122</div><div class='stat-change neu'>New entries</div></div></div></div>
+    <div class="filter-bar">
+      <div class="search-box">
+        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input type="text" id="searchInput" placeholder="Search..." oninput="searchTable()">
+      </div>
+      <select class="filter-select"><option>All Status</option><option>Active</option><option>Inactive</option></select>
+      <div class="filter-spacer"></div>
+      <button class="btn btn-ghost btn-sm" onclick="clearFilters()">Clear</button>
+    </div>
+    <div class="table-card">
+      <div class="table-wrap">
+        <table id="dataTable">
+          <thead><tr><th><input type="checkbox" class="table-checkbox" id="chkAll" onclick="toggleAll(this)"></th><th onclick='sortCol("id")'>ID</th><th onclick='sortCol("name")'>Name</th><th onclick='sortCol("ref")'>Reference</th><th onclick='sortCol("date")'>Date</th><th onclick='sortCol("status")'>Status</th><th>Actions</th></tr></thead>
+          <tbody id="tableBody"><tr><td><input type="checkbox" class="table-checkbox row-chk"></td><td>ID-1000</td><td><strong>Aarav Sharma</strong></td><td>REF-2025-100</td><td>1 Jun 2025</td><td><span class='badge badge-green'>Active</span></td><td><div class="row-actions"><button class="btn-icon" onclick="viewRow(this)" title="View"><svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button><button class="btn-icon" onclick="editRow(this)" title="Edit"><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button><button class="btn-icon" onclick="deleteRow(this)" title="Delete"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button></div></td></tr><tr><td><input type="checkbox" class="table-checkbox row-chk"></td><td>ID-1001</td><td><strong>Priya Singh</strong></td><td>REF-2025-101</td><td>2 Jun 2025</td><td><span class='badge badge-yellow'>Pending</span></td><td><div class="row-actions"><button class="btn-icon" onclick="viewRow(this)" title="View"><svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button><button class="btn-icon" onclick="editRow(this)" title="Edit"><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button><button class="btn-icon" onclick="deleteRow(this)" title="Delete"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button></div></td></tr><tr><td><input type="checkbox" class="table-checkbox row-chk"></td><td>ID-1002</td><td><strong>Rohan Mehta</strong></td><td>REF-2025-102</td><td>3 Jun 2025</td><td><span class='badge badge-blue'>In Progress</span></td><td><div class="row-actions"><button class="btn-icon" onclick="viewRow(this)" title="View"><svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button><button class="btn-icon" onclick="editRow(this)" title="Edit"><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button><button class="btn-icon" onclick="deleteRow(this)" title="Delete"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button></div></td></tr><tr><td><input type="checkbox" class="table-checkbox row-chk"></td><td>ID-1003</td><td><strong>Sneha Patel</strong></td><td>REF-2025-103</td><td>4 Jun 2025</td><td><span class='badge badge-green'>Completed</span></td><td><div class="row-actions"><button class="btn-icon" onclick="viewRow(this)" title="View"><svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button><button class="btn-icon" onclick="editRow(this)" title="Edit"><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button><button class="btn-icon" onclick="deleteRow(this)" title="Delete"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button></div></td></tr><tr><td><input type="checkbox" class="table-checkbox row-chk"></td><td>ID-1004</td><td><strong>Karan Verma</strong></td><td>REF-2025-104</td><td>5 Jun 2025</td><td><span class='badge badge-red'>Inactive</span></td><td><div class="row-actions"><button class="btn-icon" onclick="viewRow(this)" title="View"><svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button><button class="btn-icon" onclick="editRow(this)" title="Edit"><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button><button class="btn-icon" onclick="deleteRow(this)" title="Delete"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button></div></td></tr><tr><td><input type="checkbox" class="table-checkbox row-chk"></td><td>ID-1005</td><td><strong>Ananya Gupta</strong></td><td>REF-2025-105</td><td>6 Jun 2025</td><td><span class='badge badge-green'>Active</span></td><td><div class="row-actions"><button class="btn-icon" onclick="viewRow(this)" title="View"><svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button><button class="btn-icon" onclick="editRow(this)" title="Edit"><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button><button class="btn-icon" onclick="deleteRow(this)" title="Delete"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button></div></td></tr><tr><td><input type="checkbox" class="table-checkbox row-chk"></td><td>ID-1006</td><td><strong>Vikram Nair</strong></td><td>REF-2025-106</td><td>7 Jun 2025</td><td><span class='badge badge-yellow'>Pending</span></td><td><div class="row-actions"><button class="btn-icon" onclick="viewRow(this)" title="View"><svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button><button class="btn-icon" onclick="editRow(this)" title="Edit"><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button><button class="btn-icon" onclick="deleteRow(this)" title="Delete"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button></div></td></tr><tr><td><input type="checkbox" class="table-checkbox row-chk"></td><td>ID-1007</td><td><strong>Divya Reddy</strong></td><td>REF-2025-107</td><td>8 Jun 2025</td><td><span class='badge badge-blue'>In Progress</span></td><td><div class="row-actions"><button class="btn-icon" onclick="viewRow(this)" title="View"><svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button><button class="btn-icon" onclick="editRow(this)" title="Edit"><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button><button class="btn-icon" onclick="deleteRow(this)" title="Delete"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button></div></td></tr><tr><td><input type="checkbox" class="table-checkbox row-chk"></td><td>ID-1008</td><td><strong>Arjun Kumar</strong></td><td>REF-2025-108</td><td>9 Jun 2025</td><td><span class='badge badge-green'>Completed</span></td><td><div class="row-actions"><button class="btn-icon" onclick="viewRow(this)" title="View"><svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button><button class="btn-icon" onclick="editRow(this)" title="Edit"><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button><button class="btn-icon" onclick="deleteRow(this)" title="Delete"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button></div></td></tr><tr><td><input type="checkbox" class="table-checkbox row-chk"></td><td>ID-1009</td><td><strong>Riya Joshi</strong></td><td>REF-2025-109</td><td>10 Jun 2025</td><td><span class='badge badge-red'>Inactive</span></td><td><div class="row-actions"><button class="btn-icon" onclick="viewRow(this)" title="View"><svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button><button class="btn-icon" onclick="editRow(this)" title="Edit"><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button><button class="btn-icon" onclick="deleteRow(this)" title="Delete"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button></div></td></tr><tr><td><input type="checkbox" class="table-checkbox row-chk"></td><td>ID-1010</td><td><strong>Dev Agarwal</strong></td><td>REF-2025-110</td><td>11 Jun 2025</td><td><span class='badge badge-green'>Active</span></td><td><div class="row-actions"><button class="btn-icon" onclick="viewRow(this)" title="View"><svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button><button class="btn-icon" onclick="editRow(this)" title="Edit"><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button><button class="btn-icon" onclick="deleteRow(this)" title="Delete"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button></div></td></tr><tr><td><input type="checkbox" class="table-checkbox row-chk"></td><td>ID-1011</td><td><strong>Kavya Nair</strong></td><td>REF-2025-111</td><td>12 Jun 2025</td><td><span class='badge badge-yellow'>Pending</span></td><td><div class="row-actions"><button class="btn-icon" onclick="viewRow(this)" title="View"><svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button><button class="btn-icon" onclick="editRow(this)" title="Edit"><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button><button class="btn-icon" onclick="deleteRow(this)" title="Delete"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button></div></td></tr></tbody>
+        </table>
+      </div>
+      <div class="table-footer">
+        <span class="table-info" id="tableInfo">Loading...</span>
+        <div class="pagination">
+          <button class="page-btn"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
+          <button class="page-btn active">1</button>
+          <button class="page-btn">2</button>
+          <button class="page-btn">3</button>
+          <button class="page-btn"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></button>
+        </div>
+      </div>
+    </div>
+    <!-- Add Modal -->
+    <div class="modal-backdrop" id="addModal">
+      <div class="modal">
+        <div class="modal-header">
+          <div class="modal-title">Add New</div>
+          <button class="modal-close" onclick="closeModal('addModal')"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+        </div>
+        <div class="modal-body">
+          <div class="alert alert-info"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>Fill in the details. Fields marked * are required.</div>
+          <div class="form-grid" style="margin-top:1rem">
+            <div class="form-group"><label class="form-label">Name / Title <span class="req">*</span></label><input type="text" class="form-input" id="addName" placeholder="Enter name"></div>
+            <div class="form-group"><label class="form-label">Status</label><select class="form-select"><option>Active</option><option>Inactive</option></select></div>
+            <div class="form-group"><label class="form-label">Date</label><input type="date" class="form-input"></div>
+            <div class="form-group"><label class="form-label">Reference</label><input type="text" class="form-input" placeholder="Auto-generated"></div>
+            <div class="form-group form-full"><label class="form-label">Notes</label><textarea class="form-textarea" placeholder="Additional notes..."></textarea></div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-ghost" onclick="closeModal('addModal')">Cancel</button>
+          <button class="btn btn-primary" onclick="submitAdd()">Save Record</button>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+<div class="toast-container" id="toastContainer"></div>
+<script src="../../js/app.js"></script>
+<script src="../../js/sidebar.js"></script>
+<script>
+renderSidebar('messaging','parents','../../');
+function showToast(msg, type) {
+  type = type || 'success';
+  var icons = { success:'<path d="M9 11l3 3L22 4"/>', error:'<path d="M18 6 6 18M6 6l12 12"/>', info:'<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>', warning:'<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>' };
+  var c = document.getElementById('toastContainer');
+  var t = document.createElement('div');
+  t.className = 'toast toast-' + type;
+  t.innerHTML = '<div class="toast-icon"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">'+icons[type]+'</svg></div><div class="toast-body"><div class="toast-title">'+(type.charAt(0).toUpperCase()+type.slice(1))+'</div><div class="toast-msg">'+msg+'</div></div>';
+  c.appendChild(t);
+  setTimeout(function(){t.classList.add('show');},10);
+  setTimeout(function(){t.classList.remove('show');setTimeout(function(){t.remove();},300);},3500);
+}
+function openModal(id) { var m=document.getElementById(id); if(m) m.classList.add('open'); }
+function closeModal(id) { var m=document.getElementById(id); if(m) m.classList.remove('open'); }
+document.addEventListener('click', function(e) { if(e.target.classList.contains('modal-backdrop')) e.target.classList.remove('open'); });
+function searchTable() {
+  var q = document.getElementById('searchInput').value.toLowerCase();
+  var rows = document.querySelectorAll('#tableBody tr');
+  var v = 0;
+  rows.forEach(function(r){ var s=r.textContent.toLowerCase().includes(q); r.style.display=s?'':'none'; if(s)v++; });
+  document.getElementById('tableInfo').textContent = 'Showing '+v+' of '+rows.length+' records';
+}
+function clearFilters() { document.getElementById('searchInput').value=''; searchTable(); }
+function toggleAll(cb) { document.querySelectorAll('.row-chk').forEach(function(c){c.checked=cb.checked;}); }
+function viewRow(btn) { showToast('Opening record details...','info'); }
+function editRow(btn) { openModal('addModal'); }
+function deleteRow(btn) { if(confirm('Delete this record?')) { btn.closest('tr').style.opacity='0.4'; showToast('Record deleted','error'); } }
+function submitAdd() {
+  var n=document.getElementById('addName').value;
+  if(!n){showToast('Name is required','error');return;}
+  closeModal('addModal');
+  showToast('Record saved successfully!','success');
+}
+function sortCol(k) { showToast('Sorted by '+k,'info'); }
+function exportData() { showToast('Preparing export...','info'); }
+(function(){ var r=document.querySelectorAll('#tableBody tr'); document.getElementById('tableInfo').textContent='Showing '+r.length+' records'; })();
+</script>
+</body>
+</html>

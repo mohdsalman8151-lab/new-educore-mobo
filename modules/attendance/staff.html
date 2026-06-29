@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Staff Attendance — EduCore SMS</title>
+  <meta name="description" content="Mark and manage daily attendance for teaching and non-teaching staff with biometric sync and leave integration.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;900&family=IBM+Plex+Mono:wght@400;500;600&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../css/main.css">
+  <link rel="stylesheet" href="../../css/components.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <style>
+    .staff-kpi { display:grid; grid-template-columns:repeat(5,1fr); gap:1rem; margin-bottom:1.5rem; }
+    @media(max-width:1200px){ .staff-kpi{grid-template-columns:repeat(3,1fr);} }
+    .sk-card { background:var(--bg2); border-radius:var(--radius); border:1px solid var(--border); padding:1rem 1.25rem; position:relative; overflow:hidden; }
+    .sk-card::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; background:var(--kc); }
+    .sk-label { font-size:0.7rem; color:var(--text2); font-weight:500; text-transform:uppercase; letter-spacing:0.04em; }
+    .sk-value { font-size:1.8rem; font-weight:700; font-family:'IBM Plex Mono',monospace; color:var(--kc); line-height:1.1; }
+    .sk-sub { font-size:0.7rem; color:var(--text2); margin-top:2px; }
+    /* Dept tabs */
+    .dept-tabs { display:flex; gap:0.5rem; flex-wrap:wrap; margin-bottom:1.25rem; }
+    .dept-tab { padding:6px 14px; border-radius:var(--radius-full); font-size:0.75rem; font-weight:600; border:1.5px solid var(--border); cursor:pointer; background:var(--bg2); color:var(--text2); transition:all 0.18s; }
+    .dept-tab.active { background:var(--primary); color:#fff; border-color:var(--primary); }
+    /* Staff table */
+    .staff-table { width:100%; border-collapse:collapse; }
+    .staff-table th { text-align:left; padding:0.65rem 1rem; font-size:0.7rem; text-transform:uppercase; letter-spacing:0.05em; color:var(--text3); border-bottom:2px solid var(--border); background:var(--bg); white-space:nowrap; }
+    .staff-table td { padding:0.65rem 1rem; font-size:0.82rem; border-bottom:1px solid var(--border); vertical-align:middle; }
+    .staff-table tr:last-child td { border-bottom:none; }
+    .staff-table tr:hover td { background:rgba(10,61,98,0.02); }
+    .staff-avatar { width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:0.68rem; font-weight:700; color:#fff; flex-shrink:0; }
+    .att-toggle-group { display:flex; gap:2px; }
+    .att-toggle { padding:4px 10px; font-size:0.7rem; font-weight:600; border:1.5px solid transparent; border-radius:4px; cursor:pointer; background:transparent; transition:all 0.15s; }
+    .att-toggle.P  { border-color:var(--success); color:var(--success); }
+    .att-toggle.A  { border-color:var(--accent);  color:var(--accent); }
+    .att-toggle.L  { border-color:var(--warning); color:var(--warning); }
+    .att-toggle.OL { border-color:var(--info);    color:var(--info); }
+    .att-toggle.WFH{ border-color:var(--purple);  color:var(--purple); }
+    .att-toggle.HD { border-color:var(--orange);  color:var(--orange); }
+    .att-toggle.selected.P  { background:var(--success); color:#fff; }
+    .att-toggle.selected.A  { background:var(--accent);  color:#fff; }
+    .att-toggle.selected.L  { background:var(--warning); color:#fff; }
+    .att-toggle.selected.OL { background:var(--info);    color:#fff; }
+    .att-toggle.selected.WFH{ background:var(--purple);  color:#fff; }
+    .att-toggle.selected.HD { background:var(--orange);  color:#fff; }
+    .bio-badge { display:inline-flex; align-items:center; gap:4px; font-size:0.68rem; padding:2px 8px; border-radius:20px; font-weight:600; }
+    .bio-synced { background:rgba(22,160,133,0.12); color:var(--success); }
+    .bio-pending { background:rgba(243,156,18,0.12); color:var(--warning); }
+    .bio-manual  { background:rgba(154,163,176,0.12); color:var(--text3); }
+    .time-in { font-family:'IBM Plex Mono',monospace; font-size:0.75rem; color:var(--text2); }
+    .charts-2col { display:grid; grid-template-columns:1fr 1fr; gap:1.5rem; margin-bottom:1.5rem; }
+    @media(max-width:900px){ .charts-2col{grid-template-columns:1fr;} }
+  </style>
+</head>
+<body>
+<div class="mobile-overlay" id="mobileOverlay" onclick="closeMobileSidebar()"></div>
+<header class="topbar">
+  <div class="logo-area">
+    <div class="logo-mark"><svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div>
+    <span class="logo-text">EduCore SMS</span>
+  </div>
+  <button class="sidebar-toggle" onclick="toggleSidebar()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+  </button>
+  <div class="tb-search">
+    <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+    <input type="text" placeholder="Search staff…" oninput="filterStaff(this.value)">
+  </div>
+  <div class="tb-right">
+    <div class="tb-date" id="tb-date"></div>
+    <button class="dark-toggle" onclick="toggleDarkMode()">
+      <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/></svg>
+    </button>
+    <div class="dropdown-wrapper">
+      <div class="tb-user" onclick="toggleUserDropdown(event)" id="userBtn">
+        <div class="avatar">SA</div>
+        <div class="tb-user-info"><div class="tb-user-name">Super Admin</div><div class="tb-user-role">Administrator</div></div>
+      </div>
+      <div class="user-dropdown" id="userDropdown">
+        <div class="user-dd-header"><div class="user-dd-name">Super Admin</div><div class="user-dd-role">Administrator · EduCore SMS</div></div>
+        <a class="user-dd-item danger" href="../../index.html"><svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>Logout</a>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="layout" id="layout">
+  <nav class="sidebar" id="sidebar"><div id="sidebar-nav"></div></nav>
+  <main class="main">
+    <div class="breadcrumb">
+      <a href="../../index.html">Dashboard</a><span class="breadcrumb-sep">›</span>
+      <a href="dashboard.html">Attendance</a><span class="breadcrumb-sep">›</span>
+      <span>Staff Attendance</span>
+    </div>
+    <div class="page-header">
+      <div>
+        <h1>Staff Attendance</h1>
+        <div class="page-subtitle">Teaching & Non-Teaching Staff · 29 Jun 2026 · Main Campus</div>
+      </div>
+      <div class="ph-actions">
+        <input type="date" value="2026-06-29" class="filter-select" style="font-size:0.82rem">
+        <button class="btn btn-ghost" onclick="syncBiometric()">
+          <svg viewBox="0 0 24 24" style="width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2"><path d="M1 4v6h6M23 20v-6h-6"/><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/></svg>
+          Sync Biometric
+        </button>
+        <button class="btn btn-ghost" onclick="exportStaff()">Export</button>
+        <button class="btn btn-primary" onclick="submitStaffAttendance()">
+          <svg viewBox="0 0 24 24" style="width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2"><path d="M9 11l3 3L22 4"/></svg>
+          Submit
+        </button>
+      </div>
+    </div>
+
+    <!-- KPIs -->
+    <div class="staff-kpi">
+      <div class="sk-card" style="--kc:var(--text)">
+        <div class="sk-label">Total Staff</div>
+        <div class="sk-value">86</div>
+        <div class="sk-sub">Teaching: 72 · Non-Teaching: 14</div>
+      </div>
+      <div class="sk-card" style="--kc:var(--success)">
+        <div class="sk-label">Present</div>
+        <div class="sk-value">79</div>
+        <div class="sk-sub">91.9% attendance rate</div>
+      </div>
+      <div class="sk-card" style="--kc:var(--accent)">
+        <div class="sk-label">Absent</div>
+        <div class="sk-value">4</div>
+        <div class="sk-sub">Substitutes assigned: 4</div>
+      </div>
+      <div class="sk-card" style="--kc:var(--info)">
+        <div class="sk-label">On Leave</div>
+        <div class="sk-value">3</div>
+        <div class="sk-sub">CL: 2 · Medical: 1</div>
+      </div>
+      <div class="sk-card" style="--kc:var(--warning)">
+        <div class="sk-label">Late Arrivals</div>
+        <div class="sk-value">7</div>
+        <div class="sk-sub">After 7:45 AM</div>
+      </div>
+    </div>
+
+    <!-- Department Tabs -->
+    <div class="dept-tabs" id="deptTabs"></div>
+
+    <!-- Filter Row -->
+    <div style="display:flex;gap:0.75rem;flex-wrap:wrap;align-items:center;margin-bottom:1rem">
+      <select class="filter-select" id="staffTypeFilter" onchange="renderStaffTable()">
+        <option value="">All Staff Types</option>
+        <option value="Teaching">Teaching</option>
+        <option value="Non-Teaching">Non-Teaching</option>
+      </select>
+      <select class="filter-select" id="statusFilter" onchange="renderStaffTable()">
+        <option value="">All Statuses</option>
+        <option value="P">Present</option>
+        <option value="A">Absent</option>
+        <option value="L">Late</option>
+        <option value="OL">On Leave</option>
+      </select>
+      <button class="btn btn-ghost btn-sm" onclick="markAllPresent()">✓ Mark All Present</button>
+      <div style="margin-left:auto"><input type="text" class="form-input" placeholder="Search staff…" oninput="filterStaff(this.value)" style="padding:6px 12px;font-size:0.8rem;width:200px"></div>
+    </div>
+
+    <!-- Charts Row -->
+    <div class="charts-2col">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Department-wise Attendance</div>
+          <div class="card-meta">Today · 29 Jun 2026</div>
+        </div>
+        <div class="chart-wrap" style="height:200px"><canvas id="deptChart"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Monthly Staff Attendance Trend</div>
+          <div class="card-meta">June 2026</div>
+        </div>
+        <div class="chart-wrap" style="height:200px"><canvas id="monthlyStaffChart"></canvas></div>
+      </div>
+    </div>
+
+    <!-- Staff Table -->
+    <div class="card card-flush">
+      <div class="card-padding" style="display:flex;justify-content:space-between;align-items:center">
+        <div class="card-title">Staff Attendance Register — <span id="activeDept" style="color:var(--primary)">All Departments</span></div>
+        <span class="badge badge-blue" id="staffCount">86 staff</span>
+      </div>
+      <div class="table-wrap">
+        <table class="staff-table">
+          <thead>
+            <tr>
+              <th><input type="checkbox" onclick="toggleAllStaff(this)"></th>
+              <th>Staff Member</th>
+              <th>Emp ID</th>
+              <th>Department</th>
+              <th>Designation</th>
+              <th>Time In</th>
+              <th>Biometric</th>
+              <th>Attendance</th>
+              <th>Remarks</th>
+            </tr>
+          </thead>
+          <tbody id="staffTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- Substitute Assignment Modal -->
+<div class="modal-backdrop" id="subModal">
+  <div class="modal" style="max-width:480px">
+    <div class="modal-header">
+      <div class="modal-title">Assign Substitute Teacher</div>
+      <button class="modal-close" onclick="closeModal('subModal')"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <div class="alert alert-warning" style="margin-bottom:1rem;font-size:0.8rem">
+        <svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg>
+        <span id="absentTeacherName">Teacher</span> is marked absent. Assign a substitute for their classes today.
+      </div>
+      <div class="form-group">
+        <label class="form-label">Absent Teacher's Classes</label>
+        <div style="padding:0.6rem;background:var(--bg);border-radius:6px;font-size:0.8rem" id="absentClasses">IX-A (8:35), XI-B (10:15), X-A (12:15)</div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Select Substitute Teacher <span class="req">*</span></label>
+        <select class="form-select">
+          <option value="">— Select available teacher —</option>
+          <option>Mr. Ravi Kumar (Free Period: 8:35–9:25)</option>
+          <option>Mrs. Lakshmi Rao (Free Period: All Day)</option>
+          <option>Mr. Anand S. (Free Period: 10:15–11:05)</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Reason for Absence</label>
+        <select class="form-select">
+          <option>Medical Leave</option><option>Casual Leave</option><option>Emergency</option><option>Official Duty</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Notes</label>
+        <textarea class="form-textarea" placeholder="Additional notes for substitute teacher…" rows="2"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('subModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="assignSubstitute()">Assign & Notify</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+<script src="../../js/app.js"></script>
+<script src="../../js/sidebar.js"></script>
+<script>
+renderSidebar('attendance','staff-att','../../');
+
+var STAFF = [
+  {id:1,empId:'EMP-001',name:'Mrs. Sunita Sharma',dept:'Mathematics',desig:'Senior Teacher',type:'Teaching',timeIn:'07:42',bio:'Synced',status:'P'},
+  {id:2,empId:'EMP-002',name:'Mr. Rajesh Kumar',dept:'Physics',desig:'HOD Physics',type:'Teaching',timeIn:'07:48',bio:'Synced',status:'P'},
+  {id:3,empId:'EMP-003',name:'Mrs. Priya Nair',dept:'Chemistry',desig:'Senior Teacher',type:'Teaching',timeIn:'07:51',bio:'Synced',status:'P'},
+  {id:4,empId:'EMP-004',name:'Mr. Arun Menon',dept:'English',desig:'HOD English',type:'Teaching',timeIn:'–',bio:'Pending',status:'OL'},
+  {id:5,empId:'EMP-005',name:'Mrs. Kavitha S.',dept:'Biology',desig:'PGT Biology',type:'Teaching',timeIn:'07:39',bio:'Synced',status:'P'},
+  {id:6,empId:'EMP-006',name:'Mr. Prakash Nair',dept:'Social Science',desig:'TGT SST',type:'Teaching',timeIn:'08:05',bio:'Manual',status:'L'},
+  {id:7,empId:'EMP-007',name:'Mrs. Meena Thomas',dept:'Hindi',desig:'TGT Hindi',type:'Teaching',timeIn:'07:44',bio:'Synced',status:'P'},
+  {id:8,empId:'EMP-008',name:'Mr. Srinivas G.',dept:'Computer Science',desig:'PGT CS',type:'Teaching',timeIn:'–',bio:'Pending',status:'A'},
+  {id:9,empId:'EMP-009',name:'Mrs. Geetha S.',dept:'Mathematics',desig:'TGT Math',type:'Teaching',timeIn:'07:52',bio:'Synced',status:'P'},
+  {id:10,empId:'EMP-010',name:'Mr. Venkat Kumar',dept:'Physics',desig:'TGT Physics',type:'Teaching',timeIn:'07:46',bio:'Synced',status:'P'},
+  {id:11,empId:'EMP-011',name:'Mrs. Anita Rao',dept:'English',desig:'TGT English',type:'Teaching',timeIn:'07:55',bio:'Manual',status:'L'},
+  {id:12,empId:'EMP-012',name:'Mr. Suresh K.',dept:'Social Science',desig:'PGT History',type:'Teaching',timeIn:'07:41',bio:'Synced',status:'P'},
+  {id:13,empId:'EMP-013',name:'Mrs. Lakshmi R.',dept:'Chemistry',desig:'TGT Chemistry',type:'Teaching',timeIn:'07:43',bio:'Synced',status:'P'},
+  {id:14,empId:'EMP-014',name:'Mr. Ravi V.',dept:'Physical Education',desig:'PET',type:'Teaching',timeIn:'07:30',bio:'Synced',status:'P'},
+  {id:15,empId:'EMP-015',name:'Mrs. Deepa K.',dept:'Art & Craft',desig:'Art Teacher',type:'Teaching',timeIn:'07:47',bio:'Synced',status:'P'},
+  {id:16,empId:'EMP-016',name:'Mr. Anand S.',dept:'Mathematics',desig:'PGT Math',type:'Teaching',timeIn:'07:50',bio:'Synced',status:'P'},
+  {id:17,empId:'EMP-017',name:'Mrs. Radha P.',dept:'Biology',desig:'TGT Biology',type:'Teaching',timeIn:'08:12',bio:'Manual',status:'L'},
+  {id:18,empId:'EMP-018',name:'Mr. Kumar V.',dept:'Computer Science',desig:'TGT CS',type:'Teaching',timeIn:'07:45',bio:'Synced',status:'P'},
+  {id:19,empId:'EMP-019',name:'Mrs. Nirmala B.',dept:'Hindi',desig:'HOD Hindi',type:'Teaching',timeIn:'07:38',bio:'Synced',status:'P'},
+  {id:20,empId:'EMP-020',name:'Mr. Rajan M.',dept:'Social Science',desig:'TGT Civics',type:'Teaching',timeIn:'–',bio:'Pending',status:'A'},
+  {id:21,empId:'EMP-021',name:'Mrs. Sudha M.',dept:'English',desig:'TGT English',type:'Teaching',timeIn:'07:49',bio:'Synced',status:'P'},
+  {id:22,empId:'EMP-022',name:'Mr. Shivam T.',dept:'Physical Education',desig:'Sports Coach',type:'Teaching',timeIn:'07:28',bio:'Synced',status:'P'},
+  {id:23,empId:'EMP-023',name:'Mrs. Puja D.',dept:'Music',desig:'Music Teacher',type:'Teaching',timeIn:'07:53',bio:'Synced',status:'P'},
+  {id:24,empId:'EMP-024',name:'Mr. Kiran B.',dept:'Chemistry',desig:'Lab Assistant',type:'Non-Teaching',timeIn:'07:35',bio:'Synced',status:'P'},
+  {id:25,empId:'EMP-025',name:'Mrs. Suma R.',dept:'Library',desig:'Librarian',type:'Non-Teaching',timeIn:'07:58',bio:'Manual',status:'P'},
+  {id:26,empId:'EMP-026',name:'Mr. Prasad N.',dept:'Administration',desig:'Office Manager',type:'Non-Teaching',timeIn:'08:00',bio:'Synced',status:'P'},
+  {id:27,empId:'EMP-027',name:'Mrs. Rekha S.',dept:'Administration',desig:'Coordinator',type:'Non-Teaching',timeIn:'07:42',bio:'Synced',status:'P'},
+  {id:28,empId:'EMP-028',name:'Mr. Ganesh P.',dept:'Security',desig:'Security Guard',type:'Non-Teaching',timeIn:'06:00',bio:'Synced',status:'P'},
+  {id:29,empId:'EMP-029',name:'Mrs. Leela D.',dept:'Housekeeping',desig:'Housekeeping Staff',type:'Non-Teaching',timeIn:'06:30',bio:'Manual',status:'P'},
+  {id:30,empId:'EMP-030',name:'Mr. Ramu K.',dept:'Accounts',desig:'Accountant',type:'Non-Teaching',timeIn:'–',bio:'Pending',status:'OL'},
+];
+
+var staffAtt = {};
+STAFF.forEach(function(s){ staffAtt[s.id] = s.status; });
+
+var departments = ['All','Mathematics','Physics','Chemistry','English','Biology','Social Science','Hindi','Computer Science','Physical Education','Art & Craft','Music','Administration','Library','Accounts','Security','Housekeeping'];
+var activeDept = 'All';
+
+function renderDeptTabs() {
+  var mainDepts = ['All','Mathematics','Physics','Chemistry','English','Biology','Hindi','Computer Science','Administration'];
+  document.getElementById('deptTabs').innerHTML = mainDepts.map(function(d){
+    return '<button class="dept-tab'+(d===activeDept?' active':'')+'" onclick="setDept(\''+d+'\')">'+d+'</button>';
+  }).join('');
+}
+function setDept(d) { activeDept=d; renderDeptTabs(); renderStaffTable(); document.getElementById('activeDept').textContent=d==='All'?'All Departments':d+' Dept.'; }
+
+function renderStaffTable() {
+  var typeF = document.getElementById('staffTypeFilter').value;
+  var statusF = document.getElementById('statusFilter').value;
+  var filtered = STAFF.filter(function(s){
+    if(activeDept!=='All' && s.dept!==activeDept) return false;
+    if(typeF && s.type!==typeF) return false;
+    if(statusF && staffAtt[s.id]!==statusF) return false;
+    return true;
+  });
+  document.getElementById('staffCount').textContent = filtered.length+' staff';
+  var codes = ['P','A','L','OL','WFH','HD'];
+  var labels = {P:'P',A:'A',L:'Late',OL:'Leave',WFH:'WFH',HD:'Half Day'};
+  var html = '';
+  filtered.forEach(function(s) {
+    var inits = s.name.replace(/Mrs\.|Mr\.|Dr\./g,'').trim().split(' ').slice(0,2).map(function(n){return n[0]}).join('');
+    var colors = ['#0A3D62','#16A085','#8E44AD','#E67E22','#2980B9','#E8505B'];
+    var color = colors[s.id%colors.length];
+    var bioClass = s.bio==='Synced'?'bio-synced':s.bio==='Pending'?'bio-pending':'bio-manual';
+    var st = staffAtt[s.id];
+    html += '<tr id="sr-'+s.id+'">'
+      +'<td><input type="checkbox" class="table-checkbox"></td>'
+      +'<td><div style="display:flex;align-items:center;gap:0.6rem"><div class="staff-avatar" style="background:'+color+'">'+inits+'</div><div><div style="font-weight:600;font-size:0.83rem">'+s.name+'</div><div style="font-size:0.68rem;color:var(--text2)">'+s.type+'</div></div></div></td>'
+      +'<td style="font-family:\'IBM Plex Mono\',monospace;font-size:0.75rem">'+s.empId+'</td>'
+      +'<td style="font-size:0.78rem;color:var(--text2)">'+s.dept+'</td>'
+      +'<td style="font-size:0.78rem">'+s.desig+'</td>'
+      +'<td class="time-in">'+s.timeIn+'</td>'
+      +'<td><span class="bio-badge '+bioClass+'">'+s.bio+'</span></td>'
+      +'<td><div class="att-toggle-group">'
+      +codes.map(function(c){return '<button class="att-toggle '+c+(st===c?' selected':'')+'" onclick="markStaff('+s.id+',\''+c+'\')">'+labels[c]+'</button>';}).join('')
+      +(st==='A'?'<button class="btn-xs" style="margin-left:4px;background:rgba(232,80,91,0.1);color:var(--accent);border-radius:4px;padding:3px 8px;border:none;cursor:pointer;font-size:0.65rem;font-weight:600" onclick="openSubModal('+s.id+')">+ Sub</button>':'')
+      +'</div></td>'
+      +'<td><input type="text" placeholder="Remarks…" style="padding:3px 8px;border-radius:4px;border:1px solid var(--border);background:var(--bg);font-size:0.72rem;width:120px;color:var(--text)"></td>'
+      +'</tr>';
+  });
+  document.getElementById('staffTableBody').innerHTML = html || '<tr><td colspan="9" style="text-align:center;padding:2rem;color:var(--text2)">No staff found for selected filters</td></tr>';
+}
+
+function markStaff(id, code) {
+  staffAtt[id] = code;
+  renderStaffTable();
+  if(code==='A') { setTimeout(function(){ openSubModal(id); }, 300); }
+}
+function openSubModal(id) {
+  var s = STAFF.find(function(x){return x.id===id;});
+  document.getElementById('absentTeacherName').textContent = s.name;
+  openModal('subModal');
+}
+function assignSubstitute() { closeModal('subModal'); showToast('Substitute assigned and notified via SMS','success'); }
+function markAllPresent() { STAFF.forEach(function(s){ staffAtt[s.id]='P'; }); renderStaffTable(); showToast('All staff marked Present','success'); }
+function toggleAllStaff(cb) { document.querySelectorAll('.staff-table input[type=checkbox]').forEach(function(c){ c.checked=cb.checked; }); }
+function syncBiometric() { showToast('Biometric sync initiated — 2 devices connected','info'); }
+function submitStaffAttendance() { showToast('Staff attendance submitted for 29 Jun 2026','success'); }
+function exportStaff() { showToast('Exporting staff attendance…','info'); }
+function filterStaff(q) { q=q.toLowerCase(); document.querySelectorAll('#staffTableBody tr').forEach(function(r){ r.style.display=r.textContent.toLowerCase().includes(q)?'':'none'; }); }
+
+function openModal(id){ var m=document.getElementById(id);if(m)m.classList.add('open'); }
+function closeModal(id){ var m=document.getElementById(id);if(m)m.classList.remove('open'); }
+document.addEventListener('click',function(e){if(e.target.classList.contains('modal-backdrop'))e.target.classList.remove('open');});
+function showToast(msg,type){var icons={success:'<path d="M9 11l3 3L22 4"/>',error:'<path d="M18 6 6 18M6 6l12 12"/>',info:'<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>',warning:'<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>'};var c=document.getElementById('toastContainer');var t=document.createElement('div');t.className='toast toast-'+type;t.innerHTML='<div class="toast-icon"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">'+icons[type]+'</svg></div><div class="toast-body"><div class="toast-title">'+(type.charAt(0).toUpperCase()+type.slice(1))+'</div><div class="toast-msg">'+msg+'</div></div>';c.appendChild(t);setTimeout(function(){t.classList.add('show');},10);setTimeout(function(){t.classList.remove('show');setTimeout(function(){t.remove();},300);},3500);}
+
+/* ── CHARTS ── */
+var tc = document.documentElement.getAttribute('data-theme')==='dark'?'#94A3B8':'#6C757D';
+var gc = document.documentElement.getAttribute('data-theme')==='dark'?'rgba(255,255,255,0.06)':'rgba(0,0,0,0.06)';
+new Chart(document.getElementById('deptChart'),{type:'bar',data:{labels:['Math','Physics','Chem','English','Bio','Hindi','CS','PE'],datasets:[{label:'Present',data:[4,3,3,2,2,2,2,2],backgroundColor:'rgba(22,160,133,0.8)',borderRadius:4},{label:'Absent/Leave',data:[0,0,0,1,0,0,1,0],backgroundColor:'rgba(232,80,91,0.75)',borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',labels:{boxWidth:10,font:{size:10},color:tc}}},scales:{x:{stacked:false,grid:{display:false},ticks:{font:{size:9},color:tc}},y:{grid:{color:gc},ticks:{font:{size:9},color:tc}}}}});
+new Chart(document.getElementById('monthlyStaffChart'),{type:'line',data:{labels:['1','5','9','13','17','21','25','29'],datasets:[{label:'Attendance %',data:[94,91,96,93,90,95,92,92],borderColor:'#0A3D62',backgroundColor:'rgba(10,61,98,0.07)',borderWidth:2.5,fill:true,tension:0.4,pointBackgroundColor:'#E8505B',pointRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{min:80,max:100,grid:{color:gc},ticks:{font:{size:9},color:tc,callback:function(v){return v+'%'}}},x:{grid:{display:false},ticks:{font:{size:9},color:tc}}}}});
+
+renderDeptTabs();
+renderStaffTable();
+</script>
+</body>
+</html>

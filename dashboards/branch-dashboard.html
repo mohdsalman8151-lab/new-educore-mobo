@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Branch Dashboard — EduCore SMS</title>
+  <link rel="stylesheet" href="../css/main.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+</head>
+<body>
+<div class="mobile-overlay" id="mobileOverlay" onclick="closeMobileSidebar()"></div>
+<header class="topbar">
+  <div class="logo-area"><div class="logo-mark"><svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div><span class="logo-text">EduCore SMS</span></div>
+  <button class="sidebar-toggle" onclick="toggleSidebar()"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
+  <div class="tb-search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg><input type="text" placeholder="Search branches…"></div>
+  <div class="tb-right">
+    <div class="tb-date" id="tb-date"></div>
+    <button class="dark-toggle" onclick="toggleDarkMode()"><svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg><svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/></svg></button>
+    <div class="dropdown-wrapper">
+      <div class="tb-btn" onclick="toggleNotif(event)" id="notifBtn"><svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg><div class="notif-dot"></div></div>
+      <div class="notif-dropdown" id="notifDropdown"><div class="notif-header"><h4>Notifications</h4><span onclick="markAllRead()">Mark all read</span></div><div class="notif-footer"><a href="../communication/notices.html">View all →</a></div></div>
+    </div>
+    <div class="dropdown-wrapper">
+      <div class="tb-user" onclick="toggleUserDropdown(event)" id="userBtn"><div class="avatar">SA</div><div class="tb-user-info"><div class="tb-user-name">Super Admin</div><div class="tb-user-role">Administrator</div></div></div>
+      <div class="user-dropdown" id="userDropdown"><div class="user-dd-header"><div class="user-dd-name">Super Admin</div></div><a class="user-dd-item danger" href="#"><svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>Logout</a></div>
+    </div>
+  </div>
+</header>
+
+<div class="layout" id="layout">
+  <nav class="sidebar" id="sidebar"><div id="sidebar-nav"></div></nav>
+  <main class="main">
+    <div class="page-header">
+      <div><h1>Branch Dashboard</h1><div class="page-subtitle">All Branches · EduCore SMS · 2025–26</div></div>
+      <div class="ph-actions">
+        <button class="btn btn-primary" onclick="location.href='../administration/branches.html'"><svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Add Branch</button>
+      </div>
+    </div>
+
+    <!-- KPIs -->
+    <div class="kpi-strip kpi-4">
+      <div class="stat-card" style="--c1:#16A085;--c2:#1abc9c"><div class="stat-icon"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></div><div class="stat-label">Total Branches</div><div class="stat-value" data-count="3">0</div><div class="stat-change up">All active</div></div>
+      <div class="stat-card" style="--c1:#2980B9;--c2:#0A3D62"><div class="stat-icon"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div><div class="stat-label">Total Students</div><div class="stat-value" data-count="1248">0</div><div class="stat-change up">▲ 34 this month</div></div>
+      <div class="stat-card" style="--c1:#F39C12;--c2:#d68910"><div class="stat-icon"><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div><div class="stat-label">Total Teachers</div><div class="stat-value" style="color:var(--warning)" data-count="86">0</div><div class="stat-change up">▲ 3 new hires</div></div>
+      <div class="stat-card" style="--c1:#E8505B;--c2:#c0392b"><div class="stat-icon"><svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div><div class="stat-label">Revenue (Apr)</div><div class="stat-value" style="color:var(--accent);font-size:1.7rem">₹18.4L</div><div class="stat-change down">79% collected</div></div>
+    </div>
+
+    <!-- Branch Cards -->
+    <div class="grid-row g-3">
+      <!-- Main Campus -->
+      <div class="card" style="border-top:4px solid var(--success)">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem">
+          <div><div style="font-family:'Playfair Display',serif;font-size:1.2rem;font-weight:700;color:var(--text)">Main Campus</div><div class="stat-label" style="margin:0">Sector 12, New Delhi</div></div>
+          <span class="badge badge-green">Active</span>
+        </div>
+        <div class="stat-row"><span class="stat-lbl">Students</span><span class="stat-val">842</span></div>
+        <div class="stat-row"><span class="stat-lbl">Teachers</span><span class="stat-val">54</span></div>
+        <div class="stat-row"><span class="stat-lbl">Classes</span><span class="stat-val">28</span></div>
+        <div class="stat-row"><span class="stat-lbl">Attendance Today</span><span class="stat-val" style="color:var(--success)">92.3%</span></div>
+        <div class="stat-row"><span class="stat-lbl">Fee Collection</span><span class="stat-val" style="color:var(--primary)">₹12.1L</span></div>
+        <div style="margin-top:1rem"><div class="prog-track" style="height:8px"><div class="prog-fill" data-width="82%" style="width:0;background:var(--success)"></div></div><div style="font-size:.72rem;color:var(--text2);margin-top:.3rem">82% fee collected</div></div>
+        <a href="../administration/branches.html" class="btn btn-success" style="width:100%;justify-content:center;margin-top:1rem">View Branch</a>
+      </div>
+      <!-- North Branch -->
+      <div class="card" style="border-top:4px solid var(--info)">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem">
+          <div><div style="font-family:'Playfair Display',serif;font-size:1.2rem;font-weight:700;color:var(--text)">North Branch</div><div class="stat-label" style="margin:0">Rohini, New Delhi</div></div>
+          <span class="badge badge-green">Active</span>
+        </div>
+        <div class="stat-row"><span class="stat-lbl">Students</span><span class="stat-val">234</span></div>
+        <div class="stat-row"><span class="stat-lbl">Teachers</span><span class="stat-val">18</span></div>
+        <div class="stat-row"><span class="stat-lbl">Classes</span><span class="stat-val">9</span></div>
+        <div class="stat-row"><span class="stat-lbl">Attendance Today</span><span class="stat-val" style="color:var(--warning)">88.1%</span></div>
+        <div class="stat-row"><span class="stat-lbl">Fee Collection</span><span class="stat-val" style="color:var(--primary)">₹3.8L</span></div>
+        <div style="margin-top:1rem"><div class="prog-track" style="height:8px"><div class="prog-fill" data-width="74%" style="width:0;background:var(--info)"></div></div><div style="font-size:.72rem;color:var(--text2);margin-top:.3rem">74% fee collected</div></div>
+        <a href="../administration/branches.html" class="btn btn-primary" style="width:100%;justify-content:center;margin-top:1rem">View Branch</a>
+      </div>
+      <!-- South Branch -->
+      <div class="card" style="border-top:4px solid var(--warning)">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem">
+          <div><div style="font-family:'Playfair Display',serif;font-size:1.2rem;font-weight:700;color:var(--text)">South Branch</div><div class="stat-label" style="margin:0">Saket, New Delhi</div></div>
+          <span class="badge badge-green">Active</span>
+        </div>
+        <div class="stat-row"><span class="stat-lbl">Students</span><span class="stat-val">172</span></div>
+        <div class="stat-row"><span class="stat-lbl">Teachers</span><span class="stat-val">14</span></div>
+        <div class="stat-row"><span class="stat-lbl">Classes</span><span class="stat-val">6</span></div>
+        <div class="stat-row"><span class="stat-lbl">Attendance Today</span><span class="stat-val" style="color:var(--success)">91.7%</span></div>
+        <div class="stat-row"><span class="stat-lbl">Fee Collection</span><span class="stat-val" style="color:var(--primary)">₹2.5L</span></div>
+        <div style="margin-top:1rem"><div class="prog-track" style="height:8px"><div class="prog-fill" data-width="76%" style="width:0;background:var(--warning)"></div></div><div style="font-size:.72rem;color:var(--text2);margin-top:.3rem">76% fee collected</div></div>
+        <a href="../administration/branches.html" class="btn btn-warning" style="width:100%;justify-content:center;margin-top:1rem">View Branch</a>
+      </div>
+    </div>
+
+    <!-- Charts Row -->
+    <div class="grid-row g-1-1">
+      <div class="card">
+        <div class="card-header"><div class="card-title">Branch Enrollment Comparison</div><div class="card-meta">2025–26</div></div>
+        <div class="chart-wrap" style="height:220px"><canvas id="enrollChart"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-header"><div class="card-title">Monthly Revenue by Branch</div><div class="card-meta">₹ Lakhs</div></div>
+        <div class="chart-wrap" style="height:220px"><canvas id="revChart"></canvas></div>
+      </div>
+    </div>
+
+    <!-- Comparison Table -->
+    <div class="card card-flush">
+      <div class="card-padding"><div class="card-title">Branch Performance Comparison</div></div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Branch</th><th>Students</th><th>Teachers</th><th>Attendance</th><th>Fee Collected</th><th>Pending Fees</th><th>Avg Score</th><th>Status</th></tr></thead>
+          <tbody>
+            <tr><td><strong>Main Campus</strong></td><td>842</td><td>54</td><td><span class="badge badge-green">92.3%</span></td><td>₹12.1L</td><td><span class="badge badge-red">₹2.4L</span></td><td>83.2</td><td><span class="badge badge-green">Excellent</span></td></tr>
+            <tr><td><strong>North Branch</strong></td><td>234</td><td>18</td><td><span class="badge badge-yellow">88.1%</span></td><td>₹3.8L</td><td><span class="badge badge-yellow">₹1.3L</span></td><td>78.9</td><td><span class="badge badge-blue">Good</span></td></tr>
+            <tr><td><strong>South Branch</strong></td><td>172</td><td>14</td><td><span class="badge badge-green">91.7%</span></td><td>₹2.5L</td><td><span class="badge badge-yellow">₹1.1L</span></td><td>80.4</td><td><span class="badge badge-blue">Good</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="../js/app.js"></script>
+<script src="../js/sidebar.js"></script>
+<script>
+renderSidebar('dash','branch-dash','../');
+const isDark = () => document.documentElement.getAttribute('data-theme') === 'dark';
+const gc = () => isDark() ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)';
+const tc = () => isDark() ? '#94A3B8' : '#6C757D';
+
+new Chart(document.getElementById('enrollChart'),{type:'bar',data:{labels:['2021-22','2022-23','2023-24','2024-25','2025-26'],datasets:[{label:'Main',data:[680,720,780,820,842],backgroundColor:'rgba(22,160,133,.8)',borderRadius:5},{label:'North',data:[120,158,190,210,234],backgroundColor:'rgba(41,128,185,.8)',borderRadius:5},{label:'South',data:[80,110,140,158,172],backgroundColor:'rgba(243,156,18,.8)',borderRadius:5}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:tc(),boxWidth:10,font:{size:10}}}},scales:{x:{grid:{display:false},ticks:{color:tc(),font:{size:10}}},y:{grid:{color:gc()},ticks:{color:tc(),font:{size:10}}}}}});
+new Chart(document.getElementById('revChart'),{type:'line',data:{labels:['Nov','Dec','Jan','Feb','Mar','Apr'],datasets:[{label:'Main',data:[8.2,9.1,10.4,8.8,9.6,12.1],borderColor:'#16A085',backgroundColor:'rgba(22,160,133,.08)',borderWidth:2,tension:.4,pointRadius:4,fill:true},{label:'North',data:[2.1,2.4,2.8,2.2,2.6,3.8],borderColor:'#2980B9',backgroundColor:'rgba(41,128,185,.08)',borderWidth:2,tension:.4,pointRadius:4,fill:true},{label:'South',data:[1.4,1.8,2.1,1.6,1.9,2.5],borderColor:'#F39C12',backgroundColor:'rgba(243,156,18,.08)',borderWidth:2,tension:.4,pointRadius:4,fill:true}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:tc(),boxWidth:10,font:{size:10}}}},scales:{x:{grid:{display:false},ticks:{color:tc(),font:{size:10}}},y:{grid:{color:gc()},ticks:{color:tc(),font:{size:10},callback:v=>'₹'+v+'L'}}}}});
+</script>
+</body>
+</html>

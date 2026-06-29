@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document Verification — EduCore SMS Admission</title>
+  <meta name="description" content="Track and manage student admission document verification status">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;900&family=IBM+Plex+Mono:wght@400;500;600&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../css/main.css">
+  <link rel="stylesheet" href="../../css/components.css">
+</head>
+<body>
+<div class="mobile-overlay" id="mobileOverlay" onclick="closeMobileSidebar()"></div>
+<header class="topbar">
+  <div class="logo-area">
+    <div class="logo-mark"><svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div>
+    <span class="logo-text">EduCore SMS</span>
+  </div>
+  <button class="sidebar-toggle" onclick="toggleSidebar()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round">
+      <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+    </svg>
+  </button>
+  <div class="tb-search">
+    <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+    <input type="text" placeholder="Search by admission no or student name..." id="globalSearch">
+  </div>
+  <div class="tb-right">
+    <div class="tb-date" id="tb-date"></div>
+    <button class="dark-toggle" onclick="toggleDarkMode()">
+      <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/></svg>
+    </button>
+    <div class="dropdown-wrapper">
+      <div class="tb-btn" onclick="toggleNotif(event)" id="notifBtn">
+        <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        <div class="notif-dot"></div>
+      </div>
+      <div class="notif-dropdown" id="notifDropdown">
+        <div class="notif-header"><h4>Notifications</h4><span onclick="markAllRead()">Mark all read</span></div>
+        <div class="notif-item">
+          <div class="notif-icon" style="background:var(--warning)"><svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg></div>
+          <div class="notif-text"><p><strong>7 students</strong> have incomplete documents — pending for 3+ days</p><span>2 hours ago</span></div>
+          <div class="notif-unread"></div>
+        </div>
+        <div class="notif-footer"><a href="../../modules/communication/noticeboard.html">View all</a></div>
+      </div>
+    </div>
+    <div class="dropdown-wrapper">
+      <div class="tb-user" onclick="toggleUserDropdown(event)" id="userBtn">
+        <div class="avatar">SA</div>
+        <div class="tb-user-info">
+          <div class="tb-user-name">Super Admin</div>
+          <div class="tb-user-role">Administrator</div>
+        </div>
+      </div>
+      <div class="user-dropdown" id="userDropdown">
+        <div class="user-dd-header"><div class="user-dd-name">Super Admin</div><div class="user-dd-role">Administrator · EduCore SMS</div></div>
+        <a class="user-dd-item" href="../../modules/settings/school-profile.html"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/></svg>Settings</a>
+        <a class="user-dd-item danger" href="../../index.html"><svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>Logout</a>
+      </div>
+    </div>
+  </div>
+</header>
+<div class="layout" id="layout">
+  <nav class="sidebar" id="sidebar"><div id="sidebar-nav"></div></nav>
+  <main class="main">
+    <div class="breadcrumb">
+      <a href="../../index.html">Dashboard</a><span class="breadcrumb-sep">&#8250;</span>
+      <span>Admission</span><span class="breadcrumb-sep">&#8250;</span>
+      <span>Document Verification</span>
+    </div>
+    <div class="page-header">
+      <div>
+        <h1>Document Verification</h1>
+        <div class="page-subtitle">Academic Year 2026–27 · Track submitted documents per applicant</div>
+      </div>
+      <div class="ph-actions">
+        <button class="btn btn-ghost" onclick="exportData()">
+          <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Export
+        </button>
+        <button class="btn btn-primary" onclick="sendReminder()">
+          <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          Send Reminder
+        </button>
+      </div>
+    </div>
+
+    <!-- KPI Strip -->
+    <div class="stats-grid">
+      <div class="stat-card" style="--c1:#16A085;--c2:#0e6655">
+        <div class="stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></div>
+        <div class="stat-body"><div class="stat-label">Fully Verified</div><div class="stat-value" data-count="86">86</div><div class="stat-change up">Ready for enrollment</div></div>
+      </div>
+      <div class="stat-card" style="--c1:#F39C12;--c2:#d68910">
+        <div class="stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+        <div class="stat-body"><div class="stat-label">Partially Submitted</div><div class="stat-value" data-count="34">34</div><div class="stat-change down">▼ Docs pending</div></div>
+      </div>
+      <div class="stat-card" style="--c1:#E8505B;--c2:#c0392b">
+        <div class="stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
+        <div class="stat-body"><div class="stat-label">Not Submitted</div><div class="stat-value" data-count="23">23</div><div class="stat-change down">▼ Follow-up needed</div></div>
+      </div>
+      <div class="stat-card" style="--c1:#8E44AD;--c2:#6c3483">
+        <div class="stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
+        <div class="stat-body"><div class="stat-label">Total Applications</div><div class="stat-value" data-count="143">143</div><div class="stat-change neu">2026–27 intake</div></div>
+      </div>
+    </div>
+
+    <!-- Filter Bar -->
+    <div class="filter-bar">
+      <div class="search-box">
+        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input type="text" id="searchInput" placeholder="Search by name or admission no..." oninput="searchTable()">
+      </div>
+      <select class="filter-select" id="docStatusFilter" onchange="filterTable()">
+        <option value="">All Document Status</option>
+        <option>Complete</option>
+        <option>Partial</option>
+        <option>Not Submitted</option>
+      </select>
+      <select class="filter-select" onchange="filterTable()">
+        <option value="">All Classes</option>
+        <option>Nursery / LKG / UKG</option>
+        <option>Class I–V</option>
+        <option>Class VI–X</option>
+        <option>Class XI–XII</option>
+      </select>
+      <div class="filter-spacer"></div>
+      <button class="btn btn-ghost btn-sm" onclick="clearFilters()">Clear</button>
+    </div>
+
+    <!-- Table -->
+    <div class="table-card">
+      <div class="table-wrap">
+        <table id="dataTable">
+          <thead>
+            <tr>
+              <th><input type="checkbox" class="table-checkbox" id="chkAll" onclick="toggleAll(this)"></th>
+              <th>Adm. No</th>
+              <th>Student Name</th>
+              <th>Class</th>
+              <th>Birth Certificate</th>
+              <th>Aadhar Card</th>
+              <th>Report Card</th>
+              <th>Photo</th>
+              <th>TC</th>
+              <th>Caste Cert.</th>
+              <th>Doc Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody">
+            <tr>
+              <td><input type="checkbox" class="table-checkbox row-chk"></td>
+              <td class="td-mono">ADM-2026-001</td>
+              <td><div class="td-name">Aarav Sharma</div></td>
+              <td><span class="badge badge-blue">Class I</span></td>
+              <td><span class="badge badge-green">✓</span></td>
+              <td><span class="badge badge-green">✓</span></td>
+              <td><span class="badge badge-green">✓</span></td>
+              <td><span class="badge badge-green">✓</span></td>
+              <td><span class="badge badge-yellow">N/A</span></td>
+              <td><span class="badge badge-yellow">N/A</span></td>
+              <td><span class="badge badge-green">Complete</span></td>
+              <td><div class="row-actions"><button class="btn-icon" onclick="viewDocs(this)" title="View Documents"><svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button><button class="btn-icon" onclick="verifyAll(this)" title="Verify All"><svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/></svg></button></div></td>
+            </tr>
+            <tr>
+              <td><input type="checkbox" class="table-checkbox row-chk"></td>
+              <td class="td-mono">ADM-2026-002</td>
+              <td><div class="td-name">Priya Mehta</div></td>
+              <td><span class="badge badge-blue">Class II</span></td>
+              <td><span class="badge badge-green">✓</span></td>
+              <td><span class="badge badge-green">✓</span></td>
+              <td><span class="badge badge-red">✗</span></td>
+              <td><span class="badge badge-green">✓</span></td>
+              <td><span class="badge badge-red">✗</span></td>
+              <td><span class="badge badge-yellow">N/A</span></td>
+              <td><span class="badge badge-yellow">Partial</span></td>
+              <td><div class="row-actions"><button class="btn-icon" onclick="viewDocs(this)" title="View Documents"><svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button><button class="btn-icon" onclick="sendDocReminder(this)" title="Send Reminder"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></button></div></td>
+            </tr>
+            <tr>
+              <td><input type="checkbox" class="table-checkbox row-chk"></td>
+              <td class="td-mono">ADM-2026-003</td>
+              <td><div class="td-name">Rohan Kumar</div></td>
+              <td><span class="badge badge-orange">Class VI</span></td>
+              <td><span class="badge badge-green">✓</span></td>
+              <td><span class="badge badge-green">✓</span></td>
+              <td><span class="badge badge-green">✓</span></td>
+              <td><span class="badge badge-green">✓</span></td>
+              <td><span class="badge badge-green">✓</span></td>
+              <td><span class="badge badge-yellow">N/A</span></td>
+              <td><span class="badge badge-green">Complete</span></td>
+              <td><div class="row-actions"><button class="btn-icon" onclick="viewDocs(this)" title="View Documents"><svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button><button class="btn-icon" onclick="verifyAll(this)" title="Verify All"><svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/></svg></button></div></td>
+            </tr>
+            <tr>
+              <td><input type="checkbox" class="table-checkbox row-chk"></td>
+              <td class="td-mono">ADM-2026-004</td>
+              <td><div class="td-name">Ananya Reddy</div></td>
+              <td><span class="badge badge-purple">Class IX</span></td>
+              <td><span class="badge badge-red">✗</span></td>
+              <td><span class="badge badge-red">✗</span></td>
+              <td><span class="badge badge-red">✗</span></td>
+              <td><span class="badge badge-red">✗</span></td>
+              <td><span class="badge badge-red">✗</span></td>
+              <td><span class="badge badge-red">✗</span></td>
+              <td><span class="badge badge-red">Not Submitted</span></td>
+              <td><div class="row-actions"><button class="btn-icon" onclick="viewDocs(this)" title="View Documents"><svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button><button class="btn-icon" onclick="sendDocReminder(this)" title="Send Reminder"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></button></div></td>
+            </tr>
+            <tr>
+              <td><input type="checkbox" class="table-checkbox row-chk"></td>
+              <td class="td-mono">ADM-2026-005</td>
+              <td><div class="td-name">Diya Patel</div></td>
+              <td><span class="badge badge-orange">Class IV</span></td>
+              <td><span class="badge badge-green">✓</span></td>
+              <td><span class="badge badge-green">✓</span></td>
+              <td><span class="badge badge-green">✓</span></td>
+              <td><span class="badge badge-green">✓</span></td>
+              <td><span class="badge badge-yellow">N/A</span></td>
+              <td><span class="badge badge-yellow">N/A</span></td>
+              <td><span class="badge badge-green">Complete</span></td>
+              <td><div class="row-actions"><button class="btn-icon" onclick="viewDocs(this)" title="View Documents"><svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button><button class="btn-icon" onclick="verifyAll(this)" title="Verify All"><svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/></svg></button></div></td>
+            </tr>
+            <tr>
+              <td><input type="checkbox" class="table-checkbox row-chk"></td>
+              <td class="td-mono">ADM-2026-006</td>
+              <td><div class="td-name">Ishaan Joshi</div></td>
+              <td><span class="badge badge-blue">Nursery</span></td>
+              <td><span class="badge badge-green">✓</span></td>
+              <td><span class="badge badge-red">✗</span></td>
+              <td><span class="badge badge-yellow">N/A</span></td>
+              <td><span class="badge badge-red">✗</span></td>
+              <td><span class="badge badge-yellow">N/A</span></td>
+              <td><span class="badge badge-yellow">N/A</span></td>
+              <td><span class="badge badge-yellow">Partial</span></td>
+              <td><div class="row-actions"><button class="btn-icon" onclick="viewDocs(this)" title="View Documents"><svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button><button class="btn-icon" onclick="sendDocReminder(this)" title="Send Reminder"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></button></div></td>
+            </tr>
+            <tr>
+              <td><input type="checkbox" class="table-checkbox row-chk"></td>
+              <td class="td-mono">ADM-2026-007</td>
+              <td><div class="td-name">Sana Khan</div></td>
+              <td><span class="badge badge-orange">Class VIII</span></td>
+              <td><span class="badge badge-green">✓</span></td>
+              <td><span class="badge badge-green">✓</span></td>
+              <td><span class="badge badge-green">✓</span></td>
+              <td><span class="badge badge-green">✓</span></td>
+              <td><span class="badge badge-green">✓</span></td>
+              <td><span class="badge badge-green">✓</span></td>
+              <td><span class="badge badge-green">Complete</span></td>
+              <td><div class="row-actions"><button class="btn-icon" onclick="viewDocs(this)" title="View Documents"><svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button><button class="btn-icon" onclick="verifyAll(this)" title="Verify All"><svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/></svg></button></div></td>
+            </tr>
+            <tr>
+              <td><input type="checkbox" class="table-checkbox row-chk"></td>
+              <td class="td-mono">ADM-2026-008</td>
+              <td><div class="td-name">Arjun Verma</div></td>
+              <td><span class="badge badge-orange">Class VII</span></td>
+              <td><span class="badge badge-green">✓</span></td>
+              <td><span class="badge badge-green">✓</span></td>
+              <td><span class="badge badge-red">✗</span></td>
+              <td><span class="badge badge-green">✓</span></td>
+              <td><span class="badge badge-red">✗</span></td>
+              <td><span class="badge badge-yellow">N/A</span></td>
+              <td><span class="badge badge-yellow">Partial</span></td>
+              <td><div class="row-actions"><button class="btn-icon" onclick="viewDocs(this)" title="View Documents"><svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button><button class="btn-icon" onclick="sendDocReminder(this)" title="Send Reminder"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></button></div></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="table-footer">
+        <span class="table-info" id="tableInfo">Showing 8 of 143 records</span>
+        <div class="pagination">
+          <button class="page-btn"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
+          <button class="page-btn active">1</button>
+          <button class="page-btn">2</button>
+          <button class="page-btn">3</button>
+          <button class="page-btn"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></button>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+<div class="toast-container" id="toastContainer"></div>
+<script src="../../js/app.js"></script>
+<script src="../../js/sidebar.js"></script>
+<script>
+renderSidebar('admission-mod','adm-docs','../../');
+function showToast(msg, type) {
+  type = type || 'success';
+  var icons = { success:'<path d="M9 11l3 3L22 4"/>', error:'<path d="M18 6 6 18M6 6l12 12"/>', info:'<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>', warning:'<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>' };
+  var c = document.getElementById('toastContainer');
+  var t = document.createElement('div');
+  t.className = 'toast toast-' + type;
+  t.innerHTML = '<div class="toast-icon"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">'+icons[type]+'</svg></div><div class="toast-body"><div class="toast-title">'+(type.charAt(0).toUpperCase()+type.slice(1))+'</div><div class="toast-msg">'+msg+'</div></div>';
+  c.appendChild(t);
+  setTimeout(function(){t.classList.add('show');},10);
+  setTimeout(function(){t.classList.remove('show');setTimeout(function(){t.remove();},300);},3500);
+}
+function openModal(id) { var m=document.getElementById(id); if(m) m.classList.add('open'); }
+function closeModal(id) { var m=document.getElementById(id); if(m) m.classList.remove('open'); }
+function searchTable() {
+  var q = document.getElementById('searchInput').value.toLowerCase();
+  var rows = document.querySelectorAll('#tableBody tr');
+  var v = 0;
+  rows.forEach(function(r){ var s=r.textContent.toLowerCase().includes(q); r.style.display=s?'':'none'; if(s)v++; });
+  document.getElementById('tableInfo').textContent = 'Showing '+v+' of 143 records';
+}
+function filterTable() { searchTable(); }
+function clearFilters() { document.getElementById('searchInput').value=''; searchTable(); }
+function toggleAll(cb) { document.querySelectorAll('.row-chk').forEach(function(c){c.checked=cb.checked;}); }
+function viewDocs(btn) { showToast('Loading document viewer...','info'); }
+function verifyAll(btn) { var row=btn.closest('tr'); row.querySelectorAll('.badge-yellow').forEach(function(b){if(b.textContent!=='N/A'){b.className='badge badge-green';b.textContent='✓';}}); showToast('All documents verified successfully!','success'); }
+function sendDocReminder(btn) { showToast('Reminder sent to parent via WhatsApp and SMS','success'); }
+function sendReminder() { showToast('Bulk reminder sent to 34 parents with incomplete documents','success'); }
+function exportData() { showToast('Preparing Excel export...','info'); }
+</script>
+</body>
+</html>

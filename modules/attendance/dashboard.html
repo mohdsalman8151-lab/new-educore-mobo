@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Attendance Dashboard — EduCore SMS</title>
+  <meta name="description" content="EduCore SMS Attendance Dashboard — real-time student and staff attendance analytics, KPIs, and reports">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;900&family=IBM+Plex+Mono:wght@400;500;600&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../css/main.css">
+  <link rel="stylesheet" href="../../css/components.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <style>
+    .att-kpi { display:grid; grid-template-columns:repeat(6,1fr); gap:1rem; margin-bottom:1.5rem; }
+    @media(max-width:1400px){ .att-kpi{grid-template-columns:repeat(3,1fr);} }
+    @media(max-width:768px){ .att-kpi{grid-template-columns:repeat(2,1fr);} }
+    .kpi-card { background:var(--bg2); border-radius:var(--radius); border:1px solid var(--border); padding:1.1rem 1.25rem; display:flex; flex-direction:column; gap:0.35rem; position:relative; overflow:hidden; transition:transform 0.2s,box-shadow 0.2s; }
+    .kpi-card:hover { transform:translateY(-2px); box-shadow:var(--shadow-md); }
+    .kpi-card::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; background:var(--kc); }
+    .kpi-icon { width:36px; height:36px; border-radius:8px; display:flex; align-items:center; justify-content:center; background:color-mix(in srgb,var(--kc) 12%,transparent); margin-bottom:0.2rem; }
+    .kpi-icon svg { width:18px; height:18px; fill:none; stroke:var(--kc); stroke-width:2; }
+    .kpi-label { font-size:0.72rem; color:var(--text2); font-weight:500; text-transform:uppercase; letter-spacing:0.04em; }
+    .kpi-value { font-size:1.85rem; font-weight:700; color:var(--text); font-family:'IBM Plex Mono',monospace; line-height:1; }
+    .kpi-sub { font-size:0.72rem; color:var(--text2); }
+    .kpi-badge { position:absolute; top:0.9rem; right:0.9rem; font-size:0.65rem; padding:2px 7px; border-radius:20px; font-weight:700; background:color-mix(in srgb,var(--kc) 15%,transparent); color:var(--kc); }
+    /* Charts row */
+    .charts-row { display:grid; grid-template-columns:2fr 1fr; gap:1.5rem; margin-bottom:1.5rem; }
+    @media(max-width:1100px){ .charts-row{grid-template-columns:1fr;} }
+    .charts-row-3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:1.5rem; margin-bottom:1.5rem; }
+    @media(max-width:1100px){ .charts-row-3{grid-template-columns:1fr;} }
+    /* Class stats table */
+    .class-att-table { width:100%; border-collapse:collapse; }
+    .class-att-table th { text-align:left; padding:0.55rem 0.8rem; font-size:0.72rem; text-transform:uppercase; letter-spacing:0.05em; color:var(--text3); border-bottom:2px solid var(--border); }
+    .class-att-table td { padding:0.6rem 0.8rem; font-size:0.82rem; border-bottom:1px solid var(--border); vertical-align:middle; }
+    .class-att-table tr:last-child td { border-bottom:none; }
+    .class-att-table tr:hover td { background:var(--bg); }
+    .mini-bar { height:6px; border-radius:3px; background:var(--border); overflow:hidden; width:80px; }
+    .mini-fill { height:100%; border-radius:3px; }
+    /* Activity feed */
+    .activity-feed { display:flex; flex-direction:column; gap:0; }
+    .act-item { display:flex; gap:0.75rem; padding:0.75rem 0; border-bottom:1px solid var(--border); align-items:flex-start; }
+    .act-item:last-child { border-bottom:none; }
+    .act-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; margin-top:4px; }
+    .act-body { flex:1; }
+    .act-title { font-size:0.82rem; color:var(--text); font-weight:500; }
+    .act-meta { font-size:0.72rem; color:var(--text2); font-family:'IBM Plex Mono',monospace; margin-top:1px; }
+    /* Defaulter list */
+    .defaulter-row { display:flex; align-items:center; gap:0.75rem; padding:0.6rem 0; border-bottom:1px solid var(--border); }
+    .defaulter-row:last-child { border-bottom:none; }
+    .def-avatar { width:32px; height:32px; border-radius:50%; background:linear-gradient(135deg,var(--accent),var(--accent-dark)); color:#fff; display:flex; align-items:center; justify-content:center; font-size:0.65rem; font-weight:700; flex-shrink:0; }
+    .def-info { flex:1; min-width:0; }
+    .def-name { font-size:0.82rem; font-weight:600; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .def-sub { font-size:0.7rem; color:var(--text2); }
+    .def-pct { font-size:0.85rem; font-weight:700; font-family:'IBM Plex Mono',monospace; }
+    /* Pending approvals */
+    .approval-card { display:flex; gap:0.75rem; padding:0.75rem; background:var(--bg); border-radius:var(--radius-sm); border:1px solid var(--border); margin-bottom:0.5rem; }
+    .approval-card:last-child { margin-bottom:0; }
+    .appr-icon { width:38px; height:38px; border-radius:8px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+    .appr-icon svg { width:18px; height:18px; fill:none; stroke:#fff; stroke-width:2; }
+    .appr-body { flex:1; min-width:0; }
+    .appr-name { font-size:0.82rem; font-weight:600; color:var(--text); }
+    .appr-detail { font-size:0.72rem; color:var(--text2); }
+    .appr-actions { display:flex; gap:0.4rem; margin-top:0.4rem; }
+    .btn-xs { padding:3px 10px; font-size:0.7rem; border-radius:5px; border:none; cursor:pointer; font-weight:600; }
+    .btn-approve { background:rgba(22,160,133,0.12); color:var(--success); }
+    .btn-reject { background:rgba(232,80,91,0.12); color:var(--accent); }
+    .btn-approve:hover { background:var(--success); color:#fff; }
+    .btn-reject:hover { background:var(--accent); color:#fff; }
+    /* Section heatmap */
+    .heatmap-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:3px; }
+    .hm-cell { aspect-ratio:1; border-radius:3px; display:flex; align-items:center; justify-content:center; font-size:0.55rem; font-weight:600; color:#fff; cursor:pointer; transition:transform 0.15s; }
+    .hm-cell:hover { transform:scale(1.15); }
+    .hm-label { font-size:0.62rem; color:var(--text2); text-align:center; font-family:'IBM Plex Mono',monospace; }
+    /* Teacher summary */
+    .teacher-row { display:flex; align-items:center; gap:0.7rem; padding:0.55rem 0; border-bottom:1px solid var(--border); }
+    .teacher-row:last-child { border-bottom:none; }
+    .t-av { width:30px; height:30px; border-radius:50%; background:linear-gradient(135deg,var(--primary),var(--info)); color:#fff; display:flex; align-items:center; justify-content:center; font-size:0.6rem; font-weight:700; flex-shrink:0; }
+    .t-name { font-size:0.8rem; font-weight:600; color:var(--text); flex:1; }
+    .t-dept { font-size:0.68rem; color:var(--text2); }
+  </style>
+</head>
+<body>
+<div class="mobile-overlay" id="mobileOverlay" onclick="closeMobileSidebar()"></div>
+<header class="topbar">
+  <div class="logo-area">
+    <div class="logo-mark"><svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div>
+    <span class="logo-text">EduCore SMS</span>
+  </div>
+  <button class="sidebar-toggle" onclick="toggleSidebar()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round">
+      <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+    </svg>
+  </button>
+  <div class="tb-search">
+    <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+    <input type="text" placeholder="Search students, classes, reports…">
+  </div>
+  <div class="tb-right">
+    <div class="tb-date" id="tb-date"></div>
+    <button class="dark-toggle" onclick="toggleDarkMode()">
+      <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/></svg>
+    </button>
+    <div class="dropdown-wrapper">
+      <div class="tb-btn" onclick="toggleNotif(event)" id="notifBtn">
+        <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        <div class="notif-dot"></div>
+      </div>
+      <div class="notif-dropdown" id="notifDropdown">
+        <div class="notif-header"><h4>Notifications</h4><span onclick="markAllRead()">Mark all read</span></div>
+        <div class="notif-item">
+          <div class="notif-icon" style="background:var(--accent)"><svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg></div>
+          <div class="notif-text"><p><strong>Low attendance warning</strong> — 14 students below 75% threshold</p><span>Today, 8:30 AM</span></div>
+          <div class="notif-unread"></div>
+        </div>
+        <div class="notif-item">
+          <div class="notif-icon" style="background:var(--warning)"><svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/></svg></div>
+          <div class="notif-text"><p><strong>Attendance pending</strong> — Class XI-B not marked yet</p><span>Today, 9:10 AM</span></div>
+          <div class="notif-unread"></div>
+        </div>
+        <div class="notif-item">
+          <div class="notif-icon" style="background:var(--info)"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>
+          <div class="notif-text"><p><strong>Leave approved</strong> — Rohan Das, Class IX-A, 3 days</p><span>Yesterday</span></div>
+        </div>
+        <div class="notif-footer"><a href="alerts.html">View all notifications →</a></div>
+      </div>
+    </div>
+    <div class="dropdown-wrapper">
+      <div class="tb-user" onclick="toggleUserDropdown(event)" id="userBtn">
+        <div class="avatar">SA</div>
+        <div class="tb-user-info">
+          <div class="tb-user-name">Super Admin</div>
+          <div class="tb-user-role">Administrator</div>
+        </div>
+      </div>
+      <div class="user-dropdown" id="userDropdown">
+        <div class="user-dd-header"><div class="user-dd-name">Super Admin</div><div class="user-dd-role">Administrator · EduCore SMS</div></div>
+        <a class="user-dd-item" href="../../modules/settings/school-profile.html"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v2M12 20v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M2 12h2M20 12h2"/></svg>Settings</a>
+        <a class="user-dd-item danger" href="../../index.html"><svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>Logout</a>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="layout" id="layout">
+  <nav class="sidebar" id="sidebar"><div id="sidebar-nav"></div></nav>
+  <main class="main">
+    <div class="breadcrumb">
+      <a href="../../index.html">Dashboard</a>
+      <span class="breadcrumb-sep">›</span>
+      <span>Attendance</span>
+      <span class="breadcrumb-sep">›</span>
+      <span>Dashboard</span>
+    </div>
+    <div class="page-header">
+      <div>
+        <h1>Attendance Dashboard</h1>
+        <div class="page-subtitle">Academic Year 2025–26 · Term II · Main Campus · Real-time Overview</div>
+      </div>
+      <div class="ph-actions">
+        <select class="filter-select" id="sessionFilter" onchange="updateDashboard()" style="min-width:140px">
+          <option value="2025-26">2025–26</option>
+          <option value="2024-25">2024–25</option>
+        </select>
+        <button class="btn btn-ghost" onclick="window.print()">
+          <svg viewBox="0 0 24 24"><path d="M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+          Print
+        </button>
+        <a href="student.html" class="btn btn-primary">
+          <svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+          Mark Attendance
+        </a>
+      </div>
+    </div>
+
+    <!-- Alert Banner -->
+    <div class="alert" style="background:rgba(243,156,18,0.08);border:1px solid rgba(243,156,18,0.3);border-radius:var(--radius-sm);padding:0.75rem 1rem;display:flex;align-items:center;gap:0.75rem;margin-bottom:1.5rem;font-size:0.82rem;color:var(--text);">
+      <svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:var(--warning);fill:none;stroke-width:2;flex-shrink:0"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      <span><strong>3 classes</strong> have not marked today's attendance yet — XI-B, XII-C, VIII-D. <a href="student.html" style="color:var(--primary);font-weight:600;text-decoration:underline">Mark now →</a></span>
+      <button onclick="this.parentElement.style.display='none'" style="margin-left:auto;background:none;border:none;color:var(--text2);font-size:1.1rem;cursor:pointer">×</button>
+    </div>
+
+    <!-- KPI Strip -->
+    <div class="att-kpi">
+      <div class="kpi-card" style="--kc:var(--primary)">
+        <div class="kpi-badge">Live</div>
+        <div class="kpi-icon"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+        <div class="kpi-label">Total Students</div>
+        <div class="kpi-value" data-count="1248" id="kpi1">0</div>
+        <div class="kpi-sub">Grades I–XII · All Sections</div>
+      </div>
+      <div class="kpi-card" style="--kc:var(--success)">
+        <div class="kpi-badge">Today</div>
+        <div class="kpi-icon"><svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></div>
+        <div class="kpi-label">Present Today</div>
+        <div class="kpi-value" data-count="1092" id="kpi2" style="color:var(--success)">0</div>
+        <div class="kpi-sub">87.5% attendance rate</div>
+      </div>
+      <div class="kpi-card" style="--kc:var(--accent)">
+        <div class="kpi-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg></div>
+        <div class="kpi-label">Absent Today</div>
+        <div class="kpi-value" data-count="98" id="kpi3" style="color:var(--accent)">0</div>
+        <div class="kpi-sub">7.8% · SMSs sent: 84</div>
+      </div>
+      <div class="kpi-card" style="--kc:var(--warning)">
+        <div class="kpi-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+        <div class="kpi-label">Late Arrivals</div>
+        <div class="kpi-value" data-count="58" id="kpi4" style="color:var(--warning)">0</div>
+        <div class="kpi-sub">After 7:55 AM roll call</div>
+      </div>
+      <div class="kpi-card" style="--kc:var(--info)">
+        <div class="kpi-icon"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg></div>
+        <div class="kpi-label">Approved Leaves</div>
+        <div class="kpi-value" data-count="34" id="kpi5" style="color:var(--info)">0</div>
+        <div class="kpi-sub">12 pending review</div>
+      </div>
+      <div class="kpi-card" style="--kc:var(--accent)">
+        <div class="kpi-icon"><svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
+        <div class="kpi-label">Below 75% (Defaulters)</div>
+        <div class="kpi-value" data-count="14" id="kpi6" style="color:var(--accent)">0</div>
+        <div class="kpi-sub">Escalation triggered: 6</div>
+      </div>
+    </div>
+
+    <!-- Row 1: Weekly Trend + Today's Class Status -->
+    <div class="charts-row">
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">Weekly Attendance Trend</div>
+            <div class="card-meta">Jun 23–29, 2026 · All Grades · Present vs Absent vs Leave</div>
+          </div>
+          <div style="display:flex;gap:0.5rem">
+            <button class="btn btn-ghost btn-sm" onclick="switchChart('week')">Week</button>
+            <button class="btn btn-ghost btn-sm" onclick="switchChart('month')">Month</button>
+            <a href="reports.html" class="btn btn-sm btn-primary">Report</a>
+          </div>
+        </div>
+        <div class="chart-wrap" style="height:200px"><canvas id="weeklyChart"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Today's Marking Status</div>
+          <div class="card-meta">Mon 29 Jun 2026</div>
+        </div>
+        <div class="chart-wrap" style="height:160px"><canvas id="todayDonut"></canvas></div>
+        <div style="margin-top:0.75rem">
+          <div style="display:flex;justify-content:space-between;font-size:0.75rem;padding:0.3rem 0;border-bottom:1px solid var(--border)">
+            <span style="display:flex;align-items:center;gap:6px"><span style="width:10px;height:10px;border-radius:2px;background:var(--success);display:inline-block"></span>Present</span><strong style="color:var(--success)">1,092</strong>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:0.75rem;padding:0.3rem 0;border-bottom:1px solid var(--border)">
+            <span style="display:flex;align-items:center;gap:6px"><span style="width:10px;height:10px;border-radius:2px;background:var(--accent);display:inline-block"></span>Absent</span><strong style="color:var(--accent)">98</strong>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:0.75rem;padding:0.3rem 0;border-bottom:1px solid var(--border)">
+            <span style="display:flex;align-items:center;gap:6px"><span style="width:10px;height:10px;border-radius:2px;background:var(--warning);display:inline-block"></span>Late</span><strong style="color:var(--warning)">58</strong>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:0.75rem;padding:0.3rem 0">
+            <span style="display:flex;align-items:center;gap:6px"><span style="width:10px;height:10px;border-radius:2px;background:var(--info);display:inline-block"></span>On Leave</span><strong style="color:var(--info)">0</strong>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Row 2: Class-wise Table + Monthly Chart -->
+    <div class="charts-row">
+      <div class="card card-flush">
+        <div class="card-padding" style="display:flex;justify-content:space-between;align-items:center">
+          <div>
+            <div class="card-title">Class-wise Attendance — Today</div>
+            <div class="card-meta">All grades · 29 Jun 2026</div>
+          </div>
+          <div style="display:flex;gap:0.5rem;align-items:center">
+            <select class="filter-select" style="font-size:0.75rem;padding:4px 10px">
+              <option>All Sections</option><option>Section A</option><option>Section B</option><option>Section C</option>
+            </select>
+            <a href="reports.html" style="font-size:0.73rem;color:var(--primary);font-weight:600">Full Report →</a>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table class="class-att-table">
+            <thead><tr><th>Class</th><th>Section</th><th>Teacher</th><th>Total</th><th>Present</th><th>Absent</th><th>Late</th><th>Att%</th><th>Status</th></tr></thead>
+            <tbody id="classTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">Monthly Trend</div>
+            <div class="card-meta">June 2026 · Average %</div>
+          </div>
+        </div>
+        <div class="chart-wrap" style="height:220px"><canvas id="monthlyChart"></canvas></div>
+      </div>
+    </div>
+
+    <!-- Row 3: Defaulters + Pending Approvals + Activity -->
+    <div class="charts-row-3">
+      <!-- Defaulters -->
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title" style="color:var(--accent)">⚠ Defaulter Students</div>
+            <div class="card-meta">Below 75% attendance threshold</div>
+          </div>
+          <a href="reports.html?type=defaulter" style="font-size:0.73rem;color:var(--accent);font-weight:600">View All →</a>
+        </div>
+        <div id="defaulterList"></div>
+      </div>
+
+      <!-- Pending Approvals -->
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">Pending Approvals</div>
+            <div class="card-meta">Leave applications awaiting action</div>
+          </div>
+          <a href="leave.html" style="font-size:0.73rem;color:var(--primary);font-weight:600">All (12) →</a>
+        </div>
+        <div id="approvalList"></div>
+      </div>
+
+      <!-- Activity -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Recent Activity</div>
+          <div class="card-meta">Last 24 hours</div>
+        </div>
+        <div class="activity-feed" id="activityFeed"></div>
+      </div>
+    </div>
+
+    <!-- Row 4: Teacher Summary + Section Heatmap -->
+    <div class="charts-row">
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">Monthly Attendance Heatmap</div>
+            <div class="card-meta">June 2026 · School-wide average attendance %</div>
+          </div>
+        </div>
+        <div style="margin-bottom:0.5rem">
+          <div class="heatmap-grid" id="heatmapDays" style="margin-bottom:4px"></div>
+          <div class="heatmap-grid" id="heatmapGrid"></div>
+        </div>
+        <div style="display:flex;gap:1rem;align-items:center;margin-top:0.75rem;flex-wrap:wrap">
+          <span style="font-size:0.7rem;color:var(--text2)">Legend:</span>
+          <span style="display:flex;align-items:center;gap:4px;font-size:0.7rem"><span style="width:12px;height:12px;border-radius:2px;background:#EF4444;display:inline-block"></span>&lt;75%</span>
+          <span style="display:flex;align-items:center;gap:4px;font-size:0.7rem"><span style="width:12px;height:12px;border-radius:2px;background:#F59E0B;display:inline-block"></span>75-85%</span>
+          <span style="display:flex;align-items:center;gap:4px;font-size:0.7rem"><span style="width:12px;height:12px;border-radius:2px;background:#10B981;display:inline-block"></span>85-95%</span>
+          <span style="display:flex;align-items:center;gap:4px;font-size:0.7rem"><span style="width:12px;height:12px;border-radius:2px;background:#059669;display:inline-block"></span>&gt;95%</span>
+          <span style="display:flex;align-items:center;gap:4px;font-size:0.7rem"><span style="width:12px;height:12px;border-radius:2px;background:var(--border);display:inline-block"></span>Holiday/Weekend</span>
+        </div>
+      </div>
+      <div class="card card-flush">
+        <div class="card-padding" style="display:flex;justify-content:space-between;align-items:center">
+          <div class="card-title">Teacher Attendance — Today</div>
+          <a href="staff.html" style="font-size:0.73rem;color:var(--primary);font-weight:600">Full →</a>
+        </div>
+        <div style="padding:0 1.25rem 0.5rem">
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:0.5rem;margin-bottom:1rem">
+            <div style="text-align:center;padding:0.6rem;background:rgba(22,160,133,0.08);border-radius:8px">
+              <div style="font-size:1.4rem;font-weight:700;color:var(--success);font-family:'IBM Plex Mono',monospace">79</div>
+              <div style="font-size:0.65rem;color:var(--text2)">Present</div>
+            </div>
+            <div style="text-align:center;padding:0.6rem;background:rgba(232,80,91,0.08);border-radius:8px">
+              <div style="font-size:1.4rem;font-weight:700;color:var(--accent);font-family:'IBM Plex Mono',monospace">4</div>
+              <div style="font-size:0.65rem;color:var(--text2)">Absent</div>
+            </div>
+            <div style="text-align:center;padding:0.6rem;background:rgba(243,156,18,0.08);border-radius:8px">
+              <div style="font-size:1.4rem;font-weight:700;color:var(--warning);font-family:'IBM Plex Mono',monospace">3</div>
+              <div style="font-size:0.65rem;color:var(--text2)">On Leave</div>
+            </div>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table style="width:100%;border-collapse:collapse" id="teacherTable">
+            <thead><tr>
+              <th style="text-align:left;padding:0.5rem 1.25rem;font-size:0.7rem;text-transform:uppercase;color:var(--text3);border-bottom:1px solid var(--border)">Teacher</th>
+              <th style="text-align:left;padding:0.5rem 0.5rem;font-size:0.7rem;text-transform:uppercase;color:var(--text3);border-bottom:1px solid var(--border)">Dept</th>
+              <th style="text-align:left;padding:0.5rem 0.5rem;font-size:0.7rem;text-transform:uppercase;color:var(--text3);border-bottom:1px solid var(--border)">Status</th>
+            </tr></thead>
+            <tbody id="teacherBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+<div class="toast-container" id="toastContainer"></div>
+
+<script src="../../js/app.js"></script>
+<script src="../../js/sidebar.js"></script>
+<script>
+renderSidebar('attendance','student-att','../../');
+
+/* ── DATA ── */
+const classData = [
+  {cls:'I',sec:'A',teacher:'Mrs. Anitha Rao',total:32,present:30,absent:1,late:1},
+  {cls:'I',sec:'B',teacher:'Mrs. Kavitha S.',total:30,present:28,absent:2,late:0},
+  {cls:'II',sec:'A',teacher:'Mrs. Shobha P.',total:35,present:34,absent:1,late:0},
+  {cls:'III',sec:'A',teacher:'Mr. Suresh K.',total:38,present:35,absent:2,late:1},
+  {cls:'III',sec:'B',teacher:'Mrs. Lakshmi R.',total:36,present:32,absent:3,late:1},
+  {cls:'IV',sec:'A',teacher:'Mrs. Meena T.',total:40,present:38,absent:2,late:0},
+  {cls:'V',sec:'A',teacher:'Mr. Ravi V.',total:42,present:38,absent:3,late:1},
+  {cls:'V',sec:'B',teacher:'Mrs. Geetha S.',total:40,present:36,absent:3,late:1},
+  {cls:'VI',sec:'A',teacher:'Mr. Prakash N.',total:44,present:40,absent:3,late:1},
+  {cls:'VI',sec:'B',teacher:'Mrs. Sudha M.',total:44,present:39,absent:4,late:1},
+  {cls:'VII',sec:'A',teacher:'Mr. Venkat K.',total:46,present:42,absent:3,late:1},
+  {cls:'VII',sec:'B',teacher:'Mrs. Priya L.',total:45,present:40,absent:4,late:1},
+  {cls:'VIII',sec:'A',teacher:'Mr. Srinivas G.',total:48,present:44,absent:3,late:1},
+  {cls:'VIII',sec:'B',teacher:'Mrs. Nirmala B.',total:47,present:41,absent:5,late:1},
+  {cls:'IX',sec:'A',teacher:'Mrs. Sunita Sharma',total:50,present:45,absent:4,late:1},
+  {cls:'IX',sec:'B',teacher:'Mr. Arun Menon',total:49,present:43,absent:5,late:1},
+  {cls:'X',sec:'A',teacher:'Mrs. Priya Nair',total:52,present:47,absent:4,late:1},
+  {cls:'X',sec:'B',teacher:'Mr. Rajesh Kumar',total:51,present:45,absent:5,late:1},
+  {cls:'XI',sec:'A',teacher:'Mr. Anand S.',total:48,present:42,absent:5,late:1},
+  {cls:'XI',sec:'B',teacher:'Ms. Deepa K.',total:46,present:36,absent:7,late:3},
+  {cls:'XII',sec:'A',teacher:'Mr. Kumar V.',total:45,present:40,absent:4,late:1},
+  {cls:'XII',sec:'B',teacher:'Mrs. Radha P.',total:44,present:39,absent:4,late:1},
+  {cls:'XII',sec:'C',teacher:'Mr. Rajan M.',total:42,present:32,absent:8,late:2},
+];
+
+const defaulters = [
+  {name:'Aditya Singh',cls:'VIII-A',adm:'ADM-0892',pct:58,trend:'down'},
+  {name:'Rahul Verma',cls:'X-B',adm:'ADM-1034',pct:62,trend:'down'},
+  {name:'Sneha Goyal',cls:'XI-B',adm:'ADM-1102',pct:65,trend:'stable'},
+  {name:'Kiran Patel',cls:'VII-A',adm:'ADM-0788',pct:68,trend:'up'},
+  {name:'Meena Reddy',cls:'IX-B',adm:'ADM-0966',pct:71,trend:'stable'},
+  {name:'Dev Agarwal',cls:'XII-C',adm:'ADM-1189',pct:72,trend:'up'},
+];
+
+const pendingApprovals = [
+  {name:'Priya Singh',cls:'IX-A',type:'Medical Leave',days:3,date:'28 Jun',color:'var(--info)'},
+  {name:'Rohan Das',cls:'VIII-B',type:'Casual Leave',days:1,date:'29 Jun',color:'var(--warning)'},
+  {name:'Ananya Gupta',cls:'XI-A',type:'Medical Leave',days:5,date:'27 Jun',color:'var(--info)'},
+  {name:'Vikram Nair',cls:'VII-B',type:'Family Emergency',days:2,date:'29 Jun',color:'var(--accent)'},
+];
+
+const activities = [
+  {dot:'var(--success)',title:'Attendance submitted — IX-A','meta':'Mrs. Sunita Sharma · 9:08 AM'},
+  {dot:'var(--success)',title:'Attendance submitted — X-B','meta':'Mr. Rajesh Kumar · 9:10 AM'},
+  {dot:'var(--info)',title:'Leave approved — Priya Mehta (3 days)','meta':'Coordinator Mrs. Rekha · 9:15 AM'},
+  {dot:'var(--warning)',title:'Late arrival gate pass issued — Rahul Das','meta':'Security · 9:22 AM'},
+  {dot:'var(--accent)',title:'Attendance correction request — VII-A Date: 27 Jun','meta':'Mr. Venkat Kumar · 9:30 AM'},
+  {dot:'var(--info)',title:'SMS sent to 48 absent students\' parents','meta':'Automated · 9:35 AM'},
+  {dot:'var(--warning)',title:'Attendance pending reminder — XI-B','meta':'System · 9:45 AM'},
+  {dot:'var(--success)',title:'Biometric sync completed — 234 records','meta':'Device BIO-02 · 9:50 AM'},
+];
+
+const teachers = [
+  {name:'Mrs. Sunita Sharma',dept:'Mathematics',status:'Present'},
+  {name:'Mr. Rajesh Kumar',dept:'Physics',status:'Present'},
+  {name:'Mrs. Priya Nair',dept:'Chemistry',status:'Present'},
+  {name:'Mr. Arun Menon',dept:'English',status:'On Leave'},
+  {name:'Mrs. Kavitha S.',dept:'Biology',status:'Present'},
+  {name:'Mr. Prakash N.',dept:'Social Sci.',status:'Late'},
+  {name:'Mrs. Meena T.',dept:'Hindi',status:'Present'},
+  {name:'Mr. Srinivas G.',dept:'Computer Sc.',status:'Absent'},
+];
+
+/* ── RENDER ── */
+function renderClassTable() {
+  var tb = document.getElementById('classTableBody');
+  if(!tb) return;
+  var html = '';
+  classData.forEach(function(r) {
+    var pct = Math.round((r.present/r.total)*100);
+    var color = pct>=90?'var(--success)':pct>=75?'var(--warning)':'var(--accent)';
+    var statusBadge = pct>=90?'<span class="badge badge-green">Good</span>':pct>=75?'<span class="badge badge-yellow">Moderate</span>':'<span class="badge badge-red">Alert</span>';
+    html += '<tr>'
+      +'<td><strong>'+r.cls+'</strong></td>'
+      +'<td><span class="badge badge-blue">'+r.sec+'</span></td>'
+      +'<td style="font-size:0.75rem;color:var(--text2)">'+r.teacher+'</td>'
+      +'<td style="font-family:\'IBM Plex Mono\',monospace;font-size:0.78rem">'+r.total+'</td>'
+      +'<td style="font-family:\'IBM Plex Mono\',monospace;font-size:0.78rem;color:var(--success)">'+r.present+'</td>'
+      +'<td style="font-family:\'IBM Plex Mono\',monospace;font-size:0.78rem;color:var(--accent)">'+r.absent+'</td>'
+      +'<td style="font-family:\'IBM Plex Mono\',monospace;font-size:0.78rem;color:var(--warning)">'+r.late+'</td>'
+      +'<td><div style="display:flex;align-items:center;gap:6px"><div class="mini-bar"><div class="mini-fill" style="width:'+pct+'%;background:'+color+'"></div></div><span style="font-size:0.75rem;font-weight:700;color:'+color+';font-family:\'IBM Plex Mono\',monospace">'+pct+'%</span></div></td>'
+      +'<td>'+statusBadge+'</td>'
+      +'</tr>';
+  });
+  tb.innerHTML = html;
+}
+
+function renderDefaulters() {
+  var el = document.getElementById('defaulterList');
+  if(!el) return;
+  var html = '';
+  defaulters.forEach(function(d) {
+    var initials = d.name.split(' ').map(function(n){return n[0]}).join('');
+    var color = d.pct<65?'var(--accent)':'var(--warning)';
+    html += '<div class="defaulter-row">'
+      +'<div class="def-avatar">'+initials+'</div>'
+      +'<div class="def-info"><div class="def-name">'+d.name+'</div><div class="def-sub">'+d.cls+' · '+d.adm+'</div></div>'
+      +'<div class="def-pct" style="color:'+color+'">'+d.pct+'%</div>'
+      +'</div>';
+  });
+  el.innerHTML = html;
+}
+
+function renderApprovals() {
+  var el = document.getElementById('approvalList');
+  if(!el) return;
+  var html = '';
+  pendingApprovals.forEach(function(a,i) {
+    html += '<div class="approval-card">'
+      +'<div class="appr-icon" style="background:'+a.color+'"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>'
+      +'<div class="appr-body">'
+      +'<div class="appr-name">'+a.name+' <span style="font-weight:400;color:var(--text2);font-size:0.72rem">· '+a.cls+'</span></div>'
+      +'<div class="appr-detail">'+a.type+' · '+a.days+' day(s) · Applied: '+a.date+'</div>'
+      +'<div class="appr-actions">'
+      +'<button class="btn-xs btn-approve" onclick="approveLeave(this,\''+a.name+'\')">✓ Approve</button>'
+      +'<button class="btn-xs btn-reject" onclick="rejectLeave(this,\''+a.name+'\')">✗ Reject</button>'
+      +'</div></div></div>';
+  });
+  el.innerHTML = html;
+}
+
+function renderActivity() {
+  var el = document.getElementById('activityFeed');
+  if(!el) return;
+  var html = '';
+  activities.forEach(function(a) {
+    html += '<div class="act-item">'
+      +'<div class="act-dot" style="background:'+a.dot+'"></div>'
+      +'<div class="act-body"><div class="act-title">'+a.title+'</div><div class="act-meta">'+a.meta+'</div></div>'
+      +'</div>';
+  });
+  el.innerHTML = html;
+}
+
+function renderTeachers() {
+  var tb = document.getElementById('teacherBody');
+  if(!tb) return;
+  var html = '';
+  teachers.forEach(function(t) {
+    var inits = t.name.replace('Mrs.','').replace('Mr.','').replace('Ms.','').trim().split(' ').slice(0,2).map(function(n){return n[0]}).join('');
+    var badgeClass = t.status==='Present'?'badge-green':t.status==='Late'?'badge-yellow':t.status==='On Leave'?'badge-blue':'badge-red';
+    html += '<tr><td style="padding:0.5rem 1.25rem"><div style="display:flex;align-items:center;gap:8px">'
+      +'<div class="t-av">'+inits+'</div>'
+      +'<div><div class="t-name">'+t.name+'</div></div></div></td>'
+      +'<td style="padding:0.5rem;font-size:0.75rem;color:var(--text2)">'+t.dept+'</td>'
+      +'<td style="padding:0.5rem"><span class="badge '+badgeClass+'">'+t.status+'</span></td></tr>';
+  });
+  tb.innerHTML = html;
+}
+
+function renderHeatmap() {
+  var days = document.getElementById('heatmapDays');
+  var grid = document.getElementById('heatmapGrid');
+  if(!days||!grid) return;
+  var dayNames = ['M','T','W','T','F','S','S'];
+  days.innerHTML = dayNames.map(function(d){return '<div class="hm-label">'+d+'</div>'}).join('');
+  // June 2026 starts Monday
+  var heatData = [
+    null,null,null,null,null,null,null, // placeholder for Sunday start (June starts Mon)
+    87,null,null,null,null,null,null,   // week 1 — Mon-Sun (most Sundays = holiday)
+    90,88,92,85,89,null,null,
+    91,87,93,88,null,null,null,
+    94,90,87,null,null,null,null,
+    95,92,89,88,null,null,null
+  ];
+  // Use last 35 cells
+  var values = [null,null,null,null,null,88,null,90,87,93,91,89,null,null,92,88,85,94,91,null,null,89,92,87,96,93,null,null,87,null,null,null,null,null,null];
+  var html = '';
+  values.forEach(function(v) {
+    if(v===null){
+      html += '<div class="hm-cell" style="background:var(--border);cursor:default" title="Weekend/Holiday"></div>';
+    } else {
+      var bg = v>=95?'#059669':v>=85?'#10B981':v>=75?'#F59E0B':'#EF4444';
+      html += '<div class="hm-cell" style="background:'+bg+'" title="'+v+'%">'+v+'</div>';
+    }
+  });
+  grid.innerHTML = html;
+}
+
+function approveLeave(btn, name) {
+  btn.closest('.approval-card').style.opacity='0.5';
+  showToast('Leave approved for '+name, 'success');
+}
+function rejectLeave(btn, name) {
+  btn.closest('.approval-card').style.opacity='0.5';
+  showToast('Leave rejected for '+name, 'error');
+}
+
+/* ── CHARTS ── */
+var weeklyChart, donutChart, monthlyChart;
+function getColors() {
+  return { grid: document.documentElement.getAttribute('data-theme')==='dark'?'rgba(255,255,255,0.06)':'rgba(0,0,0,0.06)', text: document.documentElement.getAttribute('data-theme')==='dark'?'#94A3B8':'#6C757D' };
+}
+
+function buildWeeklyChart() {
+  var c = getColors();
+  weeklyChart = new Chart(document.getElementById('weeklyChart'), {
+    type:'bar',
+    data:{
+      labels:['Mon 23','Tue 24','Wed 25','Thu 26','Fri 27','Sat 28','Mon 29'],
+      datasets:[
+        {label:'Present',data:[1140,1182,1098,1156,1120,820,1092],backgroundColor:'rgba(22,160,133,0.8)',borderRadius:5,borderSkipped:false},
+        {label:'Absent',data:[72,54,110,72,92,80,98],backgroundColor:'rgba(232,80,91,0.75)',borderRadius:5,borderSkipped:false},
+        {label:'Late',data:[36,12,40,20,36,28,58],backgroundColor:'rgba(243,156,18,0.75)',borderRadius:5,borderSkipped:false},
+      ]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{position:'top',labels:{boxWidth:10,font:{size:10},color:c.text}}},
+      scales:{
+        x:{stacked:false,grid:{display:false},ticks:{font:{size:10},color:c.text}},
+        y:{grid:{color:c.grid},ticks:{font:{size:10},color:c.text}}
+      }
+    }
+  });
+}
+
+function buildDonutChart() {
+  var c = getColors();
+  donutChart = new Chart(document.getElementById('todayDonut'), {
+    type:'doughnut',
+    data:{
+      labels:['Present','Absent','Late','Not Marked'],
+      datasets:[{data:[1092,98,58,0],backgroundColor:['#16A085','#E8505B','#F39C12','#CBD5E0'],borderWidth:0,hoverOffset:5}]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,cutout:'68%',
+      plugins:{legend:{display:false}}
+    }
+  });
+}
+
+function buildMonthlyChart() {
+  var c = getColors();
+  monthlyChart = new Chart(document.getElementById('monthlyChart'), {
+    type:'line',
+    data:{
+      labels:['1','3','5','7','9','11','13','15','17','19','21','23','25','27','29'],
+      datasets:[{
+        label:'Avg Attendance %',
+        data:[91,88,92,90,87,93,91,89,94,92,88,91,90,87,88],
+        borderColor:'#0A3D62',backgroundColor:'rgba(10,61,98,0.08)',
+        borderWidth:2.5,fill:true,tension:0.4,
+        pointBackgroundColor:'#E8505B',pointRadius:3,pointHoverRadius:6
+      }]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false}},
+      scales:{
+        y:{min:75,max:100,grid:{color:c.grid},ticks:{font:{size:10},color:c.text,callback:function(v){return v+'%'}}},
+        x:{grid:{display:false},ticks:{font:{size:10},color:c.text}}
+      }
+    }
+  });
+}
+
+/* ── COUNTER ANIMATION ── */
+function animateCounters() {
+  document.querySelectorAll('[data-count]').forEach(function(el) {
+    var target = parseFloat(el.getAttribute('data-count'));
+    var duration = 1200;
+    var start = performance.now();
+    var suffix = el.getAttribute('data-suffix')||'';
+    function step(now) {
+      var progress = Math.min((now-start)/duration,1);
+      var eased = 1-Math.pow(1-progress,3);
+      el.textContent = Math.round(target*eased).toLocaleString()+suffix;
+      if(progress<1) requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+  });
+}
+
+function showToast(msg,type){
+  var icons={success:'<path d="M9 11l3 3L22 4"/>',error:'<path d="M18 6 6 18M6 6l12 12"/>',info:'<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>',warning:'<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>'};
+  var c=document.getElementById('toastContainer');
+  var t=document.createElement('div');
+  t.className='toast toast-'+type;
+  t.innerHTML='<div class="toast-icon"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">'+icons[type]+'</svg></div><div class="toast-body"><div class="toast-title">'+(type.charAt(0).toUpperCase()+type.slice(1))+'</div><div class="toast-msg">'+msg+'</div></div>';
+  c.appendChild(t);
+  setTimeout(function(){t.classList.add('show');},10);
+  setTimeout(function(){t.classList.remove('show');setTimeout(function(){t.remove();},300);},3500);
+}
+
+/* ── INIT ── */
+renderClassTable();
+renderDefaulters();
+renderApprovals();
+renderActivity();
+renderTeachers();
+renderHeatmap();
+buildWeeklyChart();
+buildDonutChart();
+buildMonthlyChart();
+animateCounters();
+
+// Theme observer
+new MutationObserver(function(){
+  if(weeklyChart) weeklyChart.update();
+  if(donutChart) donutChart.update();
+  if(monthlyChart) monthlyChart.update();
+}).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
+</script>
+</body>
+</html>

@@ -1,0 +1,985 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EduCore SMS — Sign In</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;900&family=IBM+Plex+Mono:wght@400;500;600&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #0A3D62;
+      --primary-light: #1a5276;
+      --accent: #E8505B;
+      --accent-dark: #c0392b;
+      --success: #16A085;
+      --warning: #F39C12;
+      --info: #2980B9;
+      --purple: #8E44AD;
+      --bg: #F0F4F8;
+      --bg2: #FFFFFF;
+      --bg3: #E8EDF3;
+      --text: #1A1A2E;
+      --text2: #6C757D;
+      --text3: #9AA3B0;
+      --border: #E0E6ED;
+      --border2: #C8D3DE;
+      --shadow-sm: 0 2px 8px rgba(10,61,98,.07);
+      --shadow-md: 0 4px 20px rgba(10,61,98,.11);
+      --shadow-lg: 0 8px 40px rgba(10,61,98,.15);
+      --shadow-xl: 0 16px 60px rgba(10,61,98,.18);
+      --radius: 16px;
+      --radius-sm: 10px;
+      --transition: 0.25s cubic-bezier(.4,0,.2,1);
+    }
+    [data-theme="dark"] {
+      --primary: #3B82F6;
+      --primary-light: #60A5FA;
+      --accent: #F87171;
+      --accent-dark: #EF4444;
+      --success: #34D399;
+      --warning: #FBBF24;
+      --info: #60A5FA;
+      --bg: #0F172A;
+      --bg2: #1E293B;
+      --bg3: #162032;
+      --text: #F1F5F9;
+      --text2: #94A3B8;
+      --text3: #64748B;
+      --border: #334155;
+      --border2: #475569;
+      --shadow-sm: 0 2px 8px rgba(0,0,0,.3);
+      --shadow-md: 0 4px 20px rgba(0,0,0,.4);
+      --shadow-lg: 0 8px 40px rgba(0,0,0,.45);
+      --shadow-xl: 0 16px 60px rgba(0,0,0,.5);
+    }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    html{scroll-behavior:smooth}
+    body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;transition:background var(--transition),color var(--transition)}
+    a{text-decoration:none;color:inherit}
+    button{cursor:pointer;font-family:inherit;border:none}
+
+    /* ── LAYOUT ── */
+    .auth-layout{display:flex;width:100%;min-height:100vh}
+
+    /* LEFT */
+    .auth-left{flex:0 0 48%;background:linear-gradient(145deg,#0A3D62 0%,#0D4F7E 40%,#1a2a4e 100%);display:flex;flex-direction:column;justify-content:space-between;padding:3rem;position:relative;overflow:hidden}
+    [data-theme="dark"] .auth-left{background:linear-gradient(145deg,#0F172A 0%,#1E293B 50%,#0A1628 100%)}
+    .auth-left::before{content:'';position:absolute;top:-80px;right:-80px;width:400px;height:400px;background:radial-gradient(circle,rgba(232,80,91,.18) 0%,transparent 70%);border-radius:50%}
+    .auth-left::after{content:'';position:absolute;bottom:-60px;left:-60px;width:300px;height:300px;background:radial-gradient(circle,rgba(41,128,185,.15) 0%,transparent 70%);border-radius:50%}
+
+    .auth-logo{display:flex;align-items:center;gap:.9rem;position:relative;z-index:2}
+    .auth-logo-mark{width:46px;height:46px;border-radius:12px;background:linear-gradient(135deg,var(--accent),var(--accent-dark));display:flex;align-items:center;justify-content:center;box-shadow:0 6px 20px rgba(232,80,91,.4)}
+    .auth-logo-mark svg{width:26px;height:26px;fill:none;stroke:#fff;stroke-width:2}
+    .auth-logo-text{font-family:'Playfair Display',serif;font-size:1.5rem;font-weight:700;color:#fff;letter-spacing:-.01em}
+
+    .auth-hero{position:relative;z-index:2}
+    .auth-hero-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(232,80,91,.18);border:1px solid rgba(232,80,91,.3);border-radius:100px;padding:6px 14px;font-size:.72rem;font-weight:600;color:#F87171;letter-spacing:.08em;text-transform:uppercase;margin-bottom:1.5rem;font-family:'IBM Plex Mono',monospace}
+    .auth-hero-badge span{width:7px;height:7px;background:#F87171;border-radius:50%;animation:pulse2 2s infinite}
+    @keyframes pulse2{0%,100%{opacity:1}50%{opacity:.4}}
+    .auth-hero h2{font-family:'Playfair Display',serif;font-size:clamp(2rem,4vw,3rem);font-weight:900;color:#fff;line-height:1.15;letter-spacing:-.02em;margin-bottom:1.25rem}
+    .auth-hero h2 em{color:#F87171;font-style:normal}
+    .auth-hero p{font-size:.95rem;color:rgba(255,255,255,.6);line-height:1.7;max-width:380px}
+
+    .auth-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;position:relative;z-index:2}
+    .auth-stat{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:1rem;text-align:center;backdrop-filter:blur(10px)}
+    .auth-stat-num{font-family:'Playfair Display',serif;font-size:1.6rem;font-weight:900;color:#fff;line-height:1}
+    .auth-stat-lbl{font-size:.72rem;color:rgba(255,255,255,.5);margin-top:4px;font-family:'IBM Plex Mono',monospace}
+
+    /* RIGHT */
+    .auth-right{flex:1;display:flex;align-items:center;justify-content:center;padding:2rem;position:relative;background:var(--bg2);overflow:hidden}
+
+    .dark-toggle-auth{position:absolute;top:1.5rem;right:1.5rem;width:40px;height:40px;border-radius:10px;border:1px solid var(--border);background:var(--bg);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all var(--transition);z-index:10}
+    .dark-toggle-auth:hover{background:var(--bg3);border-color:var(--border2)}
+    .dark-toggle-auth svg{width:18px;height:18px;fill:none;stroke:var(--text2);stroke-width:2}
+    .icon-sun{display:none}.icon-moon{display:block}
+    [data-theme="dark"] .icon-sun{display:block}
+    [data-theme="dark"] .icon-moon{display:none}
+
+    /* ── PANELS ── */
+    .panel-wrapper{width:100%;max-width:460px;position:relative}
+
+    .panel{width:100%;opacity:0;transform:translateX(40px);pointer-events:none;transition:opacity .4s ease,transform .4s ease;position:absolute;top:0;left:0;visibility:hidden}
+    .panel.active{opacity:1;transform:translateX(0);pointer-events:auto;visibility:visible;position:relative}
+    .panel.animating-in{position:absolute;top:0;left:0;visibility:visible}
+    .panel.animating-out{position:absolute;top:0;left:0;visibility:visible;pointer-events:none}
+
+    /* ── CARD HEADER ── */
+    .auth-card-title{font-family:'Playfair Display',serif;font-size:2rem;font-weight:900;color:var(--text);letter-spacing:-.02em;line-height:1.15}
+    .auth-card-sub{font-size:.88rem;color:var(--text2);margin-top:.5rem;line-height:1.6;margin-bottom:1.75rem}
+
+    /* ── STEP INDICATOR ── */
+    .step-indicator{display:flex;align-items:center;gap:0;margin-bottom:1.75rem}
+    .step{display:flex;flex-direction:column;align-items:center;flex:1;position:relative}
+    .step:not(:last-child)::after{content:'';position:absolute;top:16px;left:calc(50% + 16px);right:calc(-50% + 16px);height:2px;background:var(--border);transition:background .5s ease}
+    .step.done:not(:last-child)::after{background:var(--success)}
+    .step.active:not(:last-child)::after{background:var(--primary)}
+    .step-num{width:32px;height:32px;border-radius:50%;border:2px solid var(--border);background:var(--bg);display:flex;align-items:center;justify-content:center;font-size:.8rem;font-weight:700;color:var(--text3);font-family:'IBM Plex Mono',monospace;transition:all .4s ease;position:relative;z-index:1}
+    .step.active .step-num{border-color:var(--primary);background:var(--primary);color:#fff;box-shadow:0 4px 12px rgba(10,61,98,.3)}
+    .step.done .step-num{border-color:var(--success);background:var(--success);color:#fff}
+    .step-label{font-size:.68rem;font-family:'IBM Plex Mono',monospace;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-top:6px;text-align:center}
+    .step.active .step-label{color:var(--primary);font-weight:600}
+    .step.done .step-label{color:var(--success)}
+
+    /* ── ICON AREA ── */
+    .icon-area{width:64px;height:64px;border-radius:16px;display:flex;align-items:center;justify-content:center;margin-bottom:1.25rem}
+    .icon-area svg{width:30px;height:30px;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+    .icon-email{background:linear-gradient(135deg,rgba(10,61,98,.1),rgba(10,61,98,.05));border:1px solid rgba(10,61,98,.12)}
+    .icon-email svg{stroke:var(--primary)}
+    .icon-otp{background:linear-gradient(135deg,rgba(22,160,133,.1),rgba(22,160,133,.05));border:1px solid rgba(22,160,133,.18)}
+    .icon-otp svg{stroke:var(--success)}
+    .icon-reset{background:linear-gradient(135deg,rgba(142,68,173,.1),rgba(142,68,173,.05));border:1px solid rgba(142,68,173,.15)}
+    .icon-reset svg{stroke:#8E44AD}
+
+    /* ── FORM ELEMENTS ── */
+    .form-group{margin-bottom:1.35rem}
+    .form-label{display:block;font-size:.82rem;font-weight:600;color:var(--text);margin-bottom:.5rem;letter-spacing:.01em}
+    .form-label span{color:var(--accent)}
+    .input-wrap{position:relative}
+    .input-icon{position:absolute;left:14px;top:50%;transform:translateY(-50%);width:18px;height:18px;fill:none;stroke:var(--text3);stroke-width:2;stroke-linecap:round;stroke-linejoin:round;pointer-events:none;transition:stroke var(--transition)}
+    .form-input{width:100%;height:50px;border:1.5px solid var(--border);border-radius:var(--radius-sm);background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;font-size:.92rem;padding:0 44px 0 44px;outline:none;transition:all var(--transition)}
+    .form-input:focus{border-color:var(--primary);background:var(--bg2);box-shadow:0 0 0 3px rgba(10,61,98,.08)}
+    [data-theme="dark"] .form-input:focus{box-shadow:0 0 0 3px rgba(59,130,246,.15)}
+    .form-input::placeholder{color:var(--text3)}
+    .form-input.error{border-color:var(--accent)}
+    .form-input.success{border-color:var(--success)}
+    .input-wrap:focus-within .input-icon{stroke:var(--primary)}
+
+    .pwd-toggle{position:absolute;right:14px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;padding:2px;display:flex;align-items:center}
+    .pwd-toggle svg{width:18px;height:18px;fill:none;stroke:var(--text3);stroke-width:2;stroke-linecap:round}
+    .pwd-toggle:hover svg{stroke:var(--text)}
+
+    .field-error{font-size:.75rem;color:var(--accent);margin-top:5px;display:none;align-items:center;gap:4px;font-family:'IBM Plex Mono',monospace}
+    .field-error.show{display:flex}
+
+    /* ── ROLE GRID ── */
+    .role-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:.6rem;margin-bottom:1.5rem}
+    .role-chip{border:1.5px solid var(--border);border-radius:8px;padding:.6rem .5rem;text-align:center;cursor:pointer;transition:all var(--transition);font-size:.78rem;font-weight:600;color:var(--text2);background:var(--bg);user-select:none}
+    .role-chip:hover{border-color:var(--primary);color:var(--primary);background:var(--bg2)}
+    .role-chip.active{border-color:var(--primary);background:var(--primary);color:#fff;box-shadow:0 4px 12px rgba(10,61,98,.25)}
+    .role-chip-icon{font-size:1.2rem;display:block;margin-bottom:3px}
+
+    /* ── BUTTONS ── */
+    .btn-auth{width:100%;height:52px;background:linear-gradient(135deg,var(--primary),var(--primary-light));color:#fff;border:none;border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:.95rem;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:all var(--transition);box-shadow:0 4px 16px rgba(10,61,98,.25);letter-spacing:.02em;position:relative;overflow:hidden}
+    .btn-auth::before{content:'';position:absolute;top:0;left:-100%;width:100%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.1),transparent);transition:left .5s ease}
+    .btn-auth:hover::before{left:100%}
+    .btn-auth:hover{transform:translateY(-1px);box-shadow:0 8px 28px rgba(10,61,98,.35)}
+    .btn-auth:active{transform:translateY(0)}
+    .btn-auth:disabled{opacity:.65;cursor:not-allowed;transform:none}
+    .btn-auth svg{width:20px;height:20px;fill:none;stroke:#fff;stroke-width:2.5}
+    .spinner{width:20px;height:20px;border:2.5px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;display:none}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .btn-auth.loading .spinner{display:block}
+    .btn-auth.loading .btn-text{display:none}
+
+    .btn-success{width:100%;height:50px;background:linear-gradient(135deg,var(--success),#0E8A72);color:#fff;border:none;border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:.95rem;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:all var(--transition);box-shadow:0 4px 16px rgba(22,160,133,.3);position:relative;overflow:hidden}
+    .btn-success::before{content:'';position:absolute;top:0;left:-100%;width:100%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.12),transparent);transition:left .5s ease}
+    .btn-success:hover::before{left:100%}
+    .btn-success:hover{transform:translateY(-1px);box-shadow:0 8px 24px rgba(22,160,133,.4)}
+    .btn-success svg{width:18px;height:18px;fill:none;stroke:#fff;stroke-width:2.5}
+
+    /* ── ALERT ── */
+    .auth-alert{border-radius:var(--radius-sm);padding:.85rem 1rem;font-size:.83rem;display:none;align-items:flex-start;gap:10px;margin-bottom:1.35rem}
+    .auth-alert.show{display:flex;animation:fadeSlide .3s ease both}
+    .auth-alert.error{background:rgba(232,80,91,.09);border:1px solid rgba(232,80,91,.25);color:var(--accent)}
+    .auth-alert.success{background:rgba(22,160,133,.09);border:1px solid rgba(22,160,133,.25);color:var(--success)}
+    .auth-alert svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;flex-shrink:0;margin-top:1px}
+
+    /* ── INFO BOX ── */
+    .info-box{background:rgba(41,128,185,.07);border:1px solid rgba(41,128,185,.2);border-radius:var(--radius-sm);padding:.85rem 1rem;display:flex;gap:10px;align-items:flex-start;margin-bottom:1.5rem;font-size:.82rem;color:var(--info);line-height:1.55}
+    .info-box svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;flex-shrink:0;margin-top:1px}
+
+    /* ── FORM ROW ── */
+    .form-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.35rem}
+    .form-check{display:flex;align-items:center;gap:10px;cursor:pointer}
+    .form-check input[type="checkbox"]{width:18px;height:18px;accent-color:var(--primary);cursor:pointer;flex-shrink:0}
+    .form-check-label{font-size:.85rem;color:var(--text2);user-select:none}
+    .link-btn{font-size:.84rem;color:var(--primary);font-weight:600;background:none;border:none;cursor:pointer;font-family:inherit;transition:color var(--transition);padding:0}
+    .link-btn:hover{color:var(--accent);text-decoration:underline}
+
+    /* ── OTP INPUTS ── */
+    .otp-group{display:flex;gap:10px;justify-content:center;margin-bottom:.6rem;align-items:center}
+
+    .otp-input{width:58px;height:64px;border:1.5px solid var(--border);border-radius:12px;background:var(--bg);color:var(--text);font-family:'IBM Plex Mono',monospace;font-size:1.6rem;font-weight:700;text-align:center;outline:none;transition:all .3s cubic-bezier(.34,1.56,.64,1);caret-color:var(--primary)}
+    .otp-input:focus{border-color:var(--primary);background:var(--bg2);box-shadow:0 0 0 3px rgba(10,61,98,.1);transform:translateY(-3px) scale(1.05)}
+    [data-theme="dark"] .otp-input:focus{box-shadow:0 0 0 3px rgba(59,130,246,.2)}
+    .otp-input.filled{border-color:var(--primary);background:rgba(10,61,98,.05)}
+    [data-theme="dark"] .otp-input.filled{background:rgba(59,130,246,.08)}
+    .otp-input.error{border-color:var(--accent);animation:shake .4s ease}
+    .otp-input.verified{border-color:var(--success);background:rgba(22,160,133,.07);transform:translateY(-2px) scale(1.03);animation:otpPop .4s cubic-bezier(.34,1.56,.64,1) both}
+
+    @keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-6px)}40%{transform:translateX(6px)}60%{transform:translateX(-4px)}80%{transform:translateX(4px)}}
+    @keyframes otpPop{0%{transform:scale(.9) translateY(0)}60%{transform:scale(1.1) translateY(-4px)}100%{transform:scale(1.03) translateY(-2px)}}
+
+    /* OTP Tick overlay per cell */
+    .otp-cell{position:relative;display:inline-block}
+    .otp-tick{position:absolute;top:-8px;right:-8px;width:20px;height:20px;border-radius:50%;background:var(--success);display:flex;align-items:center;justify-content:center;opacity:0;transform:scale(0);transition:all .3s cubic-bezier(.34,1.56,.64,1);z-index:2;box-shadow:0 2px 8px rgba(22,160,133,.4)}
+    .otp-tick svg{width:10px;height:10px;fill:none;stroke:#fff;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
+    .otp-cell.has-tick .otp-tick{opacity:1;transform:scale(1)}
+
+    /* Global tick shown when all filled */
+    .otp-all-tick{display:flex;align-items:center;justify-content:center;gap:8px;font-size:.82rem;font-weight:600;color:var(--success);font-family:'IBM Plex Mono',monospace;margin:.5rem 0 1rem;opacity:0;transform:translateY(6px);transition:all .35s ease}
+    .otp-all-tick.show{opacity:1;transform:translateY(0)}
+    .otp-all-tick svg{width:18px;height:18px;fill:none;stroke:var(--success);stroke-width:2.5}
+
+    .otp-hint{text-align:center;font-size:.78rem;color:var(--text3);font-family:'IBM Plex Mono',monospace;margin-bottom:1.5rem}
+
+    /* ── TIMER RING ── */
+    .timer-ring-wrap{display:flex;justify-content:center;margin-bottom:1.25rem}
+    .timer-ring{width:64px;height:64px;position:relative}
+    .timer-ring svg{transform:rotate(-90deg)}
+    .ring-bg{fill:none;stroke:var(--border);stroke-width:3}
+    .ring-progress{fill:none;stroke:var(--accent);stroke-width:3;stroke-linecap:round;transition:stroke-dashoffset 1s linear}
+    .timer-inner{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;font-size:.95rem;font-weight:700;color:var(--accent)}
+
+    .resend-btn{background:none;border:none;cursor:pointer;color:var(--primary);font-weight:600;font-size:.84rem;font-family:inherit;text-decoration:underline;transition:color var(--transition);display:none}
+    .resend-btn:hover{color:var(--accent)}
+    .resend-btn.show{display:inline}
+    .otp-timer{text-align:center;margin-bottom:1.5rem;font-size:.83rem;color:var(--text2)}
+    .timer-count{font-family:'IBM Plex Mono',monospace;font-weight:700;color:var(--accent)}
+
+    /* ── PASSWORD STRENGTH ── */
+    .strength-bar{height:4px;border-radius:100px;background:var(--border);overflow:hidden;margin-bottom:5px;margin-top:8px}
+    .strength-fill{height:100%;border-radius:100px;transition:width .4s ease,background .4s ease;width:0%}
+    .strength-label{font-size:.73rem;font-family:'IBM Plex Mono',monospace;font-weight:600}
+
+    .pwd-reqs{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);padding:.85rem 1rem;margin-top:8px;display:none}
+    .pwd-reqs.show{display:block}
+    .req-item{display:flex;align-items:center;gap:8px;font-size:.78rem;color:var(--text3);margin-bottom:5px;font-family:'IBM Plex Mono',monospace;transition:color var(--transition)}
+    .req-item:last-child{margin-bottom:0}
+    .req-item.met{color:var(--success)}
+    .req-icon{width:14px;height:14px;border-radius:50%;border:1.5px solid var(--text3);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all var(--transition)}
+    .req-icon svg{width:8px;height:8px;fill:none;stroke:transparent;stroke-width:2.5;transition:stroke var(--transition)}
+    .req-item.met .req-icon{background:var(--success);border-color:var(--success)}
+    .req-item.met .req-icon svg{stroke:#fff}
+
+    .match-indicator{font-size:.75rem;font-family:'IBM Plex Mono',monospace;margin-top:5px;display:none;align-items:center;gap:5px}
+    .match-indicator.show{display:flex}
+    .match-indicator.match{color:var(--success)}
+    .match-indicator.no-match{color:var(--accent)}
+    .match-indicator svg{width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:2.5}
+
+    /* ── DEMO HINT ── */
+    .demo-hint{background:rgba(41,128,185,.07);border:1px solid rgba(41,128,185,.2);border-radius:var(--radius-sm);padding:.75rem 1rem;font-size:.78rem;color:var(--info);font-family:'IBM Plex Mono',monospace;margin-bottom:1.35rem;text-align:center}
+
+    /* ── BACK LINK ── */
+    .back-link{display:flex;align-items:center;gap:6px;font-size:.84rem;color:var(--text2);font-weight:500;margin-top:1.5rem;justify-content:center;transition:color var(--transition);cursor:pointer;background:none;border:none;font-family:inherit;width:100%}
+    .back-link svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2.5;transition:transform var(--transition)}
+    .back-link:hover{color:var(--primary)}
+    .back-link:hover svg{transform:translateX(-3px)}
+
+    /* ── SECURE BADGE ── */
+    .secure-badge{display:flex;align-items:center;justify-content:center;gap:6px;margin-top:1.5rem;font-size:.72rem;color:var(--text3);font-family:'IBM Plex Mono',monospace}
+    .secure-badge svg{width:13px;height:13px;fill:none;stroke:var(--text3);stroke-width:2}
+
+    /* ── SUCCESS PANEL ── */
+    .success-check-wrap{display:flex;justify-content:center;margin-bottom:.5rem}
+    .success-check-svg{width:80px;height:80px}
+    .success-circle{animation:drawCircle .6s ease forwards}
+    .success-tick{animation:drawTick .4s ease .55s forwards}
+    @keyframes drawCircle{to{stroke-dashoffset:0}}
+    @keyframes drawTick{to{stroke-dashoffset:0}}
+
+    /* ── ANIMATIONS ── */
+    @keyframes fadeSlide{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+
+    /* ── AUTH FOOTER ── */
+    .auth-footer{text-align:center;margin-top:1.75rem;font-size:.83rem;color:var(--text2)}
+    .auth-footer a{color:var(--primary);font-weight:600}
+    .auth-footer a:hover{color:var(--accent)}
+
+    /* ── RESPONSIVE ── */
+    @media(max-width:900px){.auth-left{display:none}.auth-right{flex:1;background:var(--bg)}}
+    @media(max-width:500px){.auth-right{padding:1.5rem 1.25rem}.auth-card-title{font-size:1.7rem}.role-grid{grid-template-columns:repeat(2,1fr)}.otp-input{width:46px;height:54px;font-size:1.3rem}}
+    @media(max-width:380px){.otp-input{width:40px;height:48px;font-size:1.2rem}.otp-group{gap:6px}.step-label{display:none}}
+  </style>
+</head>
+<body>
+<div class="auth-layout">
+
+  <!-- LEFT PANEL -->
+  <div class="auth-left">
+    <div class="auth-logo">
+      <div class="auth-logo-mark">
+        <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+      </div>
+      <span class="auth-logo-text">EduCore SMS</span>
+    </div>
+    <div class="auth-hero">
+      <div class="auth-hero-badge"><span></span> School Management System</div>
+      <h2>Manage your school with <em>intelligence</em></h2>
+      <p>One unified platform for students, teachers, academics, finance, and more. Built for the modern school administrator.</p>
+    </div>
+    <div class="auth-stats">
+      <div class="auth-stat"><div class="auth-stat-num">1248</div><div class="auth-stat-lbl">Students</div></div>
+      <div class="auth-stat"><div class="auth-stat-num">86</div><div class="auth-stat-lbl">Teachers</div></div>
+      <div class="auth-stat"><div class="auth-stat-num">42</div><div class="auth-stat-lbl">Classes</div></div>
+    </div>
+  </div>
+
+  <!-- RIGHT PANEL -->
+  <div class="auth-right">
+    <button class="dark-toggle-auth" onclick="toggleDark()" title="Toggle dark mode">
+      <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+    </button>
+
+    <div class="panel-wrapper">
+
+      <!-- ══ PANEL 1: LOGIN ══ -->
+      <div class="panel active" id="panel-login">
+        <div class="auth-card-title">Welcome back 👋</div>
+        <div class="auth-card-sub">Sign in to your EduCore account to continue.</div>
+
+        <div class="role-grid" id="roleGrid">
+          <div class="role-chip active" onclick="selectRole(this)" data-role="super-admin"><span class="role-chip-icon">🛡️</span>Super Admin</div>
+          <div class="role-chip" onclick="selectRole(this)" data-role="admin"><span class="role-chip-icon">👨‍💼</span>Admin</div>
+          <div class="role-chip" onclick="selectRole(this)" data-role="teacher"><span class="role-chip-icon">👨‍🏫</span>Teacher</div>
+          <div class="role-chip" onclick="selectRole(this)" data-role="student"><span class="role-chip-icon">🎓</span>Student</div>
+          <div class="role-chip" onclick="selectRole(this)" data-role="parent"><span class="role-chip-icon">👨‍👧</span>Parent</div>
+          <div class="role-chip" onclick="selectRole(this)" data-role="librarian"><span class="role-chip-icon">📚</span>Librarian</div>
+        </div>
+
+        <div class="auth-alert error" id="loginAlert">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          <span>Invalid email or password. Please try again.</span>
+        </div>
+
+        <form id="loginForm" novalidate>
+          <div class="form-group">
+            <label class="form-label" for="loginEmail">Email Address <span>*</span></label>
+            <div class="input-wrap">
+              <svg class="input-icon" viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+              <input type="email" id="loginEmail" class="form-input" placeholder="admin@educore.in" autocomplete="email" required>
+            </div>
+            <div class="field-error" id="emailError">
+              <svg viewBox="0 0 24 24" style="width:12px;height:12px;fill:none;stroke:currentColor;stroke-width:2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+              Please enter a valid email address.
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="loginPassword">Password <span>*</span></label>
+            <div class="input-wrap">
+              <svg class="input-icon" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+              <input type="password" id="loginPassword" class="form-input" placeholder="Enter your password" autocomplete="current-password" required>
+              <button type="button" class="pwd-toggle" onclick="togglePwd('loginPassword',this)">
+                <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              </button>
+            </div>
+            <div class="field-error" id="pwdError">
+              <svg viewBox="0 0 24 24" style="width:12px;height:12px;fill:none;stroke:currentColor;stroke-width:2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+              Password must be at least 6 characters.
+            </div>
+          </div>
+          <div class="form-row">
+            <label class="form-check"><input type="checkbox" id="rememberMe"><span class="form-check-label">Remember me</span></label>
+            <button type="button" class="link-btn" onclick="goTo('panel-forgot-email')">Forgot password?</button>
+          </div>
+          <button type="submit" class="btn-auth" id="loginBtn">
+            <span class="btn-text">
+              <svg viewBox="0 0 24 24"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+              Sign In
+            </span>
+            <div class="spinner"></div>
+          </button>
+        </form>
+
+        <div class="secure-badge">
+          <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          256-bit SSL encrypted · EduCore SMS v3.0
+        </div>
+        <div class="auth-footer">Don't have an account? <a href="#">Contact Administrator</a></div>
+      </div>
+
+      <!-- ══ PANEL 2: FORGOT — EMAIL ══ -->
+      <div class="panel" id="panel-forgot-email">
+        <!-- Step indicator -->
+        <div class="step-indicator">
+          <div class="step active" id="fe-step-1"><div class="step-num">1</div><div class="step-label">Email</div></div>
+          <div class="step" id="fe-step-2"><div class="step-num">2</div><div class="step-label">OTP</div></div>
+          <div class="step" id="fe-step-3"><div class="step-num">3</div><div class="step-label">Password</div></div>
+        </div>
+
+        <div class="icon-area icon-email">
+          <svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+        </div>
+        <div class="auth-card-title">Forgot Password?</div>
+        <div class="auth-card-sub">Enter your registered email address and we'll send a 6-digit OTP to reset your password.</div>
+
+        <div class="info-box">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          <span>Make sure you enter the email registered with your EduCore account. Check your spam folder if you don't receive the OTP within 2 minutes.</span>
+        </div>
+
+        <div class="auth-alert error" id="feAlert">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          <span>This email is not registered in our system.</span>
+        </div>
+
+        <form id="forgotEmailForm" novalidate>
+          <div class="form-group">
+            <label class="form-label" for="resetEmail">Registered Email Address <span>*</span></label>
+            <div class="input-wrap">
+              <svg class="input-icon" viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+              <input type="email" id="resetEmail" class="form-input" placeholder="you@school.edu.in" autocomplete="email" required>
+            </div>
+            <div class="field-error" id="resetEmailError">
+              <svg viewBox="0 0 24 24" style="width:12px;height:12px;fill:none;stroke:currentColor;stroke-width:2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+              Please enter a valid email address.
+            </div>
+          </div>
+          <button type="submit" class="btn-auth" id="sendOtpBtn">
+            <span class="btn-text">
+              <svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+              Send OTP
+            </span>
+            <div class="spinner"></div>
+          </button>
+        </form>
+
+        <button class="back-link" onclick="goTo('panel-login')">
+          <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+          Back to Login
+        </button>
+        <div class="secure-badge"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>256-bit SSL encrypted · EduCore SMS v3.0</div>
+      </div>
+
+      <!-- ══ PANEL 3: FORGOT — OTP ══ -->
+      <div class="panel" id="panel-forgot-otp">
+        <div class="step-indicator">
+          <div class="step done" id="fo-step-1"><div class="step-num">✓</div><div class="step-label">Email</div></div>
+          <div class="step active" id="fo-step-2"><div class="step-num">2</div><div class="step-label">OTP</div></div>
+          <div class="step" id="fo-step-3"><div class="step-num">3</div><div class="step-label">Password</div></div>
+        </div>
+
+        <div class="icon-area icon-otp">
+          <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        </div>
+        <div class="auth-card-title">Enter OTP Code</div>
+        <div class="auth-card-sub">We've sent a 6-digit OTP to <strong id="emailDisplay">your email</strong>. Enter it below.</div>
+
+        <div class="demo-hint">🔑 Demo OTP: <strong>1 2 3 4 5 6</strong></div>
+
+        <div class="auth-alert error" id="otpAlert">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          <span>Invalid OTP. Please check and try again.</span>
+        </div>
+        <div class="auth-alert success" id="otpSuccess">
+          <svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+          <span>OTP verified! Proceeding to password reset…</span>
+        </div>
+
+        <!-- Timer -->
+        <div class="timer-ring-wrap">
+          <div class="timer-ring">
+            <svg viewBox="0 0 64 64" width="64" height="64">
+              <circle class="ring-bg" cx="32" cy="32" r="28"/>
+              <circle class="ring-progress" id="ringProgress" cx="32" cy="32" r="28" stroke-dasharray="175.93" stroke-dashoffset="0"/>
+            </svg>
+            <div class="timer-inner" id="timerDisplay">2:00</div>
+          </div>
+        </div>
+
+        <!-- OTP inputs with tick per cell -->
+        <div class="otp-group" id="otpGroup">
+          <div class="otp-cell" id="cell-0"><input type="text" class="otp-input" maxlength="1" inputmode="numeric" pattern="[0-9]" id="otp0" aria-label="OTP digit 1"><div class="otp-tick"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div></div>
+          <div class="otp-cell" id="cell-1"><input type="text" class="otp-input" maxlength="1" inputmode="numeric" pattern="[0-9]" id="otp1" aria-label="OTP digit 2"><div class="otp-tick"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div></div>
+          <div class="otp-cell" id="cell-2"><input type="text" class="otp-input" maxlength="1" inputmode="numeric" pattern="[0-9]" id="otp2" aria-label="OTP digit 3"><div class="otp-tick"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div></div>
+          <div class="otp-cell" id="cell-3"><input type="text" class="otp-input" maxlength="1" inputmode="numeric" pattern="[0-9]" id="otp3" aria-label="OTP digit 4"><div class="otp-tick"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div></div>
+          <div class="otp-cell" id="cell-4"><input type="text" class="otp-input" maxlength="1" inputmode="numeric" pattern="[0-9]" id="otp4" aria-label="OTP digit 5"><div class="otp-tick"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div></div>
+          <div class="otp-cell" id="cell-5"><input type="text" class="otp-input" maxlength="1" inputmode="numeric" pattern="[0-9]" id="otp5" aria-label="OTP digit 6"><div class="otp-tick"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div></div>
+        </div>
+
+        <!-- Global all-filled tick -->
+        <div class="otp-all-tick" id="otpAllTick">
+          <svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+          All 6 digits entered — ready to verify!
+        </div>
+
+        <div class="otp-hint">Enter all 6 digits · OTP expires in <strong id="hintTimer">2:00</strong></div>
+
+        <div class="otp-timer" id="resendArea">
+          <span id="timerMsg">Didn't receive? Resend in <span class="timer-count" id="resendTimer">120s</span></span>
+          <button class="resend-btn" id="resendBtn" onclick="resendOtp()">Resend OTP</button>
+        </div>
+
+        <button class="btn-auth" id="verifyBtn" onclick="verifyOtp()" disabled>
+          <span class="btn-text">
+            <svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+            Verify OTP
+          </span>
+          <div class="spinner"></div>
+        </button>
+
+        <button class="back-link" onclick="goTo('panel-forgot-email')">
+          <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+          Back to Email
+        </button>
+        <div class="secure-badge"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>256-bit SSL encrypted · EduCore SMS v3.0</div>
+      </div>
+
+      <!-- ══ PANEL 4: FORGOT — RESET PASSWORD ══ -->
+      <div class="panel" id="panel-forgot-reset">
+        <div class="step-indicator">
+          <div class="step done"><div class="step-num">✓</div><div class="step-label">Email</div></div>
+          <div class="step done"><div class="step-num">✓</div><div class="step-label">OTP</div></div>
+          <div class="step active"><div class="step-num">3</div><div class="step-label">Password</div></div>
+        </div>
+
+        <div class="icon-area icon-reset">
+          <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        </div>
+        <div class="auth-card-title">Create New Password</div>
+        <div class="auth-card-sub">Choose a strong password — at least 8 characters with uppercase, lowercase, numbers, and symbols.</div>
+
+        <div class="auth-alert error" id="resetAlert">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          <span>Please fix the errors above and try again.</span>
+        </div>
+
+        <form id="resetForm" novalidate>
+          <div class="form-group">
+            <label class="form-label" for="newPassword">New Password <span>*</span></label>
+            <div class="input-wrap">
+              <svg class="input-icon" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+              <input type="password" id="newPassword" class="form-input" placeholder="Create a strong password" autocomplete="new-password" required>
+              <button type="button" class="pwd-toggle" onclick="togglePwd('newPassword',this)">
+                <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              </button>
+            </div>
+            <div class="strength-bar"><div class="strength-fill" id="strengthFill"></div></div>
+            <span class="strength-label" id="strengthLabel" style="color:var(--text3)">Enter a password</span>
+            <div class="pwd-reqs" id="pwdReqs">
+              <div class="req-item" id="req-len"><div class="req-icon"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>At least 8 characters</div>
+              <div class="req-item" id="req-upper"><div class="req-icon"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>One uppercase letter (A-Z)</div>
+              <div class="req-item" id="req-lower"><div class="req-icon"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>One lowercase letter (a-z)</div>
+              <div class="req-item" id="req-num"><div class="req-icon"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>One number (0-9)</div>
+              <div class="req-item" id="req-sym"><div class="req-icon"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>One special character (!@#$…)</div>
+            </div>
+            <div class="field-error" id="newPwdError">
+              <svg viewBox="0 0 24 24" style="width:12px;height:12px;fill:none;stroke:currentColor;stroke-width:2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+              Password does not meet the requirements.
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="confirmPassword">Confirm Password <span>*</span></label>
+            <div class="input-wrap">
+              <svg class="input-icon" viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+              <input type="password" id="confirmPassword" class="form-input" placeholder="Re-enter your password" autocomplete="new-password" required>
+              <button type="button" class="pwd-toggle" onclick="togglePwd('confirmPassword',this)">
+                <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              </button>
+            </div>
+            <div class="match-indicator" id="matchIndicator">
+              <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+              Passwords match
+            </div>
+            <div class="field-error" id="confirmPwdError">
+              <svg viewBox="0 0 24 24" style="width:12px;height:12px;fill:none;stroke:currentColor;stroke-width:2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+              Passwords do not match.
+            </div>
+          </div>
+
+          <button type="submit" class="btn-auth" id="resetBtn">
+            <span class="btn-text">
+              <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              Reset Password
+            </span>
+            <div class="spinner"></div>
+          </button>
+        </form>
+
+        <button class="back-link" onclick="goTo('panel-forgot-otp')">
+          <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+          Back to OTP
+        </button>
+        <div class="secure-badge"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>256-bit SSL encrypted · EduCore SMS v3.0</div>
+      </div>
+
+      <!-- ══ PANEL 5: SUCCESS ══ -->
+      <div class="panel" id="panel-success">
+        <div class="step-indicator">
+          <div class="step done"><div class="step-num">✓</div><div class="step-label">Email</div></div>
+          <div class="step done"><div class="step-num">✓</div><div class="step-label">OTP</div></div>
+          <div class="step done"><div class="step-num">✓</div><div class="step-label">Password</div></div>
+        </div>
+
+        <div style="text-align:center;padding:1.5rem 0 2rem">
+          <div class="success-check-wrap">
+            <svg class="success-check-svg" viewBox="0 0 80 80">
+              <circle class="success-circle" cx="40" cy="40" r="36" fill="none" stroke="var(--success)" stroke-width="3" stroke-dasharray="226" stroke-dashoffset="226"/>
+              <polyline class="success-tick" points="24,41 35,52 56,28" fill="none" stroke="var(--success)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="50" stroke-dashoffset="50"/>
+            </svg>
+          </div>
+          <div class="auth-card-title" style="margin-top:1.5rem">Password Reset! 🎉</div>
+          <div class="auth-card-sub" style="margin-bottom:2rem">Your password has been successfully updated. You can now sign in with your new credentials.</div>
+          <button class="btn-success" onclick="goTo('panel-login')">
+            <svg viewBox="0 0 24 24"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+            Go to Login
+          </button>
+        </div>
+        <div class="secure-badge"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>256-bit SSL encrypted · EduCore SMS v3.0</div>
+      </div>
+
+    </div><!-- /panel-wrapper -->
+  </div><!-- /auth-right -->
+</div><!-- /auth-layout -->
+
+
+<script>
+  // ── THEME ──
+  (function(){const t=localStorage.getItem('educore-theme');if(t==='dark')document.documentElement.setAttribute('data-theme','dark')})();
+  function toggleDark(){const d=document.documentElement.getAttribute('data-theme')==='dark';d?(document.documentElement.removeAttribute('data-theme'),localStorage.setItem('educore-theme','light')):(document.documentElement.setAttribute('data-theme','dark'),localStorage.setItem('educore-theme','dark'))}
+
+  // ── PANEL NAVIGATION ──
+  let currentPanel='panel-login';
+  let isAnimating=false;
+  function goTo(id){
+    const cur=document.getElementById(currentPanel);
+    const next=document.getElementById(id);
+    if(!next||id===currentPanel||isAnimating)return;
+
+    const order=['panel-login','panel-forgot-email','panel-forgot-otp','panel-forgot-reset','panel-success'];
+    const going=order.indexOf(id)>order.indexOf(currentPanel)?'forward':'back';
+
+    isAnimating=true;
+
+    // Freeze wrapper height so page doesn't scroll/jump during animation
+    const wrapper=cur.closest('.panel-wrapper');
+    wrapper.style.height=cur.offsetHeight+'px';
+
+    // Animate out current panel (stays absolute during transition)
+    cur.classList.remove('active');
+    cur.classList.add('animating-out');
+    cur.style.transition='opacity .38s ease,transform .38s ease';
+    cur.style.transform=going==='forward'?'translateX(-40px)':'translateX(40px)';
+    cur.style.opacity='0';
+
+    // Position entering panel offscreen and reveal
+    next.classList.add('animating-in');
+    next.style.transition='none';
+    next.style.transform=going==='forward'?'translateX(40px)':'translateX(-40px)';
+    next.style.opacity='0';
+    next.style.visibility='visible';
+
+    requestAnimationFrame(()=>{
+      requestAnimationFrame(()=>{
+        next.style.transition='opacity .38s ease,transform .38s ease';
+        next.style.transform='translateX(0)';
+        next.style.opacity='1';
+      });
+    });
+
+    setTimeout(()=>{
+      // Clean up exiting panel
+      cur.classList.remove('animating-out');
+      cur.style.cssText='';
+      // Promote entering panel to active (position:relative, drives wrapper height)
+      next.classList.remove('animating-in');
+      next.style.cssText='';
+      next.classList.add('active');
+      // Release fixed height
+      wrapper.style.height='';
+      isAnimating=false;
+    },400);
+
+    currentPanel=id;
+    if(id==='panel-forgot-otp')initOtpPanel();
+  }
+
+  // ── ROLE ──
+  function selectRole(el){document.querySelectorAll('.role-chip').forEach(c=>c.classList.remove('active'));el.classList.add('active')}
+
+  // ── PASSWORD TOGGLE ──
+  function togglePwd(id,btn){
+    const inp=document.getElementById(id);const isText=inp.type==='text';
+    inp.type=isText?'password':'text';
+    btn.querySelector('svg').innerHTML=isText
+      ?'<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>'
+      :'<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>';
+  }
+
+  // ── LOGIN FORM ──
+  document.getElementById('loginForm').addEventListener('submit',function(e){
+    e.preventDefault();
+    const email=document.getElementById('loginEmail');
+    const pwd=document.getElementById('loginPassword');
+    const emailErr=document.getElementById('emailError');
+    const pwdErr=document.getElementById('pwdError');
+    const alert=document.getElementById('loginAlert');
+    let valid=true;
+    email.classList.remove('error');pwd.classList.remove('error');
+    emailErr.classList.remove('show');pwdErr.classList.remove('show');alert.classList.remove('show');
+
+    if(!email.value||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value)){email.classList.add('error');emailErr.classList.add('show');valid=false}
+    if(!pwd.value||pwd.value.length<6){pwd.classList.add('error');pwdErr.classList.add('show');valid=false}
+    if(!valid)return;
+
+    const btn=document.getElementById('loginBtn');btn.classList.add('loading');btn.disabled=true;
+    setTimeout(()=>{
+      btn.classList.remove('loading');btn.disabled=false;
+      if(email.value==='admin@educore.in'&&pwd.value==='Admin@123'){alert('✅ Login successful! Redirecting…')}
+      else{alert.classList.add('show');email.classList.add('error');pwd.classList.add('error')}
+    },1600);
+  });
+
+  // Demo hint
+  document.getElementById('loginEmail').addEventListener('focus',function(){
+    if(document.getElementById('demoHint'))return;
+    const h=document.createElement('div');h.id='demoHint';
+    h.style.cssText='font-size:.72rem;color:var(--text3);margin-top:4px;font-family:"IBM Plex Mono",monospace;';
+    h.textContent='Demo: admin@educore.in / Admin@123';
+    this.closest('.form-group').appendChild(h);
+  });
+
+  // ── FORGOT EMAIL FORM ──
+  document.getElementById('forgotEmailForm').addEventListener('submit',function(e){
+    e.preventDefault();
+    const email=document.getElementById('resetEmail');
+    const emailErr=document.getElementById('resetEmailError');
+    const alertEl=document.getElementById('feAlert');
+    email.classList.remove('error');emailErr.classList.remove('show');alertEl.classList.remove('show');
+
+    if(!email.value||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value)){email.classList.add('error');emailErr.classList.add('show');return}
+
+    const btn=document.getElementById('sendOtpBtn');btn.classList.add('loading');btn.disabled=true;
+    setTimeout(()=>{
+      btn.classList.remove('loading');btn.disabled=false;
+      // Accept any valid email
+      sessionStorage.setItem('resetEmail',email.value);
+      document.getElementById('emailDisplay').textContent=email.value;
+      goTo('panel-forgot-otp');
+    },1800);
+  });
+
+  // ── OTP PANEL ──
+  let timerInterval=null;
+  let totalSeconds=120;
+  const circumference=175.93;
+
+  function initOtpPanel(){
+    // Reset all
+    otpInputs.forEach((inp,i)=>{
+      inp.value='';
+      inp.classList.remove('filled','error','verified');
+      document.getElementById('cell-'+i).classList.remove('has-tick');
+    });
+    document.getElementById('otpAlert').classList.remove('show');
+    document.getElementById('otpSuccess').classList.remove('show');
+    document.getElementById('otpAllTick').classList.remove('show');
+    document.getElementById('verifyBtn').disabled=true;
+
+    // Reset timer
+    totalSeconds=120;
+    clearInterval(timerInterval);
+    const ring=document.getElementById('ringProgress');
+    ring.style.stroke='var(--accent)';
+    document.getElementById('timerDisplay').style.color='var(--accent)';
+    document.getElementById('timerMsg').style.display='';
+    document.getElementById('resendBtn').classList.remove('show');
+    updateTimer();
+    timerInterval=setInterval(updateTimer,1000);
+
+    // Focus first
+    setTimeout(()=>otpInputs[0].focus(),350);
+  }
+
+  function updateTimer(){
+    const m=Math.floor(totalSeconds/60);const s=totalSeconds%60;
+    const fmt=m+':'+(s<10?'0':'')+s;
+    document.getElementById('timerDisplay').textContent=fmt;
+    document.getElementById('hintTimer').textContent=fmt;
+    document.getElementById('resendTimer').textContent=totalSeconds+'s';
+    const ring=document.getElementById('ringProgress');
+    ring.style.strokeDashoffset=circumference*(1-totalSeconds/120);
+    if(totalSeconds<=30){ring.style.stroke='var(--accent)';document.getElementById('timerDisplay').style.color='var(--accent)'}
+    else if(totalSeconds<=60){ring.style.stroke='var(--warning)';document.getElementById('timerDisplay').style.color='var(--warning)'}
+    if(totalSeconds<=0){
+      document.getElementById('timerMsg').style.display='none';
+      document.getElementById('resendBtn').classList.add('show');
+      document.getElementById('timerDisplay').textContent='0:00';
+      clearInterval(timerInterval);
+    }else totalSeconds--;
+  }
+
+  function resendOtp(){
+    totalSeconds=120;
+    clearInterval(timerInterval);
+    document.getElementById('ringProgress').style.stroke='var(--accent)';
+    document.getElementById('timerDisplay').style.color='var(--accent)';
+    document.getElementById('timerMsg').style.display='';
+    document.getElementById('resendBtn').classList.remove('show');
+    document.getElementById('otpAlert').classList.remove('show');
+    otpInputs.forEach((inp,i)=>{inp.value='';inp.classList.remove('filled','error','verified');document.getElementById('cell-'+i).classList.remove('has-tick')});
+    document.getElementById('otpAllTick').classList.remove('show');
+    document.getElementById('verifyBtn').disabled=true;
+    updateTimer();
+    timerInterval=setInterval(updateTimer,1000);
+    otpInputs[0].focus();
+  }
+
+  // OTP inputs
+  const otpInputs=Array.from({length:6},(_,i)=>document.getElementById('otp'+i));
+  otpInputs.forEach((inp,i)=>{
+    inp.addEventListener('input',function(){
+      const val=this.value.replace(/\D/g,'');
+      this.value=val;
+      const cell=document.getElementById('cell-'+i);
+      if(val){
+        this.classList.add('filled');
+        cell.classList.add('has-tick');   // show tick on this cell
+        if(i<5)otpInputs[i+1].focus();
+      }else{
+        this.classList.remove('filled');
+        cell.classList.remove('has-tick');
+      }
+      checkAllOtpFilled();
+    });
+
+    inp.addEventListener('keydown',function(e){
+      if(e.key==='Backspace'&&!this.value&&i>0){
+        otpInputs[i-1].focus();
+        otpInputs[i-1].value='';
+        otpInputs[i-1].classList.remove('filled');
+        document.getElementById('cell-'+(i-1)).classList.remove('has-tick');
+        checkAllOtpFilled();
+      }
+      if(e.key==='ArrowLeft'&&i>0)otpInputs[i-1].focus();
+      if(e.key==='ArrowRight'&&i<5)otpInputs[i+1].focus();
+    });
+
+    inp.addEventListener('paste',function(e){
+      e.preventDefault();
+      const pasted=(e.clipboardData||window.clipboardData).getData('text').replace(/\D/g,'').slice(0,6);
+      pasted.split('').forEach((ch,idx)=>{
+        if(otpInputs[idx]){
+          otpInputs[idx].value=ch;
+          otpInputs[idx].classList.add('filled');
+          document.getElementById('cell-'+idx).classList.add('has-tick');
+        }
+      });
+      otpInputs[Math.min(pasted.length,5)].focus();
+      checkAllOtpFilled();
+    });
+  });
+
+  function checkAllOtpFilled(){
+    const all=otpInputs.every(inp=>inp.value);
+    document.getElementById('verifyBtn').disabled=!all;
+    document.getElementById('otpAllTick').classList.toggle('show',all);
+  }
+
+  function verifyOtp(){
+    const otp=otpInputs.map(inp=>inp.value).join('');
+    const alertEl=document.getElementById('otpAlert');
+    const successEl=document.getElementById('otpSuccess');
+    alertEl.classList.remove('show');successEl.classList.remove('show');
+
+    const btn=document.getElementById('verifyBtn');btn.classList.add('loading');btn.disabled=true;
+
+    setTimeout(()=>{
+      btn.classList.remove('loading');
+      if(otp==='123456'){
+        // Animate each cell to verified state staggered
+        otpInputs.forEach((inp,i)=>{
+          setTimeout(()=>{
+            inp.classList.remove('filled','error');
+            inp.classList.add('verified');
+          },i*80);
+        });
+        successEl.classList.add('show');
+        clearInterval(timerInterval);
+        setTimeout(()=>goTo('panel-forgot-reset'),1600);
+      }else{
+        otpInputs.forEach(inp=>inp.classList.add('error'));
+        alertEl.classList.add('show');
+        btn.disabled=false;
+        // Remove error & clear after delay
+        setTimeout(()=>{
+          otpInputs.forEach((inp,i)=>{
+            inp.classList.remove('error','filled');
+            inp.value='';
+            document.getElementById('cell-'+i).classList.remove('has-tick');
+          });
+          document.getElementById('otpAllTick').classList.remove('show');
+          btn.disabled=true;
+          otpInputs[0].focus();
+        },1200);
+      }
+    },1400);
+  }
+
+  // ── PASSWORD STRENGTH ──
+  const newPwdInput=document.getElementById('newPassword');
+  const confirmPwdInput=document.getElementById('confirmPassword');
+  const rules={
+    len:{el:document.getElementById('req-len'),test:v=>v.length>=8},
+    upper:{el:document.getElementById('req-upper'),test:v=>/[A-Z]/.test(v)},
+    lower:{el:document.getElementById('req-lower'),test:v=>/[a-z]/.test(v)},
+    num:{el:document.getElementById('req-num'),test:v=>/[0-9]/.test(v)},
+    sym:{el:document.getElementById('req-sym'),test:v=>/[^A-Za-z0-9]/.test(v)},
+  };
+  const strengthLvls=[{l:'Very Weak',c:'#E8505B'},{l:'Weak',c:'#F39C12'},{l:'Fair',c:'#F39C12'},{l:'Good',c:'#2980B9'},{l:'Strong',c:'#16A085'}];
+
+  newPwdInput.addEventListener('input',function(){
+    const val=this.value;
+    document.getElementById('pwdReqs').classList.toggle('show',val.length>0);
+    let score=0;
+    Object.values(rules).forEach(r=>{const p=r.test(val);r.el.classList.toggle('met',p);if(p)score++});
+    const fill=document.getElementById('strengthFill');
+    const lbl=document.getElementById('strengthLabel');
+    fill.style.width=(score*20)+'%';
+    const lvl=strengthLvls[score];
+    fill.style.background=lvl.c;
+    lbl.textContent=val.length===0?'Enter a password':lvl.l;
+    lbl.style.color=val.length===0?'var(--text3)':lvl.c;
+    document.getElementById('newPwdError').classList.remove('show');
+    this.classList.remove('error');
+    updateMatchIndicator();
+  });
+
+  confirmPwdInput.addEventListener('input',function(){
+    updateMatchIndicator();
+    document.getElementById('confirmPwdError').classList.remove('show');
+    this.classList.remove('error','success');
+  });
+
+  function updateMatchIndicator(){
+    const pwd=newPwdInput.value;const conf=confirmPwdInput.value;
+    const ind=document.getElementById('matchIndicator');
+    if(!conf){ind.classList.remove('show');return}
+    ind.classList.add('show');
+    if(pwd===conf){
+      ind.className='match-indicator show match';
+      ind.innerHTML='<svg viewBox="0 0 24 24" style="width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:2.5"><polyline points="20 6 9 17 4 12"/></svg> Passwords match';
+      confirmPwdInput.classList.add('success');confirmPwdInput.classList.remove('error');
+    }else{
+      ind.className='match-indicator show no-match';
+      ind.innerHTML='<svg viewBox="0 0 24 24" style="width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Passwords do not match';
+      confirmPwdInput.classList.remove('success');
+    }
+  }
+
+  document.getElementById('resetForm').addEventListener('submit',function(e){
+    e.preventDefault();
+    const pwd=newPwdInput.value;const conf=confirmPwdInput.value;
+    const alertEl=document.getElementById('resetAlert');
+    const newErr=document.getElementById('newPwdError');const confErr=document.getElementById('confirmPwdError');
+    let valid=true;
+    alertEl.classList.remove('show');newErr.classList.remove('show');confErr.classList.remove('show');
+    newPwdInput.classList.remove('error');confirmPwdInput.classList.remove('error');
+
+    if(Object.values(rules).filter(r=>r.test(pwd)).length<5){newPwdInput.classList.add('error');newErr.classList.add('show');valid=false}
+    if(pwd!==conf||!conf){confirmPwdInput.classList.add('error');confErr.classList.add('show');valid=false}
+    if(!valid){alertEl.classList.add('show');return}
+
+    const btn=document.getElementById('resetBtn');btn.classList.add('loading');btn.disabled=true;
+    setTimeout(()=>{
+      btn.classList.remove('loading');btn.disabled=false;
+      goTo('panel-success');
+    },1800);
+  });
+</script>
+</body>
+</html>

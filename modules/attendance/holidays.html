@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Holiday & Working Day Calendar — EduCore SMS</title>
+  <meta name="description" content="Manage school holidays, working Saturdays, and academic calendar events for the full academic year.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;900&family=IBM+Plex+Mono:wght@400;500;600&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../css/main.css">
+  <link rel="stylesheet" href="../../css/components.css">
+  <style>
+    .cal-layout { display:grid; grid-template-columns:1fr 320px; gap:1.5rem; }
+    @media(max-width:1100px){ .cal-layout{grid-template-columns:1fr;} }
+    /* Calendar */
+    .calendar-header { display:flex; align-items:center; justify-content:space-between; padding:1rem 1.25rem; border-bottom:1px solid var(--border); }
+    .cal-nav { display:flex; gap:0.5rem; align-items:center; }
+    .cal-nav-btn { width:32px; height:32px; border-radius:8px; border:1px solid var(--border); background:var(--bg); cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all 0.15s; }
+    .cal-nav-btn:hover { background:var(--primary); border-color:var(--primary); }
+    .cal-nav-btn:hover svg { stroke:#fff; }
+    .cal-nav-btn svg { width:14px; height:14px; fill:none; stroke:var(--text2); stroke-width:2; }
+    .cal-month { font-family:'Playfair Display',serif; font-size:1.1rem; font-weight:700; color:var(--text); }
+    .cal-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:1px; background:var(--border); border-radius:0 0 var(--radius) var(--radius); overflow:hidden; }
+    .cal-day-header { background:var(--bg); padding:0.5rem; text-align:center; font-size:0.7rem; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; color:var(--text3); }
+    .cal-cell { background:var(--bg2); min-height:90px; padding:0.4rem; cursor:pointer; transition:background 0.15s; position:relative; }
+    .cal-cell:hover { background:rgba(10,61,98,0.04); }
+    .cal-cell.other-month { background:var(--bg); opacity:0.5; }
+    .cal-cell.today { background:rgba(10,61,98,0.06); }
+    .cal-cell.today .day-num { background:var(--primary); color:#fff; border-radius:50%; }
+    .cal-cell.holiday { background:rgba(232,80,91,0.05); }
+    .cal-cell.working-sat { background:rgba(41,128,185,0.05); }
+    .cal-cell.event { background:rgba(22,160,133,0.04); }
+    .cal-cell.school-closed { background:rgba(154,163,176,0.08); }
+    .day-num { width:26px; height:26px; display:flex; align-items:center; justify-content:center; font-size:0.78rem; font-weight:600; font-family:'IBM Plex Mono',monospace; color:var(--text); border-radius:50%; }
+    .day-tag { font-size:0.6rem; padding:1px 5px; border-radius:3px; font-weight:600; display:block; margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .dt-holiday { background:rgba(232,80,91,0.12); color:var(--accent); }
+    .dt-working { background:rgba(41,128,185,0.12); color:var(--info); }
+    .dt-event { background:rgba(22,160,133,0.12); color:var(--success); }
+    .dt-exam { background:rgba(243,156,18,0.12); color:var(--warning); }
+    .dt-term { background:rgba(10,61,98,0.12); color:var(--primary); }
+    .dt-closed { background:rgba(154,163,176,0.12); color:var(--text3); }
+    /* Sidebar */
+    .legend-item { display:flex; align-items:center; gap:0.5rem; font-size:0.78rem; padding:0.3rem 0; }
+    .leg-dot { width:12px; height:12px; border-radius:3px; flex-shrink:0; }
+    /* Holiday list */
+    .holiday-card { background:var(--bg2); border:1px solid var(--border); border-radius:var(--radius-sm); padding:0.75rem 1rem; margin-bottom:0.5rem; display:flex; align-items:center; gap:0.75rem; }
+    .hc-date { font-family:'IBM Plex Mono',monospace; font-size:0.72rem; color:var(--text2); min-width:70px; }
+    .hc-name { font-size:0.82rem; font-weight:600; color:var(--text); flex:1; }
+    .hc-type { font-size:0.65rem; padding:2px 7px; border-radius:20px; font-weight:700; }
+    /* Stats */
+    .cal-stats { display:grid; grid-template-columns:repeat(3,1fr); gap:0.75rem; margin-bottom:1rem; }
+    .cs-card { background:var(--bg2); border:1px solid var(--border); border-radius:var(--radius-sm); padding:0.75rem; text-align:center; }
+    .cs-val { font-size:1.5rem; font-weight:700; font-family:'IBM Plex Mono',monospace; }
+    .cs-lbl { font-size:0.65rem; color:var(--text2); }
+  </style>
+</head>
+<body>
+<div class="mobile-overlay" id="mobileOverlay" onclick="closeMobileSidebar()"></div>
+<header class="topbar">
+  <div class="logo-area"><div class="logo-mark"><svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div><span class="logo-text">EduCore SMS</span></div>
+  <button class="sidebar-toggle" onclick="toggleSidebar()"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
+  <div class="tb-search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg><input type="text" placeholder="Search holidays…"></div>
+  <div class="tb-right">
+    <div class="tb-date" id="tb-date"></div>
+    <button class="dark-toggle" onclick="toggleDarkMode()"><svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg><svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/></svg></button>
+    <div class="dropdown-wrapper"><div class="tb-user" onclick="toggleUserDropdown(event)" id="userBtn"><div class="avatar">SA</div><div class="tb-user-info"><div class="tb-user-name">Super Admin</div><div class="tb-user-role">Administrator</div></div></div><div class="user-dropdown" id="userDropdown"><div class="user-dd-header"><div class="user-dd-name">Super Admin</div></div><a class="user-dd-item danger" href="../../index.html"><svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>Logout</a></div></div>
+  </div>
+</header>
+<div class="layout" id="layout">
+  <nav class="sidebar" id="sidebar"><div id="sidebar-nav"></div></nav>
+  <main class="main">
+    <div class="breadcrumb"><a href="../../index.html">Dashboard</a><span class="breadcrumb-sep">›</span><a href="dashboard.html">Attendance</a><span class="breadcrumb-sep">›</span><span>Holidays & Calendar</span></div>
+    <div class="page-header">
+      <div><h1>Holiday & Working Day Calendar</h1><div class="page-subtitle">Academic Year 2025–26 · Manage holidays, working Saturdays & school events</div></div>
+      <div class="ph-actions">
+        <select class="filter-select"><option>2025–26</option><option>2024–25</option></select>
+        <select class="filter-select"><option>Main Campus</option><option>North Branch</option><option>South Branch</option></select>
+        <button class="btn btn-ghost" onclick="exportCalendar()">Export PDF</button>
+        <button class="btn btn-primary" onclick="openModal('addHolidayModal')">
+          <svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Add Holiday
+        </button>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="cal-stats" style="grid-template-columns:repeat(6,1fr);margin-bottom:1.5rem">
+      <div class="cs-card"><div class="cs-val" style="color:var(--primary)">220</div><div class="cs-lbl">Working Days</div></div>
+      <div class="cs-card"><div class="cs-val" style="color:var(--accent)">28</div><div class="cs-lbl">National Holidays</div></div>
+      <div class="cs-card"><div class="cs-val" style="color:var(--warning)">14</div><div class="cs-lbl">School Events</div></div>
+      <div class="cs-card"><div class="cs-val" style="color:var(--info)">6</div><div class="cs-lbl">Working Saturdays</div></div>
+      <div class="cs-card"><div class="cs-val" style="color:var(--success)">156</div><div class="cs-lbl">Days Completed</div></div>
+      <div class="cs-card"><div class="cs-val" style="color:var(--text2)">64</div><div class="cs-lbl">Days Remaining</div></div>
+    </div>
+
+    <div class="cal-layout">
+      <!-- Calendar -->
+      <div>
+        <div class="card" style="padding:0;overflow:hidden">
+          <div class="calendar-header">
+            <div class="cal-nav">
+              <button class="cal-nav-btn" onclick="prevMonth()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
+              <div class="cal-month" id="calMonthYear">June 2026</div>
+              <button class="cal-nav-btn" onclick="nextMonth()"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></button>
+            </div>
+            <div style="display:flex;gap:0.5rem">
+              <button class="btn btn-ghost btn-sm" onclick="goToday()">Today</button>
+              <select class="filter-select" style="font-size:0.75rem" onchange="switchCalView(this.value)"><option>Month View</option><option>List View</option></select>
+            </div>
+          </div>
+          <div class="cal-grid" id="calGrid"></div>
+        </div>
+
+        <!-- Holiday List Table -->
+        <div class="card card-flush" style="margin-top:1.5rem">
+          <div class="card-padding" style="display:flex;justify-content:space-between;align-items:center">
+            <div class="card-title">All Holidays — June 2026</div>
+            <div style="display:flex;gap:0.5rem">
+              <select class="filter-select" style="font-size:0.75rem"><option>All Types</option><option>National</option><option>Regional</option><option>School</option></select>
+            </div>
+          </div>
+          <div style="padding:0 1.25rem 1rem" id="holidayList"></div>
+        </div>
+      </div>
+
+      <!-- Sidebar Panel -->
+      <div>
+        <!-- Legend -->
+        <div class="card" style="margin-bottom:1rem">
+          <div class="card-header"><div class="card-title">Legend</div></div>
+          <div style="padding:0 1rem 1rem">
+            <div class="legend-item"><div class="leg-dot" style="background:rgba(232,80,91,0.3)"></div><span>National/Public Holiday</span></div>
+            <div class="legend-item"><div class="leg-dot" style="background:rgba(142,68,173,0.3)"></div><span>Regional Holiday</span></div>
+            <div class="legend-item"><div class="leg-dot" style="background:rgba(22,160,133,0.3)"></div><span>School Event / Function</span></div>
+            <div class="legend-item"><div class="leg-dot" style="background:rgba(243,156,18,0.3)"></div><span>Examination Period</span></div>
+            <div class="legend-item"><div class="leg-dot" style="background:rgba(41,128,185,0.3)"></div><span>Working Saturday</span></div>
+            <div class="legend-item"><div class="leg-dot" style="background:rgba(10,61,98,0.15)"></div><span>Term Start/End</span></div>
+            <div class="legend-item"><div class="leg-dot" style="background:var(--border)"></div><span>Weekend (Closed)</span></div>
+          </div>
+        </div>
+
+        <!-- Upcoming Events -->
+        <div class="card" style="margin-bottom:1rem">
+          <div class="card-header"><div class="card-title">Upcoming Events</div></div>
+          <div style="padding:0 1rem 1rem" id="upcomingEvents"></div>
+        </div>
+
+        <!-- Working Day Settings -->
+        <div class="card">
+          <div class="card-header"><div class="card-title">Working Day Policy</div></div>
+          <div style="padding:0 1rem 1rem">
+            <div style="font-size:0.78rem;margin-bottom:0.75rem;color:var(--text2)">Configured working days for AY 2025–26</div>
+            <div style="display:flex;flex-direction:column;gap:0.5rem">
+              <div style="display:flex;justify-content:space-between;align-items:center;font-size:0.8rem">
+                <span>Monday – Friday</span><span class="badge badge-green">Working Day</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;align-items:center;font-size:0.8rem">
+                <span>Saturday</span><span class="badge badge-blue">2nd & 4th Working</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;align-items:center;font-size:0.8rem">
+                <span>Sunday</span><span class="badge badge-red">Holiday</span>
+              </div>
+            </div>
+            <div style="border-top:1px solid var(--border);margin-top:0.75rem;padding-top:0.75rem">
+              <div style="font-size:0.72rem;font-weight:600;color:var(--text2);margin-bottom:0.5rem">School Timing</div>
+              <div style="font-size:0.8rem;font-family:'IBM Plex Mono',monospace">7:45 AM – 2:50 PM</div>
+              <div style="font-size:0.72rem;color:var(--text2);margin-top:2px">8 Periods · 40 min each</div>
+            </div>
+            <button class="btn btn-ghost btn-sm" style="width:100%;justify-content:center;margin-top:0.75rem" onclick="showToast('Opening policy settings…','info')">Edit Policy</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- Add Holiday Modal -->
+<div class="modal-backdrop" id="addHolidayModal">
+  <div class="modal" style="max-width:480px">
+    <div class="modal-header">
+      <div class="modal-title">Add Holiday / Event</div>
+      <button class="modal-close" onclick="closeModal('addHolidayModal')"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group"><label class="form-label">Holiday Name <span class="req">*</span></label><input class="form-input" placeholder="e.g. Independence Day"></div>
+        <div class="form-group"><label class="form-label">Type <span class="req">*</span></label><select class="form-select"><option>National Holiday</option><option>Regional Holiday</option><option>School Event</option><option>Examination</option><option>Working Saturday</option><option>School Closed</option></select></div>
+        <div class="form-group"><label class="form-label">From Date <span class="req">*</span></label><input type="date" class="form-input"></div>
+        <div class="form-group"><label class="form-label">To Date</label><input type="date" class="form-input"></div>
+        <div class="form-group form-full"><label class="form-label">Description</label><textarea class="form-textarea" placeholder="Brief description or instructions for this day…" rows="2"></textarea></div>
+        <div class="form-group"><label class="form-label">Applicable To</label><select class="form-select"><option>All Students & Staff</option><option>Students Only</option><option>Staff Only</option><option>Specific Grades</option></select></div>
+        <div class="form-group"><label class="form-label">Campus</label><select class="form-select"><option>All Campuses</option><option>Main Campus</option><option>North Branch</option></select></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('addHolidayModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="addHoliday()">Save Holiday</button>
+    </div>
+  </div>
+</div>
+
+<!-- Day Detail Modal -->
+<div class="modal-backdrop" id="dayModal">
+  <div class="modal" style="max-width:420px">
+    <div class="modal-header"><div class="modal-title" id="dayModalTitle">Day Details</div><button class="modal-close" onclick="closeModal('dayModal')"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
+    <div class="modal-body" id="dayModalBody"></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('dayModal')">Close</button>
+      <button class="btn btn-primary" onclick="openModal('addHolidayModal');closeModal('dayModal')">Add Event</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+<script src="../../js/app.js"></script>
+<script src="../../js/sidebar.js"></script>
+<script>
+renderSidebar('attendance','holidays','../../');
+
+var currentYear=2026, currentMonth=5; // 0-indexed, 5=June
+
+var HOLIDAYS = {
+  '2026-06-01':['term','Term II Begins'],
+  '2026-06-05':['event','World Environment Day Assembly'],
+  '2026-06-12':['working','Working Saturday — Parent Feedback Day'],
+  '2026-06-15':['exam','Unit Test — Grades IX–XII'],
+  '2026-06-17':['exam','Unit Test — Grades VI–VIII'],
+  '2026-06-21':['event','International Yoga Day Event'],
+  '2026-06-25':['exam','Monthly Test — All Grades'],
+  '2026-06-29':['working','Working Saturday — Science Fair'],
+};
+
+var UPCOMING_EVENTS = [
+  {date:'30 Jun 2026',name:'Science Fair',type:'event',color:'var(--success)'},
+  {date:'1–5 Jul 2026',name:'Mid-Term Exams',type:'exam',color:'var(--warning)'},
+  {date:'15 Jul 2026',name:'PTM Day',type:'event',color:'var(--info)'},
+  {date:'15 Aug 2026',name:'Independence Day',type:'holiday',color:'var(--accent)'},
+  {date:'2 Sep 2026',name:'Teachers\' Day',type:'event',color:'var(--purple)'},
+  {date:'2 Oct 2026',name:'Gandhi Jayanti',type:'holiday',color:'var(--accent)'},
+];
+
+var ALL_HOLIDAYS = [
+  {date:'01 Jun',name:'Term II Commencement',type:'School',tc:'badge-blue'},
+  {date:'05 Jun',name:'World Environment Day',type:'School',tc:'badge-green'},
+  {date:'12 Jun',name:'Working Saturday — Parent Day',type:'Working Sat',tc:'badge-blue'},
+  {date:'15 Jun',name:'Unit Test — Secondary',type:'Exam',tc:'badge-yellow'},
+  {date:'17 Jun',name:'Unit Test — Middle',type:'Exam',tc:'badge-yellow'},
+  {date:'21 Jun',name:'Yoga Day Event',type:'School',tc:'badge-green'},
+  {date:'25 Jun',name:'Monthly Assessment',type:'Exam',tc:'badge-yellow'},
+  {date:'29 Jun',name:'Working Saturday — Science Fair',type:'Working Sat',tc:'badge-blue'},
+];
+
+function renderCalendar() {
+  var months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  document.getElementById('calMonthYear').textContent = months[currentMonth]+' '+currentYear;
+  var grid = document.getElementById('calGrid');
+  var days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  var headerHtml = days.map(function(d){ return '<div class="cal-day-header">'+d+'</div>'; }).join('');
+  var firstDay = new Date(currentYear, currentMonth, 1).getDay();
+  var daysInMonth = new Date(currentYear, currentMonth+1, 0).getDate();
+  var daysInPrevMonth = new Date(currentYear, currentMonth, 0).getDate();
+  var today = new Date();
+  var cellsHtml = '';
+  var totalCells = Math.ceil((firstDay + daysInMonth) / 7) * 7;
+  for(var i=0; i<totalCells; i++) {
+    var day, otherMonth=false;
+    if(i<firstDay) { day=daysInPrevMonth-firstDay+i+1; otherMonth=true; }
+    else if(i>=firstDay+daysInMonth) { day=i-firstDay-daysInMonth+1; otherMonth=true; }
+    else { day=i-firstDay+1; }
+    var isToday = !otherMonth && day===today.getDate() && currentMonth===today.getMonth() && currentYear===today.getFullYear();
+    var isSun = (i%7===0), isSat=(i%7===6);
+    var dateStr = currentYear+'-'+(currentMonth<9?'0':'')+(currentMonth+1)+'-'+(day<10?'0':'')+day;
+    var eventData = !otherMonth&&HOLIDAYS[dateStr]?HOLIDAYS[dateStr]:null;
+    var dayType = eventData?eventData[0]:'';
+    var cellClass = 'cal-cell'+(otherMonth?' other-month':'')+(isToday?' today':'')+(dayType==='holiday'?' holiday':'')+(dayType==='working'?' working-sat':'')+(dayType==='event'?' event':'');
+    var tagHtml = '';
+    if(!otherMonth) {
+      if(isSun&&!otherMonth) tagHtml='<span class="day-tag dt-closed">Sunday</span>';
+      else if(eventData) {
+        var tagClass = eventData[0]==='working'?'dt-working':eventData[0]==='holiday'?'dt-holiday':eventData[0]==='exam'?'dt-exam':eventData[0]==='term'?'dt-term':'dt-event';
+        tagHtml = '<span class="day-tag '+tagClass+'" title="'+eventData[1]+'">'+eventData[1].substring(0,20)+(eventData[1].length>20?'…':'')+'</span>';
+      }
+    }
+    cellsHtml += '<div class="'+cellClass+'" onclick="showDayDetail('+day+','+otherMonth+',\''+dateStr+'\')">'
+      +'<div class="day-num" style="color:'+(isSun&&!otherMonth?'var(--accent)':isSat&&!otherMonth?'var(--info)':'')+'">'+day+'</div>'
+      +tagHtml
+      +'</div>';
+  }
+  grid.innerHTML = headerHtml + cellsHtml;
+}
+
+function showDayDetail(day, other, dateStr) {
+  if(other) return;
+  var ev = HOLIDAYS[dateStr];
+  var dayNames=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  var d = new Date(dateStr);
+  document.getElementById('dayModalTitle').textContent = dayNames[d.getDay()]+', '+dateStr;
+  var body = '<div style="padding:0.5rem 0">';
+  body += '<div style="font-size:0.82rem;margin-bottom:0.75rem"><strong>Date:</strong> '+dateStr+'</div>';
+  if(ev) {
+    var typeLabel = {working:'Working Saturday',holiday:'Holiday',event:'School Event',exam:'Examination',term:'Academic Milestone',closed:'School Closed'}[ev[0]]||ev[0];
+    body += '<div style="margin-bottom:0.5rem"><span class="badge badge-blue">'+typeLabel+'</span></div>';
+    body += '<div style="font-size:0.85rem;font-weight:600;margin-bottom:0.25rem">'+ev[1]+'</div>';
+  } else {
+    body += '<div class="badge badge-green" style="margin-bottom:0.5rem">Regular Working Day</div>';
+    body += '<div style="font-size:0.82rem;color:var(--text2)">Normal school day. 8 periods. 7:45 AM – 2:50 PM</div>';
+  }
+  body += '</div>';
+  document.getElementById('dayModalBody').innerHTML = body;
+  openModal('dayModal');
+}
+
+function renderHolidayList() {
+  var html = ALL_HOLIDAYS.map(function(h){
+    return '<div class="holiday-card">'
+      +'<div class="hc-date">'+h.date+'</div>'
+      +'<div class="hc-name">'+h.name+'</div>'
+      +'<span class="hc-type badge '+h.tc+'">'+h.type+'</span>'
+      +'<button class="btn-icon" onclick="showToast(\'Editing '+h.name+'…\',\'info\')" style="margin-left:0.5rem"><svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:var(--text2);fill:none;stroke-width:2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>'
+      +'<button class="btn-icon" onclick="showToast(\'Holiday deleted\',\'error\')"><svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:var(--accent);fill:none;stroke-width:2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button>'
+      +'</div>';
+  }).join('');
+  document.getElementById('holidayList').innerHTML = html;
+}
+
+function renderUpcoming() {
+  var html = UPCOMING_EVENTS.map(function(e){
+    return '<div style="display:flex;align-items:center;gap:0.75rem;padding:0.5rem 0;border-bottom:1px solid var(--border)">'
+      +'<div style="width:8px;height:8px;border-radius:50%;background:'+e.color+';flex-shrink:0"></div>'
+      +'<div style="flex:1"><div style="font-size:0.8rem;font-weight:600;color:var(--text)">'+e.name+'</div><div style="font-size:0.68rem;color:var(--text2);font-family:\'IBM Plex Mono\',monospace">'+e.date+'</div></div>'
+      +'</div>';
+  }).join('');
+  document.getElementById('upcomingEvents').innerHTML = html;
+}
+
+function prevMonth() { currentMonth--; if(currentMonth<0){currentMonth=11;currentYear--;} renderCalendar(); }
+function nextMonth() { currentMonth++; if(currentMonth>11){currentMonth=0;currentYear++;} renderCalendar(); }
+function goToday() { var now=new Date(); currentMonth=now.getMonth(); currentYear=now.getFullYear(); renderCalendar(); }
+function switchCalView(v) { showToast('Switching to '+v,'info'); }
+function addHoliday() { closeModal('addHolidayModal'); showToast('Holiday added to calendar and notified to all staff','success'); }
+function exportCalendar() { showToast('Exporting academic calendar as PDF…','info'); }
+
+function openModal(id){ var m=document.getElementById(id);if(m)m.classList.add('open'); }
+function closeModal(id){ var m=document.getElementById(id);if(m)m.classList.remove('open'); }
+document.addEventListener('click',function(e){if(e.target.classList.contains('modal-backdrop'))e.target.classList.remove('open');});
+function showToast(msg,type){var icons={success:'<path d="M9 11l3 3L22 4"/>',error:'<path d="M18 6 6 18M6 6l12 12"/>',info:'<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>',warning:'<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>'};var c=document.getElementById('toastContainer');var t=document.createElement('div');t.className='toast toast-'+type;t.innerHTML='<div class="toast-icon"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">'+icons[type]+'</svg></div><div class="toast-body"><div class="toast-title">'+(type.charAt(0).toUpperCase()+type.slice(1))+'</div><div class="toast-msg">'+msg+'</div></div>';c.appendChild(t);setTimeout(function(){t.classList.add('show');},10);setTimeout(function(){t.classList.remove('show');setTimeout(function(){t.remove();},300);},3500);}
+
+renderCalendar();
+renderHolidayList();
+renderUpcoming();
+</script>
+</body>
+</html>

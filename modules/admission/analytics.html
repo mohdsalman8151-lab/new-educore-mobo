@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admission Analytics — EduCore SMS</title>
+  <meta name="description" content="Comprehensive admission analytics and statistics for EduCore School Management System">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;900&family=IBM+Plex+Mono:wght@400;500;600&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../css/main.css">
+  <link rel="stylesheet" href="../../css/components.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+</head>
+<body>
+<div class="mobile-overlay" id="mobileOverlay" onclick="closeMobileSidebar()"></div>
+<header class="topbar">
+  <div class="logo-area">
+    <div class="logo-mark"><svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div>
+    <span class="logo-text">EduCore SMS</span>
+  </div>
+  <button class="sidebar-toggle" onclick="toggleSidebar()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round">
+      <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+    </svg>
+  </button>
+  <div class="tb-search">
+    <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+    <input type="text" placeholder="Search analytics..." id="globalSearch">
+  </div>
+  <div class="tb-right">
+    <div class="tb-date" id="tb-date"></div>
+    <button class="dark-toggle" onclick="toggleDarkMode()">
+      <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/></svg>
+    </button>
+    <div class="dropdown-wrapper">
+      <div class="tb-user" onclick="toggleUserDropdown(event)" id="userBtn">
+        <div class="avatar">SA</div>
+        <div class="tb-user-info"><div class="tb-user-name">Super Admin</div><div class="tb-user-role">Administrator</div></div>
+      </div>
+      <div class="user-dropdown" id="userDropdown">
+        <div class="user-dd-header"><div class="user-dd-name">Super Admin</div><div class="user-dd-role">Administrator</div></div>
+        <a class="user-dd-item danger" href="../../index.html"><svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>Logout</a>
+      </div>
+    </div>
+  </div>
+</header>
+<div class="layout" id="layout">
+  <nav class="sidebar" id="sidebar"><div id="sidebar-nav"></div></nav>
+  <main class="main">
+    <div class="breadcrumb">
+      <a href="../../index.html">Dashboard</a><span class="breadcrumb-sep">&#8250;</span>
+      <span>Admission</span><span class="breadcrumb-sep">&#8250;</span>
+      <span>Analytics</span>
+    </div>
+    <div class="page-header">
+      <div>
+        <h1>Admission Analytics</h1>
+        <div class="page-subtitle">Academic Year 2026–27 · Real-time admission pipeline & conversion metrics</div>
+      </div>
+      <div class="ph-actions">
+        <select class="filter-select" style="width:auto" onchange="showToast('Year changed','info')">
+          <option>2026–27 (Current)</option>
+          <option>2025–26</option>
+          <option>2024–25</option>
+        </select>
+        <button class="btn btn-ghost" onclick="exportReport()">
+          <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Export Report
+        </button>
+      </div>
+    </div>
+
+    <!-- KPI Strip -->
+    <div class="kpi-strip kpi-5">
+      <div class="stat-card" style="--c1:#0A3D62;--c2:#1a5276">
+        <div class="stat-icon"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div>
+        <div class="stat-label">Total Enquiries</div>
+        <div class="stat-value" data-count="347">347</div>
+        <div class="stat-change up">▲ 23% vs last year</div>
+      </div>
+      <div class="stat-card" style="--c1:#16A085;--c2:#0e6655">
+        <div class="stat-icon"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg></div>
+        <div class="stat-label">Applications</div>
+        <div class="stat-value" data-count="184">184</div>
+        <div class="stat-change up">▲ 53% from enquiry</div>
+      </div>
+      <div class="stat-card" style="--c1:#F39C12;--c2:#d68910">
+        <div class="stat-icon"><svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/></svg></div>
+        <div class="stat-label">Seats Confirmed</div>
+        <div class="stat-value" data-count="143">143</div>
+        <div class="stat-change up">▲ 77.7% test pass rate</div>
+      </div>
+      <div class="stat-card" style="--c1:#8E44AD;--c2:#6c3483">
+        <div class="stat-icon"><svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
+        <div class="stat-label">Fee Collected</div>
+        <div class="stat-value" style="font-size:1.7rem">₹7.15L</div>
+        <div class="stat-change up">Admission fees 2026-27</div>
+      </div>
+      <div class="stat-card" style="--c1:#E8505B;--c2:#c0392b">
+        <div class="stat-icon"><svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div>
+        <div class="stat-label">Conversion Rate</div>
+        <div class="stat-value" data-count="41.2" data-suffix="%">41.2%</div>
+        <div class="stat-change up">▲ +8.4% vs last year</div>
+      </div>
+    </div>
+
+    <!-- Charts Row 1 -->
+    <div class="grid-row" style="grid-template-columns:1.4fr 1fr">
+      <div class="card">
+        <div class="card-header">
+          <div><div class="card-title">Monthly Admission Pipeline</div><div class="card-meta">Jan – Jun 2026 · Enquiry → Application → Confirmed</div></div>
+        </div>
+        <div class="chart-wrap" style="height:220px">
+          <canvas id="pipelineChart"></canvas>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <div><div class="card-title">Enquiry Source Breakdown</div><div class="card-meta">Where our leads come from</div></div>
+        </div>
+        <div class="chart-wrap" style="height:220px">
+          <canvas id="sourceChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Charts Row 2 -->
+    <div class="grid-row" style="grid-template-columns:1fr 1fr 1fr">
+      <div class="card">
+        <div class="card-header">
+          <div><div class="card-title">Class-wise Admissions</div><div class="card-meta">Distribution by grade</div></div>
+        </div>
+        <div class="chart-wrap" style="height:190px">
+          <canvas id="classChart"></canvas>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <div><div class="card-title">Gender Ratio</div><div class="card-meta">2026–27 new admissions</div></div>
+        </div>
+        <div class="chart-wrap" style="height:190px">
+          <canvas id="genderChart"></canvas>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <div><div class="card-title">Category Breakdown</div><div class="card-meta">General / OBC / SC / ST / EWS</div></div>
+        </div>
+        <div class="chart-wrap" style="height:190px">
+          <canvas id="categoryChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Year-over-year comparison -->
+    <div class="card card-flush" style="margin-top:1.5rem">
+      <div class="card-padding d-flex justify-between align-center">
+        <div class="card-title">Year-over-Year Comparison</div>
+        <div class="card-meta">2024–25 vs 2025–26 vs 2026–27</div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Metric</th>
+              <th>2024–25</th>
+              <th>2025–26</th>
+              <th>2026–27</th>
+              <th>YoY Change</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Total Enquiries</strong></td>
+              <td>212</td>
+              <td>282</td>
+              <td>347</td>
+              <td><span class="badge badge-green">▲ +23%</span></td>
+            </tr>
+            <tr>
+              <td><strong>Applications Received</strong></td>
+              <td>124</td>
+              <td>156</td>
+              <td>184</td>
+              <td><span class="badge badge-green">▲ +17.9%</span></td>
+            </tr>
+            <tr>
+              <td><strong>Seats Confirmed</strong></td>
+              <td>98</td>
+              <td>121</td>
+              <td>143</td>
+              <td><span class="badge badge-green">▲ +18.2%</span></td>
+            </tr>
+            <tr>
+              <td><strong>Conversion Rate (Enquiry→Admitted)</strong></td>
+              <td>46.2%</td>
+              <td>42.9%</td>
+              <td>41.2%</td>
+              <td><span class="badge badge-red">▼ −1.7%</span></td>
+            </tr>
+            <tr>
+              <td><strong>Boys : Girls Ratio</strong></td>
+              <td>52:48</td>
+              <td>53:47</td>
+              <td>51:49</td>
+              <td><span class="badge badge-blue">Improving</span></td>
+            </tr>
+            <tr>
+              <td><strong>Admission Fee Revenue</strong></td>
+              <td>₹4.9L</td>
+              <td>₹6.05L</td>
+              <td>₹7.15L</td>
+              <td><span class="badge badge-green">▲ +18.2%</span></td>
+            </tr>
+            <tr>
+              <td><strong>Average Test Score</strong></td>
+              <td>71.4%</td>
+              <td>73.8%</td>
+              <td>75.2%</td>
+              <td><span class="badge badge-green">▲ +1.9%</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+</div>
+<div class="toast-container" id="toastContainer"></div>
+<script src="../../js/app.js"></script>
+<script src="../../js/sidebar.js"></script>
+<script>
+renderSidebar('admission-mod','adm-analytics','../../');
+function showToast(msg, type) {
+  type = type || 'success';
+  var icons = { success:'<path d="M9 11l3 3L22 4"/>', error:'<path d="M18 6 6 18M6 6l12 12"/>', info:'<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>', warning:'<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>' };
+  var c = document.getElementById('toastContainer');
+  var t = document.createElement('div');
+  t.className = 'toast toast-' + type;
+  t.innerHTML = '<div class="toast-icon"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">'+icons[type]+'</svg></div><div class="toast-body"><div class="toast-title">'+(type.charAt(0).toUpperCase()+type.slice(1))+'</div><div class="toast-msg">'+msg+'</div></div>';
+  c.appendChild(t);
+  setTimeout(function(){t.classList.add('show');},10);
+  setTimeout(function(){t.classList.remove('show');setTimeout(function(){t.remove();},300);},3500);
+}
+function exportReport() { showToast('Generating admission analytics report...','info'); }
+
+var isDark = function(){ return document.documentElement.getAttribute('data-theme')==='dark'; };
+var gridColor = function(){ return isDark()?'rgba(255,255,255,0.06)':'rgba(0,0,0,0.06)'; };
+var textColor = function(){ return isDark()?'#94A3B8':'#6C757D'; };
+
+// Pipeline Chart
+var pipelineChart = new Chart(document.getElementById('pipelineChart'), {
+  type: 'bar',
+  data: {
+    labels: ['Jan','Feb','Mar','Apr','May','Jun'],
+    datasets: [
+      { label: 'Enquiries', data: [28,42,67,84,72,54], backgroundColor: 'rgba(10,61,98,0.75)', borderRadius: 4 },
+      { label: 'Applications', data: [14,22,36,48,38,26], backgroundColor: 'rgba(22,160,133,0.75)', borderRadius: 4 },
+      { label: 'Confirmed', data: [10,16,28,38,28,23], backgroundColor: 'rgba(243,156,18,0.75)', borderRadius: 4 }
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { labels: { boxWidth: 10, font: { size: 10 }, color: textColor() } } },
+    scales: {
+      x: { grid: { display: false }, ticks: { font: { size: 10 }, color: textColor() } },
+      y: { grid: { color: gridColor() }, ticks: { font: { size: 10 }, color: textColor() } }
+    }
+  }
+});
+
+// Source Chart
+var sourceChart = new Chart(document.getElementById('sourceChart'), {
+  type: 'doughnut',
+  data: {
+    labels: ['Walk-in','Phone','Website','Referral','Social Media'],
+    datasets: [{ data: [68, 54, 82, 93, 50], backgroundColor: ['#0A3D62','#16A085','#F39C12','#8E44AD','#E8505B'], borderWidth: 0, hoverOffset: 6 }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false, cutout: '60%',
+    plugins: { legend: { position: 'right', labels: { boxWidth: 10, font: { size: 9 }, color: textColor(), padding: 8 } } }
+  }
+});
+
+// Class Chart
+var classChart = new Chart(document.getElementById('classChart'), {
+  type: 'bar',
+  data: {
+    labels: ['Nursery','LKG','UKG','I-II','III-V','VI-VIII','IX-X','XI-XII'],
+    datasets: [{ label: 'Admissions', data: [18,12,14,22,28,24,15,10], backgroundColor: 'rgba(10,61,98,0.75)', borderRadius: 4 }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false, indexAxis: 'y',
+    plugins: { legend: { display: false } },
+    scales: {
+      x: { grid: { color: gridColor() }, ticks: { font: { size: 10 }, color: textColor() } },
+      y: { grid: { display: false }, ticks: { font: { size: 9 }, color: textColor() } }
+    }
+  }
+});
+
+// Gender Chart
+var genderChart = new Chart(document.getElementById('genderChart'), {
+  type: 'doughnut',
+  data: {
+    labels: ['Male','Female'],
+    datasets: [{ data: [73, 70], backgroundColor: ['#0A3D62','#E8505B'], borderWidth: 0, hoverOffset: 6 }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false, cutout: '65%',
+    plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 10 }, color: textColor() } } }
+  }
+});
+
+// Category Chart
+var categoryChart = new Chart(document.getElementById('categoryChart'), {
+  type: 'doughnut',
+  data: {
+    labels: ['General','OBC','SC','ST','EWS'],
+    datasets: [{ data: [82,31,16,8,6], backgroundColor: ['#0A3D62','#16A085','#F39C12','#8E44AD','#E8505B'], borderWidth: 0, hoverOffset: 6 }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false, cutout: '60%',
+    plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 9 }, color: textColor(), padding: 6 } } }
+  }
+});
+
+// Theme observer
+var themeObserver = new MutationObserver(function(){
+  [pipelineChart, sourceChart, classChart, genderChart, categoryChart].forEach(function(c){c.update();});
+});
+themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+</script>
+</body>
+</html>

@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Super Admin Dashboard — EduCore SMS Next GEN</title>
+  <meta name="description" content="EduCore School Management System - Super Admin Dashboard with real-time statistics and analytics">
+  <link rel="stylesheet" href="css/main.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+</head>
+<body>
+
+<!-- MOBILE OVERLAY -->
+<div class="mobile-overlay" id="mobileOverlay" onclick="closeMobileSidebar()"></div>
+
+<!-- TOPBAR -->
+<header class="topbar">
+  <div class="logo-area">
+    <div class="logo-mark">
+      <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+    </div>
+    <span class="logo-text">EduCore SMS</span>
+  </div>
+  <button class="sidebar-toggle" onclick="toggleSidebar()" title="Toggle Sidebar">
+    <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round">
+      <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+    </svg>
+  </button>
+  <div class="tb-search">
+    <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+    <input type="text" placeholder="Search students, classes, reports…">
+  </div>
+  <div class="tb-right">
+    <div class="tb-date" id="tb-date"></div>
+    <!-- Dark Mode Toggle -->
+    <button class="dark-toggle" onclick="toggleDarkMode()" title="Toggle Dark Mode">
+      <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+    </button>
+    <!-- Notifications -->
+    <div class="dropdown-wrapper">
+      <div class="tb-btn" onclick="toggleNotif(event)" id="notifBtn" title="Notifications">
+        <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        <div class="notif-dot"></div>
+      </div>
+      <div class="notif-dropdown" id="notifDropdown">
+        <div class="notif-header"><h4>Notifications</h4><span onclick="markAllRead()">Mark all read</span></div>
+        <div class="notif-item">
+          <div class="notif-icon" style="background:var(--accent)"><svg viewBox="0 0 24 24"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
+          <div class="notif-text"><p><strong>Fee overdue</strong> — 63 students have pending payments</p><span>2 hours ago</span></div>
+          <div class="notif-unread"></div>
+        </div>
+        <div class="notif-item">
+          <div class="notif-icon" style="background:var(--success)"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div>
+          <div class="notif-text"><p><strong>New admission</strong> — Priya Mehta joined Class IX-A</p><span>5 hours ago</span></div>
+          <div class="notif-unread"></div>
+        </div>
+        <div class="notif-item">
+          <div class="notif-icon" style="background:var(--info)"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
+          <div class="notif-text"><p><strong>Exam schedule</strong> — Mid-term timetable published</p><span>Yesterday</span></div>
+        </div>
+        <div class="notif-item">
+          <div class="notif-icon" style="background:var(--warning)"><svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
+          <div class="notif-text"><p><strong>Low attendance</strong> — Class VIII-B below 75% threshold</p><span>2 days ago</span></div>
+        </div>
+        <div class="notif-footer"><a href="communication/notices.html">View all notifications →</a></div>
+      </div>
+    </div>
+    <!-- Messages -->
+    <div class="tb-btn" title="Messages" onclick="location.href='communication/messages.html'">
+      <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+    </div>
+    <!-- User -->
+    <div class="dropdown-wrapper">
+      <div class="tb-user" onclick="toggleUserDropdown(event)" id="userBtn">
+        <div class="avatar">SA</div>
+        <div class="tb-user-info">
+          <div class="tb-user-name">Super Admin</div>
+          <div class="tb-user-role">Administrator</div>
+        </div>
+      </div>
+      <div class="user-dropdown" id="userDropdown">
+        <div class="user-dd-header">
+          <div class="user-dd-name">Super Admin</div>
+          <div class="user-dd-role">Administrator · EduCore SMS</div>
+        </div>
+        <a class="user-dd-item" href="settings/index.html"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>Settings</a>
+        <a class="user-dd-item danger" href="#"><svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>Logout</a>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="layout" id="layout">
+  <!-- SIDEBAR -->
+  <nav class="sidebar" id="sidebar">
+    <div id="sidebar-nav"></div>
+  </nav>
+
+  <!-- MAIN CONTENT -->
+  <main class="main">
+    <div class="page-header">
+      <div>
+        <h1>Super Admin</h1>
+        <div class="page-subtitle">EduCore SMS · Academic Year 2025–26</div>
+      </div>
+      <div class="ph-actions">
+        <button class="btn" onclick="window.print()">
+          <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Export
+        </button>
+        <button class="btn btn-accent" onclick="openModal('quickActionModal')">
+          <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Quick Action
+        </button>
+      </div>
+    </div>
+
+    <!-- KPI Strip -->
+    <div class="kpi-strip kpi-5">
+      <div class="stat-card" style="--c1:#E8505B;--c2:#c0392b">
+        <div class="stat-icon"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div>
+        <div class="stat-label">Total Students</div>
+        <div class="stat-value" data-count="1248">0</div>
+        <div class="stat-change up">▲ 34 this month</div>
+      </div>
+      <div class="stat-card" style="--c1:#2980B9;--c2:#0A3D62">
+        <div class="stat-icon"><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
+        <div class="stat-label">Total Teachers</div>
+        <div class="stat-value" style="color:var(--info)" data-count="86">0</div>
+        <div class="stat-change up">▲ 3 new hires</div>
+      </div>
+      <div class="stat-card" style="--c1:#F39C12;--c2:#d68910">
+        <div class="stat-icon"><svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></div>
+        <div class="stat-label">Today's Attendance</div>
+        <div class="stat-value" style="color:var(--warning)" data-count="91.4" data-suffix="%">0</div>
+        <div class="stat-change neu">1,140 of 1,248</div>
+      </div>
+      <div class="stat-card" style="--c1:#E8505B;--c2:#8E44AD">
+        <div class="stat-icon"><svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
+        <div class="stat-label">Fees Pending</div>
+        <div class="stat-value" style="color:var(--accent);font-size:1.7rem">₹4.86L</div>
+        <div class="stat-change down">▼ 63 students overdue</div>
+      </div>
+      <div class="stat-card" style="--c1:#16A085;--c2:#0A3D62">
+        <div class="stat-icon"><svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg></div>
+        <div class="stat-label">Active Classes</div>
+        <div class="stat-value" data-count="42">0</div>
+        <div class="stat-change up">Grades I – XII</div>
+      </div>
+    </div>
+
+    <!-- Row 1: Attendance + Fee Collection + Quick Links -->
+    <div class="grid-row" style="grid-template-columns:1.5fr 1fr 240px">
+      <!-- Attendance Chart -->
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">Weekly Attendance</div>
+            <div class="card-meta">Apr 14–22, 2026 · All Grades</div>
+          </div>
+          <a href="reports/attendance.html" class="card-action" style="font-family:'IBM Plex Mono',monospace;font-size:.73rem;color:var(--primary);font-weight:600">View Report →</a>
+        </div>
+        <div class="chart-wrap" style="height:155px">
+          <canvas id="attendanceChart"></canvas>
+        </div>
+      </div>
+
+      <!-- Fee Collection -->
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">Fee Collection</div>
+            <div class="card-meta">April 2026 · ₹18.4L of ₹23.3L</div>
+          </div>
+        </div>
+        <div class="prog-row"><div class="prog-hd"><span class="prog-lbl">Grade I–IV</span><span class="prog-num">94%</span></div><div class="prog-track"><div class="prog-fill" data-width="94%" style="width:0;background:var(--success)"></div></div></div>
+        <div class="prog-row"><div class="prog-hd"><span class="prog-lbl">Grade V–VIII</span><span class="prog-num">81%</span></div><div class="prog-track"><div class="prog-fill" data-width="81%" style="width:0;background:var(--info)"></div></div></div>
+        <div class="prog-row"><div class="prog-hd"><span class="prog-lbl">Grade IX–X</span><span class="prog-num">76%</span></div><div class="prog-track"><div class="prog-fill" data-width="76%" style="width:0;background:var(--warning)"></div></div></div>
+        <div class="prog-row"><div class="prog-hd"><span class="prog-lbl">Grade XI–XII</span><span class="prog-num">68%</span></div><div class="prog-track"><div class="prog-fill" data-width="68%" style="width:0;background:var(--accent)"></div></div></div>
+        <div class="prog-row" style="margin-top:.5rem"><div class="prog-hd"><span class="prog-lbl fw-700" style="color:var(--text)">Overall</span><span class="prog-num" style="color:var(--primary)">79%</span></div><div class="prog-track" style="height:9px"><div class="prog-fill" data-width="79%" style="width:0;background:linear-gradient(90deg,var(--accent),var(--primary))"></div></div></div>
+      </div>
+
+      <!-- Quick Links -->
+      <div class="card" style="padding:1.25rem">
+        <div class="card-title" style="margin-bottom:.85rem;font-size:1rem">Quick Links</div>
+        <div class="quick-grid">
+          <a class="quick-btn" href="students/admission.html"><svg viewBox="0 0 24 24" stroke="var(--success)"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg><span>Add Student</span></a>
+          <a class="quick-btn" href="teachers/list.html"><svg viewBox="0 0 24 24" stroke="var(--info)"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span>Add Teacher</span></a>
+          <a class="quick-btn" href="finance/collect-fee.html"><svg viewBox="0 0 24 24" stroke="var(--warning)"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg><span>Collect Fee</span></a>
+          <a class="quick-btn" href="students/attendance.html"><svg viewBox="0 0 24 24" stroke="var(--success)"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg><span>Attendance</span></a>
+          <a class="quick-btn" href="academic/exams.html"><svg viewBox="0 0 24 24" stroke="var(--accent)"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg><span>Exams</span></a>
+          <a class="quick-btn" href="communication/messages.html"><svg viewBox="0 0 24 24" stroke="var(--primary)"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span>Messages</span></a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Row 2: Admissions Table + Revenue Chart -->
+    <div class="grid-row" style="grid-template-columns:1.4fr 1fr">
+      <!-- Recent Admissions -->
+      <div class="card card-flush">
+        <div class="card-padding d-flex justify-between align-center">
+          <div class="card-title">Recent Admissions</div>
+          <a href="students/admission.html" style="font-family:'IBM Plex Mono',monospace;font-size:.73rem;color:var(--primary);font-weight:600">View all →</a>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Adm. No</th><th>Name</th><th>Class</th><th>Date</th><th>Status</th><th>Action</th></tr></thead>
+            <tbody>
+              <tr><td class="td-mono">ADM-1248</td><td><div class="td-name">Priya Mehta</div><div class="td-sub">Father: Rajesh Mehta</div></td><td><span class="badge badge-blue">IX-A</span></td><td class="td-mono">22 Apr 2026</td><td><span class="badge badge-green">Active</span></td><td><a href="students/list.html" class="btn btn-sm">View</a></td></tr>
+              <tr><td class="td-mono">ADM-1247</td><td><div class="td-name">Arjun Sharma</div><div class="td-sub">Father: Vivek Sharma</div></td><td><span class="badge badge-blue">VI-B</span></td><td class="td-mono">21 Apr 2026</td><td><span class="badge badge-green">Active</span></td><td><a href="students/list.html" class="btn btn-sm">View</a></td></tr>
+              <tr><td class="td-mono">ADM-1246</td><td><div class="td-name">Sana Khan</div><div class="td-sub">Father: Imran Khan</div></td><td><span class="badge badge-purple">XI-C</span></td><td class="td-mono">20 Apr 2026</td><td><span class="badge badge-yellow">Pending</span></td><td><a href="students/list.html" class="btn btn-sm">View</a></td></tr>
+              <tr><td class="td-mono">ADM-1245</td><td><div class="td-name">Rohan Das</div><div class="td-sub">Father: Biplab Das</div></td><td><span class="badge badge-orange">III-A</span></td><td class="td-mono">19 Apr 2026</td><td><span class="badge badge-green">Active</span></td><td><a href="students/list.html" class="btn btn-sm">View</a></td></tr>
+              <tr><td class="td-mono">ADM-1244</td><td><div class="td-name">Meera Pillai</div><div class="td-sub">Father: Suresh Pillai</div></td><td><span class="badge badge-blue">VIII-A</span></td><td class="td-mono">18 Apr 2026</td><td><span class="badge badge-red">Inactive</span></td><td><a href="students/list.html" class="btn btn-sm">View</a></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Revenue Chart -->
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">Fee Revenue</div>
+            <div class="card-meta">Nov 2025 – Apr 2026 · ₹ Lakhs</div>
+          </div>
+        </div>
+        <div class="chart-wrap" style="height:180px">
+          <canvas id="revenueChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Row 3: Branch Stats + Events + Subject Performance -->
+    <div class="grid-row" style="grid-template-columns:1fr 1fr 1fr">
+      <!-- Branch Stats -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Branch Overview</div>
+          <a href="administration/branches.html" style="font-family:'IBM Plex Mono',monospace;font-size:.73rem;color:var(--primary);font-weight:600">All →</a>
+        </div>
+        <div class="stat-row"><span class="stat-lbl"><span class="stat-dot" style="background:var(--success)"></span>Main Campus</span><span class="stat-val">842</span></div>
+        <div class="stat-row"><span class="stat-lbl"><span class="stat-dot" style="background:var(--info)"></span>North Branch</span><span class="stat-val">234</span></div>
+        <div class="stat-row"><span class="stat-lbl"><span class="stat-dot" style="background:var(--warning)"></span>South Branch</span><span class="stat-val">172</span></div>
+        <div class="stat-row"><span class="stat-lbl"><span class="stat-dot" style="background:var(--purple)"></span>East Wing</span><span class="stat-val">0</span></div>
+        <div style="margin-top:1.1rem">
+          <div class="chart-wrap" style="height:100px"><canvas id="branchChart"></canvas></div>
+        </div>
+      </div>
+
+      <!-- Upcoming Events -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Upcoming Events</div>
+          <a href="communication/events.html" style="font-family:'IBM Plex Mono',monospace;font-size:.73rem;color:var(--primary);font-weight:600">All →</a>
+        </div>
+        <div class="event-item">
+          <div class="event-date"><div class="e-day">25</div><div class="e-mon">Apr</div></div>
+          <div><div class="event-name">Annual Sports Day</div><div class="event-desc">Main Ground · All branches</div></div>
+          <div class="event-tag"><span class="badge badge-green">Today +5</span></div>
+        </div>
+        <div class="event-item">
+          <div class="event-date"><div class="e-day">01</div><div class="e-mon">May</div></div>
+          <div><div class="event-name">Mid-Term Exams Begin</div><div class="event-desc">Grade VI–XII</div></div>
+          <div class="event-tag"><span class="badge badge-red">Exam</span></div>
+        </div>
+        <div class="event-item">
+          <div class="event-date"><div class="e-day">10</div><div class="e-mon">May</div></div>
+          <div><div class="event-name">Parent-Teacher Meeting</div><div class="event-desc">All classes · 9AM–1PM</div></div>
+          <div class="event-tag"><span class="badge badge-blue">PTM</span></div>
+        </div>
+        <div class="event-item">
+          <div class="event-date"><div class="e-day">15</div><div class="e-mon">May</div></div>
+          <div><div class="event-name">Science Exhibition</div><div class="event-desc">Grade VIII–XII</div></div>
+          <div class="event-tag"><span class="badge badge-purple">Expo</span></div>
+        </div>
+      </div>
+
+      <!-- Subject Performance Radar -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Subject Performance</div>
+          <div class="card-meta">Avg Score · Grade X</div>
+        </div>
+        <div class="chart-wrap" style="height:190px">
+          <canvas id="subjectChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Row 4: Notice Board + Teachers Status + Transport -->
+    <div class="grid-row" style="grid-template-columns:1fr 1fr 1fr">
+      <!-- Notice Board -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Notice Board</div>
+          <a href="communication/notices.html" style="font-family:'IBM Plex Mono',monospace;font-size:.73rem;color:var(--primary);font-weight:600">All →</a>
+        </div>
+        <div class="notice-item">
+          <div class="notice-title">📢 Holiday Announcement — Eid ul-Fitr</div>
+          <div class="notice-time">Posted · 20 Apr 2026</div>
+        </div>
+        <div class="notice-item">
+          <div class="notice-title">📋 Result Declaration — Grade XII Board</div>
+          <div class="notice-time">Posted · 18 Apr 2026</div>
+        </div>
+        <div class="notice-item">
+          <div class="notice-title">🏆 Merit Scholarship Applications Open</div>
+          <div class="notice-time">Posted · 15 Apr 2026</div>
+        </div>
+        <div class="notice-item">
+          <div class="notice-title">📚 Library Renovation — Closed 25–30 Apr</div>
+          <div class="notice-time">Posted · 12 Apr 2026</div>
+        </div>
+      </div>
+
+      <!-- Teacher Status -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Teacher Status</div>
+          <div class="card-meta">Today · 22 Apr 2026</div>
+        </div>
+        <div class="stat-row"><span class="stat-lbl"><span class="stat-dot" style="background:var(--success)"></span>Present</span><span class="stat-val">79</span></div>
+        <div class="stat-row"><span class="stat-lbl"><span class="stat-dot" style="background:var(--accent)"></span>Absent</span><span class="stat-val">4</span></div>
+        <div class="stat-row"><span class="stat-lbl"><span class="stat-dot" style="background:var(--warning)"></span>On Leave</span><span class="stat-val">3</span></div>
+        <div class="stat-row"><span class="stat-lbl"><span class="stat-dot" style="background:var(--info)"></span>Substitutes</span><span class="stat-val">7</span></div>
+        <div style="margin-top:1rem">
+          <div class="prog-row"><div class="prog-hd"><span class="prog-lbl">Attendance Rate</span><span class="prog-num">91.9%</span></div><div class="prog-track" style="height:10px"><div class="prog-fill" data-width="91.9%" style="width:0;background:linear-gradient(90deg,var(--success),var(--info))"></div></div></div>
+        </div>
+        <a href="teachers/attendance.html" class="btn btn-primary" style="width:100%;justify-content:center;margin-top:.75rem;font-size:.8rem">Mark Today's Attendance</a>
+      </div>
+
+      <!-- Transport Summary -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Transport Summary</div>
+          <a href="transport/routes.html" style="font-family:'IBM Plex Mono',monospace;font-size:.73rem;color:var(--primary);font-weight:600">All →</a>
+        </div>
+        <div class="stat-row"><span class="stat-lbl"><span class="stat-dot" style="background:var(--success)"></span>Active Buses</span><span class="stat-val">14</span></div>
+        <div class="stat-row"><span class="stat-lbl"><span class="stat-dot" style="background:var(--warning)"></span>In Maintenance</span><span class="stat-val">2</span></div>
+        <div class="stat-row"><span class="stat-lbl"><span class="stat-dot" style="background:var(--info)"></span>Routes</span><span class="stat-val">18</span></div>
+        <div class="stat-row"><span class="stat-lbl"><span class="stat-dot" style="background:var(--purple)"></span>Students Enrolled</span><span class="stat-val">486</span></div>
+        <div class="stat-row"><span class="stat-lbl"><span class="stat-dot" style="background:var(--accent)"></span>Drivers</span><span class="stat-val">16</span></div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- QUICK ACTION MODAL -->
+<div class="modal-backdrop" id="quickActionModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Quick Action</div>
+      <button class="modal-close" onclick="closeModal('quickActionModal')"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <div class="quick-grid" style="grid-template-columns:1fr 1fr 1fr;gap:10px">
+        <a class="quick-btn" href="students/admission.html" style="padding:1rem"><svg viewBox="0 0 24 24" stroke="var(--success)"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg><span>New Student</span></a>
+        <a class="quick-btn" href="teachers/list.html" style="padding:1rem"><svg viewBox="0 0 24 24" stroke="var(--info)"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span>New Teacher</span></a>
+        <a class="quick-btn" href="finance/collect-fee.html" style="padding:1rem"><svg viewBox="0 0 24 24" stroke="var(--warning)"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg><span>Collect Fee</span></a>
+        <a class="quick-btn" href="communication/notices.html" style="padding:1rem"><svg viewBox="0 0 24 24" stroke="var(--accent)"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/></svg><span>Send Notice</span></a>
+        <a class="quick-btn" href="academic/exams.html" style="padding:1rem"><svg viewBox="0 0 24 24" stroke="var(--purple)"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg><span>Schedule Exam</span></a>
+        <a class="quick-btn" href="reports/attendance.html" style="padding:1rem"><svg viewBox="0 0 24 24" stroke="var(--primary)"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg><span>View Report</span></a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="js/app.js"></script>
+<script src="js/sidebar.js"></script>
+<script>
+renderSidebar('dash', 'super-admin', '');
+
+// Charts
+const isDark = () => document.documentElement.getAttribute('data-theme') === 'dark';
+const gridColor = () => isDark() ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)';
+const textColor = () => isDark() ? '#94A3B8' : '#6C757D';
+
+// Attendance Chart
+const attCtx = document.getElementById('attendanceChart');
+const attChart = new Chart(attCtx, {
+  type: 'bar',
+  data: {
+    labels: ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'],
+    datasets: [
+      { label: 'Present', data: [1140,1182,1098,1156,1140,820,0], backgroundColor: 'rgba(22,160,133,0.8)', borderRadius: 6, borderSkipped: false },
+      { label: 'Absent',  data: [108,66,150,92,108,110,0],         backgroundColor: 'rgba(232,80,91,0.7)', borderRadius: 6, borderSkipped: false }
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { display: true, labels: { boxWidth: 10, font: { size: 10 }, color: textColor() } } },
+    scales: {
+      x: { stacked: true, grid: { display: false }, ticks: { font: { size: 10 }, color: textColor() } },
+      y: { stacked: true, grid: { color: gridColor() }, ticks: { font: { size: 10 }, color: textColor() } }
+    }
+  }
+});
+
+// Revenue Chart
+const revCtx = document.getElementById('revenueChart');
+const revChart = new Chart(revCtx, {
+  type: 'line',
+  data: {
+    labels: ['Nov','Dec','Jan','Feb','Mar','Apr'],
+    datasets: [{
+      label: 'Revenue (₹L)',
+      data: [15.2,18.8,20.1,17.5,19.3,18.4],
+      borderColor: '#0A3D62', backgroundColor: 'rgba(10,61,98,0.08)',
+      borderWidth: 2.5, fill: true, tension: 0.4,
+      pointBackgroundColor: '#E8505B', pointRadius: 5, pointHoverRadius: 7
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { display: false } },
+    scales: {
+      y: { grid: { color: gridColor() }, ticks: { font: { size: 10 }, color: textColor(), callback: v => '₹'+v+'L' } },
+      x: { grid: { display: false }, ticks: { font: { size: 10 }, color: textColor() } }
+    }
+  }
+});
+
+// Branch Doughnut Chart
+const brCtx = document.getElementById('branchChart');
+const brChart = new Chart(brCtx, {
+  type: 'doughnut',
+  data: {
+    labels: ['Main','North','South','East'],
+    datasets: [{ data: [842,234,172,0], backgroundColor: ['#16A085','#2980B9','#F39C12','#8E44AD'], borderWidth: 0, hoverOffset: 6 }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false, cutout: '65%',
+    plugins: { legend: { position: 'right', labels: { boxWidth: 10, font: { size: 9 }, color: textColor(), padding: 8 } } }
+  }
+});
+
+// Subject Radar
+const subCtx = document.getElementById('subjectChart');
+const subChart = new Chart(subCtx, {
+  type: 'radar',
+  data: {
+    labels: ['Math','Science','English','Social','Hindi','Computer'],
+    datasets: [{
+      label: 'Avg Score',
+      data: [74,82,78,80,71,86],
+      backgroundColor: 'rgba(10,61,98,0.1)',
+      borderColor: '#0A3D62', borderWidth: 2,
+      pointBackgroundColor: '#E8505B', pointRadius: 4
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { display: false } },
+    scales: { r: { min: 60, max: 100, ticks: { font: { size: 9 }, color: textColor() }, grid: { color: gridColor() }, pointLabels: { font: { size: 10 }, color: textColor() } } }
+  }
+});
+
+// Re-render charts on theme change
+const themeObserver = new MutationObserver(() => {
+  [attChart, revChart, brChart, subChart].forEach(c => c.update());
+});
+themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+</script>
+</body>
+</html>

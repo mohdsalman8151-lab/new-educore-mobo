@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Classes and Sections Configuration - EduCore SMS</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;900&family=IBM+Plex+Mono:wght@400;500;600&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../css/main.css">
+  <link rel="stylesheet" href="../../css/components.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+</head>
+<body>
+<div class="mobile-overlay" id="mobileOverlay" onclick="closeMobileSidebar()"></div>
+<header class="topbar">
+  <div class="logo-area">
+    <div class="logo-mark"><svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div>
+    <span class="logo-text">EduCore SMS</span>
+  </div>
+  <button class="sidebar-toggle" onclick="toggleSidebar()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round">
+      <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+    </svg>
+  </button>
+  <div class="tb-search">
+    <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+    <input type="text" placeholder="Search classes..." id="globalSearch" oninput="searchTableGlobal()">
+  </div>
+  <div class="tb-right">
+    <div class="tb-date" id="tb-date"></div>
+    <button class="dark-toggle" onclick="toggleDarkMode()">
+      <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/></svg>
+    </button>
+    <div class="dropdown-wrapper">
+      <div class="tb-btn" onclick="toggleNotif(event)" id="notifBtn">
+        <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        <div class="notif-dot"></div>
+      </div>
+      <div class="notif-dropdown" id="notifDropdown">
+        <div class="notif-header"><h4>Notifications</h4><span onclick="markAllRead()">Mark all read</span></div>
+        <div class="notif-item">
+          <div class="notif-icon" style="background:var(--warning)"><svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg></div>
+          <div class="notif-text"><p><strong>Fee dues</strong> - 48 students have outstanding dues</p><span>1 hour ago</span></div>
+          <div class="notif-unread"></div>
+        </div>
+        <div class="notif-item">
+          <div class="notif-icon" style="background:var(--info)"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>
+          <div class="notif-text"><p><strong>New admission</strong> - 5 new applications received</p><span>3 hours ago</span></div>
+          <div class="notif-unread"></div>
+        </div>
+        <div class="notif-item">
+          <div class="notif-icon" style="background:var(--success)"><svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/></svg></div>
+          <div class="notif-text"><p><strong>Attendance marked</strong> - All classes updated</p><span>Today 9:00 AM</span></div>
+        </div>
+        <div class="notif-footer"><a href="../../modules/communication/noticeboard.html">View all</a></div>
+      </div>
+    </div>
+    <div class="dropdown-wrapper">
+      <div class="tb-user" onclick="toggleUserDropdown(event)" id="userBtn">
+        <div class="avatar">SA</div>
+        <div class="tb-user-info">
+          <div class="tb-user-name">Super Admin</div>
+          <div class="tb-user-role">Administrator</div>
+        </div>
+      </div>
+      <div class="user-dropdown" id="userDropdown">
+        <div class="user-dd-header"><div class="user-dd-name">Super Admin</div><div class="user-dd-role">Administrator</div></div>
+        <a class="user-dd-item" href="../../modules/settings/school-profile.html">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v2M12 20v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M2 12h2M20 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+          Settings
+        </a>
+        <a class="user-dd-item danger" href="../../index.html">
+          <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+          Logout
+        </a>
+      </div>
+    </div>
+  </div>
+</header>
+<div class="layout" id="layout">
+  <nav class="sidebar" id="sidebar"><div id="sidebar-nav"></div></nav>
+  <main class="main">
+    <div class="breadcrumb">
+      <a href="../../index.html">Dashboard</a>
+      <span class="breadcrumb-sep">&#8250;</span>
+      <span>Classes & Sections</span>
+    </div>
+    <div class="page-header">
+      <div>
+        <h1>Classes & Sections</h1>
+        <div class="page-subtitle">Manage school classes, section boundaries, and assignments</div>
+      </div>
+      <div class="ph-actions">
+        <button class="btn btn-ghost" onclick="exportData()">
+          <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Export
+        </button>
+        <button class="btn btn-primary" onclick="openAddModal()">
+          <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Add Class / Section
+        </button>
+      </div>
+    </div>
+
+    <!-- Stats Grid -->
+    <div class="stats-grid">
+      <div class='stat-card' style='--c1:#0A3D62;--c2:#1a5276'>
+        <div class='stat-icon'>
+          <svg viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2'>
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+            <circle cx="9" cy="7" r="4"/>
+          </svg>
+        </div>
+        <div class='stat-body'>
+          <div class='stat-label'>Total Classes</div>
+          <div class='stat-value' id="statTotal">0</div>
+        </div>
+      </div>
+      <div class='stat-card' style='--c1:#16A085;--c2:#0e6655'>
+        <div class='stat-icon'>
+          <svg viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2'>
+            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+          </svg>
+        </div>
+        <div class='stat-body'>
+          <div class='stat-label'>Active Streams</div>
+          <div class='stat-value' id="statStreams">0</div>
+        </div>
+      </div>
+      <div class='stat-card' style='--c1:#F39C12;--c2:#d68910'>
+        <div class='stat-icon'>
+          <svg viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2'>
+            <circle cx="12" cy="12" r="10"/>
+            <polyline points="12 6 12 12 16 14"/>
+          </svg>
+        </div>
+        <div class='stat-body'>
+          <div class='stat-label'>Total Capacity</div>
+          <div class='stat-value' id="statCapacity">0</div>
+        </div>
+      </div>
+      <div class='stat-card' style='--c1:#8E44AD;--c2:#6c3483'>
+        <div class='stat-icon'>
+          <svg viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2'>
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+            <circle cx="12" cy="7" r="4"/>
+          </svg>
+        </div>
+        <div class='stat-body'>
+          <div class='stat-label'>Inactive Configs</div>
+          <div class='stat-value' id="statInactive">0</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Data Table -->
+    <div class="table-card">
+      <div class="card-padding d-flex justify-between align-center" style="padding: 0 0 0.5rem 0;">
+        <div class="card-title">Classes & Sections List</div>
+        <a href="#" class="view-all-link" style="font-family:'IBM Plex Mono',monospace;font-size:.73rem;color:var(--primary);font-weight:600" onclick="clearFilters(); return false;">Reset Filters</a>
+      </div>
+
+      <!-- Filters Section -->
+      <div class="filter-bar">
+        <div class="search-box">
+          <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          <input type="text" id="searchInput" placeholder="Search by class name..." oninput="filterData()">
+        </div>
+        <select class="filter-select" id="streamFilter" onchange="filterData()">
+          <option value="All">All Streams</option>
+          <option value="Science">Science</option>
+          <option value="Commerce">Commerce</option>
+          <option value="Arts">Arts</option>
+          <option value="N/A">General / NA</option>
+        </select>
+        <select class="filter-select" id="statusFilter" onchange="filterData()">
+          <option value="All">All Statuses</option>
+          <option value="Active">Active</option>
+          <option value="Inactive">Inactive</option>
+        </select>
+        <div class="filter-spacer"></div>
+        <button class="btn btn-ghost btn-sm" onclick="clearFilters()">Clear</button>
+      </div>
+
+      <div class="table-wrap">
+        <table id="dataTable">
+          <thead>
+            <tr>
+              <th><input type="checkbox" class="table-checkbox" id="chkAll" onclick="toggleAll(this)"></th>
+              <th>Class Code</th>
+              <th>Class Name</th>
+              <th>Section</th>
+              <th>Stream</th>
+              <th>Class Teacher</th>
+              <th>Student Capacity</th>
+              <th>Room No</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody">
+            <!-- Dynamically populated -->
+          </tbody>
+        </table>
+      </div>
+      <div class="table-footer">
+        <span class="table-info" id="tableInfo">Showing 0 records</span>
+        <div class="pagination">
+          <button class="page-btn" disabled><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
+          <button class="page-btn active">1</button>
+          <button class="page-btn">2</button>
+          <button class="page-btn"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Add/Edit Modal -->
+    <div class="modal-backdrop" id="classModal">
+      <div class="modal">
+        <div class="modal-header">
+          <div class="modal-title" id="modalTitle">Add Class / Section</div>
+          <button class="modal-close" onclick="closeModal('classModal')"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+        </div>
+        <div class="modal-body">
+          <input type="hidden" id="editClassId">
+          <div class="form-grid">
+            <div class="form-group">
+              <label class="form-label">Class Name <span class="req">*</span></label>
+              <input type="text" class="form-input" id="className" placeholder="e.g. Class 10" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Section <span class="req">*</span></label>
+              <input type="text" class="form-input" id="classSection" placeholder="e.g. A" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Stream</label>
+              <select class="form-select" id="classStream">
+                <option value="N/A">N/A</option>
+                <option value="Science">Science</option>
+                <option value="Commerce">Commerce</option>
+                <option value="Arts">Arts</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Class Teacher <span class="req">*</span></label>
+              <input type="text" class="form-input" id="classTeacher" placeholder="e.g. Mrs. Anita Desai" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Capacity <span class="req">*</span></label>
+              <input type="number" class="form-input" id="classCapacity" min="1" max="100" value="40" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Room Number</label>
+              <input type="text" class="form-input" id="classRoom" placeholder="e.g. Room 101">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Status</label>
+              <select class="form-select" id="classStatus">
+                <option value="Active">Active</option>
+                <option value="Inactive">Inactive</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-ghost" onclick="closeModal('classModal')">Cancel</button>
+          <button class="btn btn-primary" onclick="submitClass()">Save Config</button>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<script src="../../js/app.js"></script>
+<script src="../../js/sidebar.js"></script>
+<script>
+// Classes is mapped to activeItem 'subjects' in sidebar
+renderSidebar('classes', 'subjects', '../../');
+
+var CLASSES_KEY = 'educore-classes';
+var defaultClasses = [
+  {id: "CLS-1001", name: "Class 10", section: "A", stream: "N/A", teacher: "Mrs. Anita Desai", capacity: 40, room: "Room 101", status: "Active"},
+  {id: "CLS-1002", name: "Class 10", section: "B", stream: "N/A", teacher: "Mr. Suresh Raina", capacity: 40, room: "Room 102", status: "Active"},
+  {id: "CLS-1003", name: "Class 12", section: "A", stream: "Science", teacher: "Dr. Rakesh Sen", capacity: 35, room: "Room 201", status: "Active"},
+  {id: "CLS-1004", name: "Class 12", section: "B", stream: "Commerce", teacher: "Mrs. Priya Sharma", capacity: 35, room: "Room 202", status: "Active"},
+  {id: "CLS-1005", name: "Class 8", section: "A", stream: "N/A", teacher: "Ms. Kavita Shah", capacity: 45, room: "Room 104", status: "Inactive"}
+];
+
+var classes = [];
+
+function initClasses() {
+  var data = localStorage.getItem(CLASSES_KEY);
+  if (!data) {
+    classes = defaultClasses;
+    localStorage.setItem(CLASSES_KEY, JSON.stringify(classes));
+  } else {
+    classes = JSON.parse(data);
+  }
+  renderTable();
+}
+
+function showToast(msg, type) {
+  type = type || 'success';
+  var icons = { 
+    success:'<path d="M9 11l3 3L22 4"/>', 
+    error:'<path d="M18 6 6 18M6 6l12 12"/>', 
+    info:'<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>', 
+    warning:'<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>' 
+  };
+  var c = document.getElementById('toastContainer');
+  var t = document.createElement('div');
+  t.className = 'toast toast-' + type;
+  t.innerHTML = '<div class="toast-icon"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">'+icons[type]+'</svg></div><div class="toast-body"><div class="toast-title">'+(type.charAt(0).toUpperCase()+type.slice(1))+'</div><div class="toast-msg">'+msg+'</div></div>';
+  c.appendChild(t);
+  setTimeout(function(){t.classList.add('show');},10);
+  setTimeout(function(){t.classList.remove('show');setTimeout(function(){t.remove();},300);},3500);
+}
+
+function renderTable(dataList) {
+  var list = dataList || classes;
+  var tb = document.getElementById('tableBody');
+  tb.innerHTML = '';
+  
+  list.forEach(function(c) {
+    var badgeClass = c.status === 'Active' ? 'badge-green' : 'badge-red';
+    var streamBadge = c.stream === 'N/A' ? 'badge-gray' : 'badge-blue';
+
+    var tr = document.createElement('tr');
+    tr.innerHTML = '<td><input type="checkbox" class="table-checkbox row-chk" data-id="'+c.id+'"></td>' +
+      '<td class="td-mono">' + c.id + '</td>' +
+      '<td><div class="td-name">' + c.name + '</div></td>' +
+      '<td class="td-mono">' + c.section + '</td>' +
+      '<td><span class="badge ' + streamBadge + '">' + c.stream + '</span></td>' +
+      '<td>' + c.teacher + '</td>' +
+      '<td>' + c.capacity + '</td>' +
+      '<td class="td-mono">' + (c.room || 'N/A') + '</td>' +
+      '<td><span class="badge ' + badgeClass + '">' + c.status + '</span></td>' +
+      '<td>' +
+        '<div class="row-actions">' +
+          '<button class="btn-icon" onclick="viewRow(\''+c.id+'\')" title="View"><svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>' +
+          '<button class="btn-icon" onclick="editRow(\''+c.id+'\')" title="Edit"><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>' +
+          '<button class="btn-icon" onclick="deleteRow(\''+c.id+'\')" title="Delete"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button>' +
+        '</div>' +
+      '</td>';
+    tb.appendChild(tr);
+  });
+  
+  document.getElementById('tableInfo').textContent = 'Showing ' + list.length + ' of ' + classes.length + ' records';
+  updateStats();
+}
+
+function updateStats() {
+  var total = classes.length;
+  var streams = new Set(classes.map(c => c.stream).filter(s => s !== 'N/A')).size;
+  var totalCap = classes.reduce((sum, c) => sum + parseInt(c.capacity || 0), 0);
+  var inactive = classes.filter(c => c.status === 'Inactive').length;
+  
+  document.getElementById('statTotal').textContent = total;
+  document.getElementById('statStreams').textContent = streams;
+  document.getElementById('statCapacity').textContent = totalCap;
+  document.getElementById('statInactive').textContent = inactive;
+}
+
+function searchTableGlobal() {
+  var q = document.getElementById('globalSearch').value.toLowerCase();
+  var filtered = classes.filter(function(c) {
+    return c.name.toLowerCase().includes(q) || c.teacher.toLowerCase().includes(q) || c.id.toLowerCase().includes(q);
+  });
+  renderTable(filtered);
+}
+
+function filterData() {
+  var q = document.getElementById('searchInput').value.toLowerCase();
+  var stream = document.getElementById('streamFilter').value;
+  var status = document.getElementById('statusFilter').value;
+  
+  var filtered = classes.filter(function(c) {
+    var matchSearch = c.name.toLowerCase().includes(q) || c.teacher.toLowerCase().includes(q);
+    var matchStream = (stream === 'All' || c.stream === stream);
+    var matchStatus = (status === 'All' || c.status === status);
+    return matchSearch && matchStream && matchStatus;
+  });
+  
+  renderTable(filtered);
+}
+
+function clearFilters() {
+  document.getElementById('searchInput').value = '';
+  document.getElementById('streamFilter').value = 'All';
+  document.getElementById('statusFilter').value = 'All';
+  document.getElementById('globalSearch').value = '';
+  renderTable();
+}
+
+function toggleAll(cb) {
+  document.querySelectorAll('.row-chk').forEach(function(c){c.checked = cb.checked;});
+}
+
+function openAddModal() {
+  document.getElementById('modalTitle').textContent = 'Add Class / Section';
+  document.getElementById('editClassId').value = '';
+  document.getElementById('className').value = '';
+  document.getElementById('classSection').value = '';
+  document.getElementById('classStream').value = 'N/A';
+  document.getElementById('classTeacher').value = '';
+  document.getElementById('classCapacity').value = '40';
+  document.getElementById('classRoom').value = '';
+  document.getElementById('classStatus').value = 'Active';
+  openModal('classModal');
+}
+
+function editRow(id) {
+  var c = classes.find(x => x.id === id);
+  if (!c) return;
+  
+  document.getElementById('modalTitle').textContent = 'Edit Config: ' + c.name + ' - ' + c.section;
+  document.getElementById('editClassId').value = c.id;
+  document.getElementById('className').value = c.name;
+  document.getElementById('classSection').value = c.section;
+  document.getElementById('classStream').value = c.stream;
+  document.getElementById('classTeacher').value = c.teacher;
+  document.getElementById('classCapacity').value = c.capacity;
+  document.getElementById('classRoom').value = c.room || '';
+  document.getElementById('classStatus').value = c.status;
+  
+  openModal('classModal');
+}
+
+function viewRow(id) {
+  var c = classes.find(x => x.id === id);
+  if (!c) return;
+  alert('Class Configuration:\n\nClass ID: ' + c.id + '\nClass: ' + c.name + '\nSection: ' + c.section + '\nStream: ' + c.stream + '\nTeacher: ' + c.teacher + '\nCapacity: ' + c.capacity + '\nRoom: ' + (c.room || 'N/A') + '\nStatus: ' + c.status);
+}
+
+function deleteRow(id) {
+  if (confirm('Are you sure you want to delete class config ' + id + '?')) {
+    classes = classes.filter(x => x.id !== id);
+    localStorage.setItem(CLASSES_KEY, JSON.stringify(classes));
+    renderTable();
+    showToast('Class Config ' + id + ' deleted successfully', 'error');
+  }
+}
+
+function submitClass() {
+  var id = document.getElementById('editClassId').value;
+  var name = document.getElementById('className').value.trim();
+  var section = document.getElementById('classSection').value.trim();
+  var stream = document.getElementById('classStream').value;
+  var teacher = document.getElementById('classTeacher').value.trim();
+  var capacity = parseInt(document.getElementById('classCapacity').value);
+  var room = document.getElementById('classRoom').value.trim();
+  var status = document.getElementById('classStatus').value;
+  
+  if (!name || !section || !teacher || isNaN(capacity)) {
+    showToast('Please fill all required fields', 'error');
+    return;
+  }
+  
+  if (id) {
+    var index = classes.findIndex(x => x.id === id);
+    if (index > -1) {
+      classes[index].name = name;
+      classes[index].section = section;
+      classes[index].stream = stream;
+      classes[index].teacher = teacher;
+      classes[index].capacity = capacity;
+      classes[index].room = room;
+      classes[index].status = status;
+      showToast('Class configuration updated successfully');
+    }
+  } else {
+    var newId = 'CLS-' + (Math.floor(Math.random() * 9000) + 1000);
+    classes.push({
+      id: newId,
+      name: name,
+      section: section,
+      stream: stream,
+      teacher: teacher,
+      capacity: capacity,
+      room: room,
+      status: status
+    });
+    showToast('New class / section configuration created');
+  }
+  
+  localStorage.setItem(CLASSES_KEY, JSON.stringify(classes));
+  closeModal('classModal');
+  renderTable();
+}
+
+function exportData() {
+  showToast('Exporting classes config to CSV...', 'info');
+  var csv = 'ID,Class Name,Section,Stream,Teacher,Capacity,Room,Status\n';
+  classes.forEach(function(c){
+    csv += `"${c.id}","${c.name}","${c.section}","${c.stream}","${c.teacher}","${c.capacity}","${c.room || ''}","${c.status}"\n`;
+  });
+  var blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  var link = document.createElement("a");
+  var url = URL.createObjectURL(blob);
+  link.setAttribute("href", url);
+  link.setAttribute("download", "school_classes_config.csv");
+  link.style.visibility = 'hidden';
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+  initClasses();
+});
+</script>
+</body>
+</html>

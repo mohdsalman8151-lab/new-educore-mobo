@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admission Enquiries — EduCore SMS</title>
+  <meta name="description" content="Track and manage all admission enquiries for EduCore School Management System">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;900&family=IBM+Plex+Mono:wght@400;500;600&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../css/main.css">
+  <link rel="stylesheet" href="../../css/components.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+</head>
+<body>
+<div class="mobile-overlay" id="mobileOverlay" onclick="closeMobileSidebar()"></div>
+<header class="topbar">
+  <div class="logo-area">
+    <div class="logo-mark"><svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div>
+    <span class="logo-text">EduCore SMS</span>
+  </div>
+  <button class="sidebar-toggle" onclick="toggleSidebar()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round">
+      <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+    </svg>
+  </button>
+  <div class="tb-search">
+    <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+    <input type="text" placeholder="Search enquiries by name, class, contact..." id="globalSearch">
+  </div>
+  <div class="tb-right">
+    <div class="tb-date" id="tb-date"></div>
+    <button class="dark-toggle" onclick="toggleDarkMode()">
+      <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/></svg>
+    </button>
+    <div class="dropdown-wrapper">
+      <div class="tb-btn" onclick="toggleNotif(event)" id="notifBtn" title="Notifications">
+        <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        <div class="notif-dot"></div>
+      </div>
+      <div class="notif-dropdown" id="notifDropdown">
+        <div class="notif-header"><h4>Notifications</h4><span onclick="markAllRead()">Mark all read</span></div>
+        <div class="notif-item">
+          <div class="notif-icon" style="background:var(--info)"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div>
+          <div class="notif-text"><p><strong>12 new enquiries</strong> received today for 2026-27</p><span>30 min ago</span></div>
+          <div class="notif-unread"></div>
+        </div>
+        <div class="notif-item">
+          <div class="notif-icon" style="background:var(--warning)"><svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg></div>
+          <div class="notif-text"><p><strong>Follow-up pending</strong> — 34 enquiries not contacted in 3+ days</p><span>2 hours ago</span></div>
+          <div class="notif-unread"></div>
+        </div>
+        <div class="notif-item">
+          <div class="notif-icon" style="background:var(--success)"><svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/></svg></div>
+          <div class="notif-text"><p><strong>Converted</strong> — 8 enquiries moved to admission this week</p><span>Today 9:00 AM</span></div>
+        </div>
+        <div class="notif-footer"><a href="../../modules/communication/noticeboard.html">View all</a></div>
+      </div>
+    </div>
+    <div class="dropdown-wrapper">
+      <div class="tb-user" onclick="toggleUserDropdown(event)" id="userBtn">
+        <div class="avatar">SA</div>
+        <div class="tb-user-info">
+          <div class="tb-user-name">Super Admin</div>
+          <div class="tb-user-role">Administrator</div>
+        </div>
+      </div>
+      <div class="user-dropdown" id="userDropdown">
+        <div class="user-dd-header"><div class="user-dd-name">Super Admin</div><div class="user-dd-role">Administrator · EduCore SMS</div></div>
+        <a class="user-dd-item" href="../../modules/settings/school-profile.html"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v2M12 20v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M2 12h2M20 12h2"/></svg>Settings</a>
+        <a class="user-dd-item danger" href="../../index.html"><svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>Logout</a>
+      </div>
+    </div>
+  </div>
+</header>
+<div class="layout" id="layout">
+  <nav class="sidebar" id="sidebar"><div id="sidebar-nav"></div></nav>
+  <main class="main">
+    <div class="breadcrumb">
+      <a href="../../index.html">Dashboard</a>
+      <span class="breadcrumb-sep">&#8250;</span>
+      <span>Admission</span>
+      <span class="breadcrumb-sep">&#8250;</span>
+      <span>Enquiries</span>
+    </div>
+    <div class="page-header">
+      <div>
+        <h1>Admission Enquiries</h1>
+        <div class="page-subtitle">Academic Year 2026–27 · Enquiry Register</div>
+      </div>
+      <div class="ph-actions">
+        <button class="btn btn-ghost" onclick="exportData()">
+          <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Export
+        </button>
+        <button class="btn btn-primary" id="addEnqBtn" onclick="openModal('addEnqModal')">
+          <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Add Enquiry
+        </button>
+      </div>
+    </div>
+
+    <!-- KPI Cards -->
+    <div class="stats-grid">
+      <div class="stat-card" style="--c1:#0A3D62;--c2:#1a5276">
+        <div class="stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div>
+        <div class="stat-body">
+          <div class="stat-label">Total Enquiries</div>
+          <div class="stat-value" data-count="347">347</div>
+          <div class="stat-change up">▲ 12 today</div>
+        </div>
+      </div>
+      <div class="stat-card" style="--c1:#F39C12;--c2:#d68910">
+        <div class="stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+        <div class="stat-body">
+          <div class="stat-label">Pending Follow-up</div>
+          <div class="stat-value" data-count="89">89</div>
+          <div class="stat-change down">▼ Need attention</div>
+        </div>
+      </div>
+      <div class="stat-card" style="--c1:#16A085;--c2:#0e6655">
+        <div class="stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M9 11l3 3L22 4"/></svg></div>
+        <div class="stat-body">
+          <div class="stat-label">Converted</div>
+          <div class="stat-value" data-count="143">143</div>
+          <div class="stat-change up">▲ 41.2% conversion</div>
+        </div>
+      </div>
+      <div class="stat-card" style="--c1:#8E44AD;--c2:#6c3483">
+        <div class="stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg></div>
+        <div class="stat-body">
+          <div class="stat-label">Not Interested</div>
+          <div class="stat-value" data-count="115">115</div>
+          <div class="stat-change neu">This session</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Filter Bar -->
+    <div class="filter-bar">
+      <div class="search-box">
+        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input type="text" id="searchInput" placeholder="Search by name, contact or class..." oninput="searchTable()">
+      </div>
+      <select class="filter-select" id="statusFilter" onchange="filterTable()">
+        <option value="">All Status</option>
+        <option>New</option>
+        <option>Contacted</option>
+        <option>Follow-up</option>
+        <option>Converted</option>
+        <option>Not Interested</option>
+      </select>
+      <select class="filter-select" id="classFilter" onchange="filterTable()">
+        <option value="">All Classes</option>
+        <option>Nursery</option>
+        <option>LKG</option>
+        <option>UKG</option>
+        <option>Class I</option>
+        <option>Class II</option>
+        <option>Class III</option>
+        <option>Class IV</option>
+        <option>Class V</option>
+        <option>Class VI</option>
+        <option>Class VII</option>
+        <option>Class VIII</option>
+        <option>Class IX</option>
+        <option>Class X</option>
+        <option>Class XI</option>
+        <option>Class XII</option>
+      </select>
+      <select class="filter-select" id="sourceFilter" onchange="filterTable()">
+        <option value="">All Sources</option>
+        <option>Walk-in</option>
+        <option>Phone</option>
+        <option>Website</option>
+        <option>Referral</option>
+        <option>Social Media</option>
+      </select>
+      <div class="filter-spacer"></div>
+      <button class="btn btn-ghost btn-sm" onclick="clearFilters()">Clear Filters</button>
+    </div>
+
+    <!-- Table -->
+    <div class="table-card">
+      <div class="table-wrap">
+        <table id="dataTable">
+          <thead>
+            <tr>
+              <th><input type="checkbox" class="table-checkbox" id="chkAll" onclick="toggleAll(this)"></th>
+              <th onclick="sortCol('enq')">Enq. No ↕</th>
+              <th onclick="sortCol('name')">Student Name ↕</th>
+              <th onclick="sortCol('class')">Class Sought ↕</th>
+              <th onclick="sortCol('parent')">Parent / Guardian</th>
+              <th onclick="sortCol('contact')">Contact</th>
+              <th onclick="sortCol('source')">Source</th>
+              <th onclick="sortCol('date')">Date ↕</th>
+              <th onclick="sortCol('followup')">Next Follow-up</th>
+              <th onclick="sortCol('status')">Status ↕</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody">
+            <tr>
+              <td><input type="checkbox" class="table-checkbox row-chk"></td>
+              <td class="td-mono">ENQ-2026-001</td>
+              <td><div class="td-name">Aarav Sharma</div><div class="td-sub">DOB: 12 Mar 2019</div></td>
+              <td><span class="badge badge-blue">Class I</span></td>
+              <td><div class="td-name">Rajesh Sharma</div><div class="td-sub">Father</div></td>
+              <td class="td-mono">98765 43210</td>
+              <td><span class="badge badge-purple">Referral</span></td>
+              <td class="td-mono">05 Jun 2026</td>
+              <td class="td-mono">10 Jun 2026</td>
+              <td><span class="badge badge-yellow">Follow-up</span></td>
+              <td><div class="row-actions"><button class="btn-icon" onclick="viewEnquiry(this)" title="View"><svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button><button class="btn-icon" onclick="editRow(this)" title="Edit"><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button><button class="btn-icon" onclick="convertEnquiry(this)" title="Convert to Admission"><svg viewBox="0 0 24 24"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg></button></div></td>
+            </tr>
+            <tr>
+              <td><input type="checkbox" class="table-checkbox row-chk"></td>
+              <td class="td-mono">ENQ-2026-002</td>
+              <td><div class="td-name">Priya Mehta</div><div class="td-sub">DOB: 08 Jul 2018</div></td>
+              <td><span class="badge badge-blue">Class II</span></td>
+              <td><div class="td-name">Sunita Mehta</div><div class="td-sub">Mother</div></td>
+              <td class="td-mono">87654 32109</td>
+              <td><span class="badge badge-info">Website</span></td>
+              <td class="td-mono">05 Jun 2026</td>
+              <td class="td-mono">08 Jun 2026</td>
+              <td><span class="badge badge-blue">Contacted</span></td>
+              <td><div class="row-actions"><button class="btn-icon" onclick="viewEnquiry(this)" title="View"><svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button><button class="btn-icon" onclick="editRow(this)" title="Edit"><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button><button class="btn-icon" onclick="convertEnquiry(this)" title="Convert to Admission"><svg viewBox="0 0 24 24"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg></button></div></td>
+            </tr>
+            <tr>
+              <td><input type="checkbox" class="table-checkbox row-chk"></td>
+              <td class="td-mono">ENQ-2026-003</td>
+              <td><div class="td-name">Rohan Kumar</div><div class="td-sub">DOB: 22 Jan 2013</div></td>
+              <td><span class="badge badge-orange">Class VI</span></td>
+              <td><div class="td-name">Anil Kumar</div><div class="td-sub">Father</div></td>
+              <td class="td-mono">76543 21098</td>
+              <td><span class="badge badge-green">Walk-in</span></td>
+              <td class="td-mono">04 Jun 2026</td>
+              <td class="td-mono">—</td>
+              <td><span class="badge badge-green">Converted</span></td>
+              <td><div class="row-actions"><button class="btn-icon" onclick="viewEnquiry(this)" title="View"><svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button><button class="btn-icon" onclick="editRow(this)" title="Edit"><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button><button class="btn-icon" onclick="convertEnquiry(this)" title="View Admission"><svg viewBox="0 0 24 24"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg></button></div></td>
+            </tr>
+            <tr>
+              <td><input type="checkbox" class="table-checkbox row-chk"></td>
+              <td class="td-mono">ENQ-2026-004</td>
+              <td><div class="td-name">Ananya Reddy</div><div class="td-sub">DOB: 15 Oct 2010</div></td>
+              <td><span class="badge badge-purple">Class IX</span></td>
+              <td><div class="td-name">Venkat Reddy</div><div class="td-sub">Father</div></td>
+              <td class="td-mono">65432 10987</td>
+              <td><span class="badge badge-warning">Phone</span></td>
+              <td class="td-mono">03 Jun 2026</td>
+              <td class="td-mono">11 Jun 2026</td>
+              <td><span class="badge badge-yellow">Follow-up</span></td>
+              <td><div class="row-actions"><button class="btn-icon" onclick="viewEnquiry(this)" title="View"><svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button><button class="btn-icon" onclick="editRow(this)" title="Edit"><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button><button class="btn-icon" onclick="convertEnquiry(this)" title="Convert to Admission"><svg viewBox="0 0 24 24"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg></button></div></td>
+            </tr>
+            <tr>
+              <td><input type="checkbox" class="table-checkbox row-chk"></td>
+              <td class="td-mono">ENQ-2026-005</td>
+              <td><div class="td-name">Kavya Nair</div><div class="td-sub">DOB: 30 Apr 2009</div></td>
+              <td><span class="badge badge-purple">Class XI</span></td>
+              <td><div class="td-name">Suresh Nair</div><div class="td-sub">Father</div></td>
+              <td class="td-mono">54321 09876</td>
+              <td><span class="badge badge-info">Website</span></td>
+              <td class="td-mono">02 Jun 2026</td>
+              <td class="td-mono">—</td>
+              <td><span class="badge badge-red">Not Interested</span></td>
+              <td><div class="row-actions"><button class="btn-icon" onclick="viewEnquiry(this)" title="View"><svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button><button class="btn-icon" onclick="editRow(this)" title="Edit"><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button><button class="btn-icon" onclick="deleteRow(this)" title="Delete"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button></div></td>
+            </tr>
+            <tr>
+              <td><input type="checkbox" class="table-checkbox row-chk"></td>
+              <td class="td-mono">ENQ-2026-006</td>
+              <td><div class="td-name">Ishaan Joshi</div><div class="td-sub">DOB: 18 Sep 2020</div></td>
+              <td><span class="badge badge-blue">Nursery</span></td>
+              <td><div class="td-name">Priya Joshi</div><div class="td-sub">Mother</div></td>
+              <td class="td-mono">43210 98765</td>
+              <td><span class="badge badge-purple">Social Media</span></td>
+              <td class="td-mono">06 Jun 2026</td>
+              <td class="td-mono">09 Jun 2026</td>
+              <td><span class="badge badge-info">New</span></td>
+              <td><div class="row-actions"><button class="btn-icon" onclick="viewEnquiry(this)" title="View"><svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button><button class="btn-icon" onclick="editRow(this)" title="Edit"><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button><button class="btn-icon" onclick="convertEnquiry(this)" title="Convert to Admission"><svg viewBox="0 0 24 24"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg></button></div></td>
+            </tr>
+            <tr>
+              <td><input type="checkbox" class="table-checkbox row-chk"></td>
+              <td class="td-mono">ENQ-2026-007</td>
+              <td><div class="td-name">Diya Patel</div><div class="td-sub">DOB: 11 Dec 2015</div></td>
+              <td><span class="badge badge-orange">Class IV</span></td>
+              <td><div class="td-name">Hitesh Patel</div><div class="td-sub">Father</div></td>
+              <td class="td-mono">32109 87654</td>
+              <td><span class="badge badge-purple">Referral</span></td>
+              <td class="td-mono">04 Jun 2026</td>
+              <td class="td-mono">—</td>
+              <td><span class="badge badge-green">Converted</span></td>
+              <td><div class="row-actions"><button class="btn-icon" onclick="viewEnquiry(this)" title="View"><svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button><button class="btn-icon" onclick="editRow(this)" title="Edit"><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button><button class="btn-icon" onclick="convertEnquiry(this)" title="View Admission"><svg viewBox="0 0 24 24"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg></button></div></td>
+            </tr>
+            <tr>
+              <td><input type="checkbox" class="table-checkbox row-chk"></td>
+              <td class="td-mono">ENQ-2026-008</td>
+              <td><div class="td-name">Arjun Verma</div><div class="td-sub">DOB: 25 Feb 2012</div></td>
+              <td><span class="badge badge-orange">Class VII</span></td>
+              <td><div class="td-name">Deepak Verma</div><div class="td-sub">Father</div></td>
+              <td class="td-mono">21098 76543</td>
+              <td><span class="badge badge-green">Walk-in</span></td>
+              <td class="td-mono">07 Jun 2026</td>
+              <td class="td-mono">12 Jun 2026</td>
+              <td><span class="badge badge-blue">Contacted</span></td>
+              <td><div class="row-actions"><button class="btn-icon" onclick="viewEnquiry(this)" title="View"><svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button><button class="btn-icon" onclick="editRow(this)" title="Edit"><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button><button class="btn-icon" onclick="convertEnquiry(this)" title="Convert to Admission"><svg viewBox="0 0 24 24"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg></button></div></td>
+            </tr>
+            <tr>
+              <td><input type="checkbox" class="table-checkbox row-chk"></td>
+              <td class="td-mono">ENQ-2026-009</td>
+              <td><div class="td-name">Sana Khan</div><div class="td-sub">DOB: 03 Jun 2011</div></td>
+              <td><span class="badge badge-orange">Class VIII</span></td>
+              <td><div class="td-name">Imran Khan</div><div class="td-sub">Father</div></td>
+              <td class="td-mono">10987 65432</td>
+              <td><span class="badge badge-warning">Phone</span></td>
+              <td class="td-mono">01 Jun 2026</td>
+              <td class="td-mono">—</td>
+              <td><span class="badge badge-green">Converted</span></td>
+              <td><div class="row-actions"><button class="btn-icon" onclick="viewEnquiry(this)" title="View"><svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button><button class="btn-icon" onclick="editRow(this)" title="Edit"><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button><button class="btn-icon" onclick="convertEnquiry(this)" title="View Admission"><svg viewBox="0 0 24 24"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg></button></div></td>
+            </tr>
+            <tr>
+              <td><input type="checkbox" class="table-checkbox row-chk"></td>
+              <td class="td-mono">ENQ-2026-010</td>
+              <td><div class="td-name">Mihir Gupta</div><div class="td-sub">DOB: 17 Aug 2014</div></td>
+              <td><span class="badge badge-blue">Class V</span></td>
+              <td><div class="td-name">Manish Gupta</div><div class="td-sub">Father</div></td>
+              <td class="td-mono">09876 54321</td>
+              <td><span class="badge badge-purple">Referral</span></td>
+              <td class="td-mono">07 Jun 2026</td>
+              <td class="td-mono">13 Jun 2026</td>
+              <td><span class="badge badge-info">New</span></td>
+              <td><div class="row-actions"><button class="btn-icon" onclick="viewEnquiry(this)" title="View"><svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button><button class="btn-icon" onclick="editRow(this)" title="Edit"><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button><button class="btn-icon" onclick="convertEnquiry(this)" title="Convert to Admission"><svg viewBox="0 0 24 24"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg></button></div></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="table-footer">
+        <span class="table-info" id="tableInfo">Showing 10 of 347 records</span>
+        <div class="pagination">
+          <button class="page-btn"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
+          <button class="page-btn active">1</button>
+          <button class="page-btn">2</button>
+          <button class="page-btn">3</button>
+          <button class="page-btn">…</button>
+          <button class="page-btn">35</button>
+          <button class="page-btn"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Add Enquiry Modal -->
+    <div class="modal-backdrop" id="addEnqModal">
+      <div class="modal" style="max-width:680px">
+        <div class="modal-header">
+          <div class="modal-title">Register New Enquiry</div>
+          <button class="modal-close" onclick="closeModal('addEnqModal')"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+        </div>
+        <div class="modal-body">
+          <div class="alert alert-info"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>Fields marked * are required. Enquiry number will be auto-generated.</div>
+          <div class="form-grid" style="margin-top:1rem">
+            <div class="form-group"><label class="form-label">Student Name <span class="req">*</span></label><input type="text" class="form-input" id="addStudentName" placeholder="Full name of student"></div>
+            <div class="form-group"><label class="form-label">Date of Birth <span class="req">*</span></label><input type="date" class="form-input" id="addDOB"></div>
+            <div class="form-group"><label class="form-label">Class Sought <span class="req">*</span></label><select class="form-select" id="addClass"><option value="">Select Class</option><option>Nursery</option><option>LKG</option><option>UKG</option><option>Class I</option><option>Class II</option><option>Class III</option><option>Class IV</option><option>Class V</option><option>Class VI</option><option>Class VII</option><option>Class VIII</option><option>Class IX</option><option>Class X</option><option>Class XI – Science</option><option>Class XI – Commerce</option><option>Class XII – Science</option><option>Class XII – Commerce</option></select></div>
+            <div class="form-group"><label class="form-label">Enquiry Source <span class="req">*</span></label><select class="form-select"><option value="">Select Source</option><option>Walk-in</option><option>Phone</option><option>Website</option><option>Referral</option><option>Social Media</option><option>Advertisement</option></select></div>
+            <div class="form-group"><label class="form-label">Parent / Guardian Name <span class="req">*</span></label><input type="text" class="form-input" id="addParent" placeholder="Father / Mother / Guardian"></div>
+            <div class="form-group"><label class="form-label">Relation</label><select class="form-select"><option>Father</option><option>Mother</option><option>Guardian</option></select></div>
+            <div class="form-group"><label class="form-label">Contact Number <span class="req">*</span></label><input type="tel" class="form-input" id="addContact" placeholder="+91 XXXXX XXXXX"></div>
+            <div class="form-group"><label class="form-label">Alternate Contact</label><input type="tel" class="form-input" placeholder="+91 XXXXX XXXXX"></div>
+            <div class="form-group"><label class="form-label">Email Address</label><input type="email" class="form-input" placeholder="parent@email.com"></div>
+            <div class="form-group"><label class="form-label">Next Follow-up Date</label><input type="date" class="form-input"></div>
+            <div class="form-group form-full"><label class="form-label">Previous School</label><input type="text" class="form-input" placeholder="Name of previous school (if applicable)"></div>
+            <div class="form-group form-full"><label class="form-label">Remarks</label><textarea class="form-textarea" placeholder="Additional notes or specific requirements..."></textarea></div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-ghost" onclick="closeModal('addEnqModal')">Cancel</button>
+          <button class="btn btn-primary" onclick="submitEnquiry()">Save Enquiry</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- View Enquiry Modal -->
+    <div class="modal-backdrop" id="viewEnqModal">
+      <div class="modal" style="max-width:600px">
+        <div class="modal-header">
+          <div class="modal-title">Enquiry Details — ENQ-2026-001</div>
+          <button class="modal-close" onclick="closeModal('viewEnqModal')"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+        </div>
+        <div class="modal-body">
+          <div class="info-grid">
+            <div class="info-item"><div class="info-label">Enquiry No</div><div class="info-value td-mono">ENQ-2026-001</div></div>
+            <div class="info-item"><div class="info-label">Status</div><div class="info-value"><span class="badge badge-yellow">Follow-up</span></div></div>
+            <div class="info-item"><div class="info-label">Student Name</div><div class="info-value">Aarav Sharma</div></div>
+            <div class="info-item"><div class="info-label">Date of Birth</div><div class="info-value">12 Mar 2019 (Age: 7)</div></div>
+            <div class="info-item"><div class="info-label">Class Sought</div><div class="info-value"><span class="badge badge-blue">Class I</span></div></div>
+            <div class="info-item"><div class="info-label">Enquiry Source</div><div class="info-value"><span class="badge badge-purple">Referral</span></div></div>
+            <div class="info-item"><div class="info-label">Parent / Guardian</div><div class="info-value">Rajesh Sharma (Father)</div></div>
+            <div class="info-item"><div class="info-label">Contact</div><div class="info-value td-mono">+91 98765 43210</div></div>
+            <div class="info-item"><div class="info-label">Enquiry Date</div><div class="info-value">05 Jun 2026</div></div>
+            <div class="info-item"><div class="info-label">Next Follow-up</div><div class="info-value">10 Jun 2026</div></div>
+            <div class="info-item form-full"><div class="info-label">Remarks</div><div class="info-value">Referred by existing parent Mr. Vivek Sharma (ADM-1247). Interested in Science stream. Needs transportation info.</div></div>
+          </div>
+          <div style="margin-top:1.25rem;border-top:1px solid var(--border);padding-top:1rem">
+            <div style="font-weight:600;margin-bottom:.75rem;font-size:.9rem">Follow-up Timeline</div>
+            <div style="display:flex;flex-direction:column;gap:.5rem">
+              <div style="display:flex;gap:1rem;align-items:flex-start"><div class="td-mono" style="min-width:90px;font-size:.78rem;color:var(--text-muted)">05 Jun 2026</div><div style="font-size:.85rem">Initial enquiry received via referral. Shared school brochure and fee structure.</div></div>
+              <div style="display:flex;gap:1rem;align-items:flex-start"><div class="td-mono" style="min-width:90px;font-size:.78rem;color:var(--text-muted)">07 Jun 2026</div><div style="font-size:.85rem">Called parent — not available. Left voice message. Scheduled callback for 10 Jun.</div></div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-ghost" onclick="closeModal('viewEnqModal')">Close</button>
+          <button class="btn btn-primary" onclick="closeModal('viewEnqModal');openModal('addEnqModal')">Edit Enquiry</button>
+          <button class="btn btn-accent" onclick="closeModal('viewEnqModal');showToast('Moving to Admission Form...','info');setTimeout(()=>window.location.href='form.html',1000)">Convert to Admission</button>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+<div class="toast-container" id="toastContainer"></div>
+<script src="../../js/app.js"></script>
+<script src="../../js/sidebar.js"></script>
+<script>
+renderSidebar('admission-mod','adm-enquiry','../../');
+function showToast(msg, type) {
+  type = type || 'success';
+  var icons = { success:'<path d="M9 11l3 3L22 4"/>', error:'<path d="M18 6 6 18M6 6l12 12"/>', info:'<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>', warning:'<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>' };
+  var c = document.getElementById('toastContainer');
+  var t = document.createElement('div');
+  t.className = 'toast toast-' + type;
+  t.innerHTML = '<div class="toast-icon"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">'+icons[type]+'</svg></div><div class="toast-body"><div class="toast-title">'+(type.charAt(0).toUpperCase()+type.slice(1))+'</div><div class="toast-msg">'+msg+'</div></div>';
+  c.appendChild(t);
+  setTimeout(function(){t.classList.add('show');},10);
+  setTimeout(function(){t.classList.remove('show');setTimeout(function(){t.remove();},300);},3500);
+}
+function openModal(id) { var m=document.getElementById(id); if(m) m.classList.add('open'); }
+function closeModal(id) { var m=document.getElementById(id); if(m) m.classList.remove('open'); }
+document.addEventListener('click', function(e) { if(e.target.classList.contains('modal-backdrop')) e.target.classList.remove('open'); });
+function searchTable() {
+  var q = document.getElementById('searchInput').value.toLowerCase();
+  var rows = document.querySelectorAll('#tableBody tr');
+  var v = 0;
+  rows.forEach(function(r){ var s=r.textContent.toLowerCase().includes(q); r.style.display=s?'':'none'; if(s)v++; });
+  document.getElementById('tableInfo').textContent = 'Showing '+v+' of 347 records';
+}
+function filterTable() { searchTable(); }
+function clearFilters() {
+  document.getElementById('searchInput').value='';
+  document.getElementById('statusFilter').value='';
+  document.getElementById('classFilter').value='';
+  document.getElementById('sourceFilter').value='';
+  searchTable();
+}
+function toggleAll(cb) { document.querySelectorAll('.row-chk').forEach(function(c){c.checked=cb.checked;}); }
+function viewEnquiry(btn) { openModal('viewEnqModal'); }
+function editRow(btn) { openModal('addEnqModal'); }
+function deleteRow(btn) { if(confirm('Remove this enquiry record?')) { btn.closest('tr').style.opacity='0.4'; showToast('Enquiry removed','error'); } }
+function convertEnquiry(btn) { showToast('Redirecting to Admission Form...','info'); setTimeout(function(){window.location.href='form.html';},1000); }
+function submitEnquiry() {
+  var n=document.getElementById('addStudentName').value;
+  var cls=document.getElementById('addClass').value;
+  var contact=document.getElementById('addContact').value;
+  if(!n||!cls||!contact){showToast('Please fill all required fields','error');return;}
+  closeModal('addEnqModal');
+  showToast('Enquiry ENQ-2026-'+String(Math.floor(Math.random()*900)+100)+' registered successfully!','success');
+}
+function sortCol(k) { showToast('Sorted by '+k,'info'); }
+function exportData() { showToast('Preparing Excel export...','info'); }
+(function(){ document.getElementById('tableInfo').textContent='Showing 10 of 347 records'; })();
+</script>
+</body>
+</html>

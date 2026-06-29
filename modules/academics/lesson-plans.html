@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lesson Plans Tracking - EduCore SMS</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;900&family=IBM+Plex+Mono:wght@400;500;600&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../css/main.css">
+  <link rel="stylesheet" href="../../css/components.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+</head>
+<body>
+<div class="mobile-overlay" id="mobileOverlay" onclick="closeMobileSidebar()"></div>
+<header class="topbar">
+  <div class="logo-area">
+    <div class="logo-mark"><svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div>
+    <span class="logo-text">EduCore SMS</span>
+  </div>
+  <button class="sidebar-toggle" onclick="toggleSidebar()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round">
+      <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+    </svg>
+  </button>
+  <div class="tb-search">
+    <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+    <input type="text" placeholder="Search lesson plans..." id="globalSearch" oninput="searchTableGlobal()">
+  </div>
+  <div class="tb-right">
+    <div class="tb-date" id="tb-date"></div>
+    <button class="dark-toggle" onclick="toggleDarkMode()">
+      <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/></svg>
+    </button>
+    <div class="dropdown-wrapper">
+      <div class="tb-btn" onclick="toggleNotif(event)" id="notifBtn">
+        <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        <div class="notif-dot"></div>
+      </div>
+      <div class="notif-dropdown" id="notifDropdown">
+        <div class="notif-header"><h4>Notifications</h4><span onclick="markAllRead()">Mark all read</span></div>
+        <div class="notif-item">
+          <div class="notif-icon" style="background:var(--warning)"><svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg></div>
+          <div class="notif-text"><p><strong>Fee dues</strong> - 48 students have outstanding dues</p><span>1 hour ago</span></div>
+          <div class="notif-unread"></div>
+        </div>
+        <div class="notif-item">
+          <div class="notif-icon" style="background:var(--info)"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>
+          <div class="notif-text"><p><strong>New admission</strong> - 5 new applications received</p><span>3 hours ago</span></div>
+          <div class="notif-unread"></div>
+        </div>
+        <div class="notif-item">
+          <div class="notif-icon" style="background:var(--success)"><svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/></svg></div>
+          <div class="notif-text"><p><strong>Attendance marked</strong> - All classes updated</p><span>Today 9:00 AM</span></div>
+        </div>
+        <div class="notif-footer"><a href="../../modules/communication/noticeboard.html">View all</a></div>
+      </div>
+    </div>
+    <div class="dropdown-wrapper">
+      <div class="tb-user" onclick="toggleUserDropdown(event)" id="userBtn">
+        <div class="avatar">SA</div>
+        <div class="tb-user-info">
+          <div class="tb-user-name">Super Admin</div>
+          <div class="tb-user-role">Administrator</div>
+        </div>
+      </div>
+      <div class="user-dropdown" id="userDropdown">
+        <div class="user-dd-header"><div class="user-dd-name">Super Admin</div><div class="user-dd-role">Administrator</div></div>
+        <a class="user-dd-item" href="../../modules/settings/school-profile.html">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v2M12 20v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M2 12h2M20 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+          Settings
+        </a>
+        <a class="user-dd-item danger" href="../../index.html">
+          <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+          Logout
+        </a>
+      </div>
+    </div>
+  </div>
+</header>
+<div class="layout" id="layout">
+  <nav class="sidebar" id="sidebar"><div id="sidebar-nav"></div></nav>
+  <main class="main">
+    <div class="breadcrumb">
+      <a href="../../index.html">Dashboard</a>
+      <span class="breadcrumb-sep">&#8250;</span>
+      <span>Lesson Plans</span>
+    </div>
+    <div class="page-header">
+      <div>
+        <h1>Lesson Plans</h1>
+        <div class="page-subtitle">Syllabus pacing details, chapter coverage plans, and approval pipelines</div>
+      </div>
+      <div class="ph-actions">
+        <button class="btn btn-ghost" onclick="exportData()">
+          <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Export
+        </button>
+        <button class="btn btn-primary" onclick="openAddModal()">
+          <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Create Lesson Plan
+        </button>
+      </div>
+    </div>
+
+    <!-- Stats Grid -->
+    <div class="stats-grid">
+      <div class='stat-card' style='--c1:#0A3D62;--c2:#1a5276'>
+        <div class='stat-icon'>
+          <svg viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2'>
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>
+          </svg>
+        </div>
+        <div class='stat-body'>
+          <div class='stat-label'>Total Plans</div>
+          <div class='stat-value' id="statTotal">0</div>
+        </div>
+      </div>
+      <div class='stat-card' style='--c1:#16A085;--c2:#0e6655'>
+        <div class='stat-icon'>
+          <svg viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2'>
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
+          </svg>
+        </div>
+        <div class='stat-body'>
+          <div class='stat-label'>Approved Plans</div>
+          <div class='stat-value' id="statApproved">0</div>
+        </div>
+      </div>
+      <div class='stat-card' style='--c1:#F39C12;--c2:#d68910'>
+        <div class='stat-icon'>
+          <svg viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2'>
+            <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+          </svg>
+        </div>
+        <div class='stat-body'>
+          <div class='stat-label'>Pending Review</div>
+          <div class='stat-value' id="statPending">0</div>
+        </div>
+      </div>
+      <div class='stat-card' style='--c1:#8E44AD;--c2:#6c3483'>
+        <div class='stat-icon'>
+          <svg viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2'>
+            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+          </svg>
+        </div>
+        <div class='stat-body'>
+          <div class='stat-label'>Drafts</div>
+          <div class='stat-value' id="statDrafts">0</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Filters Section -->
+    <div class="filter-bar">
+      <div class="search-box">
+        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input type="text" id="searchInput" placeholder="Search by topic or chapter..." oninput="filterData()">
+      </div>
+      <select class="filter-select" id="statusFilter" onchange="filterData()">
+        <option value="All">All Statuses</option>
+        <option value="Approved">Approved</option>
+        <option value="Pending">Pending</option>
+        <option value="Draft">Draft</option>
+      </select>
+      <div class="filter-spacer"></div>
+      <button class="btn btn-ghost btn-sm" onclick="clearFilters()">Clear</button>
+    </div>
+
+    <!-- Data Table -->
+    <div class="table-card">
+      <div class="table-wrap">
+        <table id="dataTable">
+          <thead>
+            <tr>
+              <th><input type="checkbox" class="table-checkbox" id="chkAll" onclick="toggleAll(this)"></th>
+              <th>Plan ID</th>
+              <th>Chapter / Topic</th>
+              <th>Subject</th>
+              <th>Class</th>
+              <th>Duration</th>
+              <th>Est. Dates</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody">
+            <!-- Dynamically populated -->
+          </tbody>
+        </table>
+      </div>
+      <div class="table-footer">
+        <span class="table-info" id="tableInfo">Showing 0 records</span>
+      </div>
+    </div>
+
+    <!-- Add/Edit Modal -->
+    <div class="modal-backdrop" id="lessonPlanModal">
+      <div class="modal">
+        <div class="modal-header">
+          <div class="modal-title" id="modalTitle">Create Lesson Plan</div>
+          <button class="modal-close" onclick="closeModal('lessonPlanModal')"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+        </div>
+        <div class="modal-body">
+          <input type="hidden" id="editPlanId">
+          <div class="form-grid">
+            <div class="form-group form-full">
+              <label class="form-label">Chapter / Topic Name <span class="req">*</span></label>
+              <input type="text" class="form-input" id="chapterName" placeholder="e.g. Laws of Motion" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Subject <span class="req">*</span></label>
+              <select class="form-select" id="planSubject" required></select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Class Mapping <span class="req">*</span></label>
+              <select class="form-select" id="planClass" required></select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Duration (e.g. 5 Hours) <span class="req">*</span></label>
+              <input type="text" class="form-input" id="planDuration" placeholder="e.g. 6 Hours" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Estimated Start Date <span class="req">*</span></label>
+              <input type="date" class="form-input" id="startDate" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Estimated End Date <span class="req">*</span></label>
+              <input type="date" class="form-input" id="endDate" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Plan Status</label>
+              <select class="form-select" id="planStatus">
+                <option value="Draft">Draft</option>
+                <option value="Pending">Pending</option>
+                <option value="Approved">Approved</option>
+              </select>
+            </div>
+            <div class="form-group form-full">
+              <label class="form-label">Detailed Subtopics (Comma separated)</label>
+              <textarea class="form-textarea" id="planTopics" placeholder="Topic 1, Topic 2, ..."></textarea>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-ghost" onclick="closeModal('lessonPlanModal')">Cancel</button>
+          <button class="btn btn-primary" onclick="submitPlan()">Save Lesson Plan</button>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<script src="../../js/app.js"></script>
+<script src="../../js/sidebar.js"></script>
+<script>
+renderSidebar('classes', 'lesson-plans', '../../');
+
+var LESSON_PLANS_KEY = 'educore-lesson-plans';
+var defaultLessonPlans = [
+  {id: "LP-1001", subject: "Mathematics", classMap: "Class 10-A", chapterName: "Arithmetic Progressions", duration: "6 Hours", start: "2025-07-01", end: "2025-07-08", status: "Approved", topics: "Introduction, General Term, Sum of First N Terms, Application Problems"},
+  {id: "LP-1002", subject: "Physics", classMap: "Class 12-A", chapterName: "Electrostatic Potential", duration: "8 Hours", start: "2025-07-05", end: "2025-07-15", status: "Pending", topics: "Electric Potential, Potential due to Point Charge, Equipotential Surfaces, Potential Energy"},
+  {id: "LP-1003", subject: "English Literature", classMap: "Class 8-A", chapterName: "The Tsunami", duration: "4 Hours", start: "2025-07-02", end: "2025-07-05", status: "Draft", topics: "Reading comprehension, Vocabulary exercise, Story discussion"}
+];
+
+var lessonPlans = [];
+var classList = [];
+var subjectList = [];
+
+function initLessonPlans() {
+  // Load classes
+  var storedClasses = localStorage.getItem('educore-classes');
+  if (storedClasses) {
+    classList = JSON.parse(storedClasses).map(c => c.name + '-' + c.section);
+  } else {
+    classList = ["Class 10-A", "Class 10-B", "Class 12-A", "Class 8-A"];
+  }
+
+  // Load subjects
+  var storedSubjects = localStorage.getItem('educore-subjects');
+  if (storedSubjects) {
+    subjectList = JSON.parse(storedSubjects).map(s => s.name);
+  } else {
+    subjectList = ["Mathematics", "Physics", "Chemistry Lab", "English Literature", "Social Science"];
+  }
+
+  // Populate form selects
+  var cSelect = document.getElementById('planClass');
+  cSelect.innerHTML = '';
+  classList.forEach(function(c){
+    cSelect.innerHTML += '<option value="'+c+'">'+c+'</option>';
+  });
+
+  var sSelect = document.getElementById('planSubject');
+  sSelect.innerHTML = '';
+  subjectList.forEach(function(s){
+    sSelect.innerHTML += '<option value="'+s+'">'+s+'</option>';
+  });
+
+  // Load lesson plan lists
+  var data = localStorage.getItem(LESSON_PLANS_KEY);
+  if (!data) {
+    lessonPlans = defaultLessonPlans;
+    localStorage.setItem(LESSON_PLANS_KEY, JSON.stringify(lessonPlans));
+  } else {
+    lessonPlans = JSON.parse(data);
+  }
+
+  renderTable();
+}
+
+function showToast(msg, type) {
+  type = type || 'success';
+  var icons = { 
+    success:'<path d="M9 11l3 3L22 4"/>', 
+    error:'<path d="M18 6 6 18M6 6l12 12"/>', 
+    info:'<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>', 
+    warning:'<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>' 
+  };
+  var c = document.getElementById('toastContainer');
+  var t = document.createElement('div');
+  t.className = 'toast toast-' + type;
+  t.innerHTML = '<div class="toast-icon"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">'+icons[type]+'</svg></div><div class="toast-body"><div class="toast-title">'+(type.charAt(0).toUpperCase()+type.slice(1))+'</div><div class="toast-msg">'+msg+'</div></div>';
+  c.appendChild(t);
+  setTimeout(function(){t.classList.add('show');},10);
+  setTimeout(function(){t.classList.remove('show');setTimeout(function(){t.remove();},300);},3500);
+}
+
+function renderTable(dataList) {
+  var list = dataList || lessonPlans;
+  var tb = document.getElementById('tableBody');
+  tb.innerHTML = '';
+  
+  list.forEach(function(p) {
+    var badgeClass = 'badge-yellow';
+    if(p.status === 'Approved') badgeClass = 'badge-green';
+    else if(p.status === 'Draft') badgeClass = 'badge-gray';
+
+    var tr = document.createElement('tr');
+    tr.innerHTML = '<td><input type="checkbox" class="table-checkbox row-chk" data-id="'+p.id+'"></td>' +
+      '<td>' + p.id + '</td>' +
+      '<td><strong>' + p.chapterName + '</strong></td>' +
+      '<td>' + p.subject + '</td>' +
+      '<td>' + p.classMap + '</td>' +
+      '<td>' + p.duration + '</td>' +
+      '<td>' + formatDate(p.start) + ' - ' + formatDate(p.end) + '</td>' +
+      '<td><span class="badge ' + badgeClass + '">' + p.status + '</span></td>' +
+      '<td>' +
+        '<div class="row-actions">' +
+          '<button class="btn-icon" onclick="viewRow(\''+p.id+'\')" title="View"><svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>' +
+          '<button class="btn-icon" onclick="editRow(\''+p.id+'\')" title="Edit"><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>' +
+          '<button class="btn-icon" onclick="deleteRow(\''+p.id+'\')" title="Delete"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button>' +
+        '</div>' +
+      '</td>';
+    tb.appendChild(tr);
+  });
+  
+  document.getElementById('tableInfo').textContent = 'Showing ' + list.length + ' of ' + lessonPlans.length + ' records';
+  updateStats();
+}
+
+function formatDate(ds) {
+  if (!ds) return '';
+  var parts = ds.split('-');
+  if (parts.length !== 3) return ds;
+  var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  return parseInt(parts[2]) + ' ' + months[parseInt(parts[1])-1];
+}
+
+function updateStats() {
+  var total = lessonPlans.length;
+  var approved = lessonPlans.filter(p => p.status === 'Approved').length;
+  var pending = lessonPlans.filter(p => p.status === 'Pending').length;
+  var drafts = lessonPlans.filter(p => p.status === 'Draft').length;
+  
+  document.getElementById('statTotal').textContent = total;
+  document.getElementById('statApproved').textContent = approved;
+  document.getElementById('statPending').textContent = pending;
+  document.getElementById('statDrafts').textContent = drafts;
+}
+
+function searchTableGlobal() {
+  var q = document.getElementById('globalSearch').value.toLowerCase();
+  var filtered = lessonPlans.filter(function(p) {
+    return p.chapterName.toLowerCase().includes(q) || p.subject.toLowerCase().includes(q) || p.id.toLowerCase().includes(q);
+  });
+  renderTable(filtered);
+}
+
+function filterData() {
+  var q = document.getElementById('searchInput').value.toLowerCase();
+  var status = document.getElementById('statusFilter').value;
+  
+  var filtered = lessonPlans.filter(function(p) {
+    var matchSearch = p.chapterName.toLowerCase().includes(q) || p.subject.toLowerCase().includes(q);
+    var matchStatus = (status === 'All' || p.status === status);
+    return matchSearch && matchStatus;
+  });
+  
+  renderTable(filtered);
+}
+
+function clearFilters() {
+  document.getElementById('searchInput').value = '';
+  document.getElementById('statusFilter').value = 'All';
+  document.getElementById('globalSearch').value = '';
+  renderTable();
+}
+
+function toggleAll(cb) {
+  document.querySelectorAll('.row-chk').forEach(function(c){c.checked = cb.checked;});
+}
+
+function openAddModal() {
+  document.getElementById('modalTitle').textContent = 'Create Lesson Plan';
+  document.getElementById('editPlanId').value = '';
+  document.getElementById('chapterName').value = '';
+  document.getElementById('planSubject').value = subjectList[0] || '';
+  document.getElementById('planClass').value = classList[0] || '';
+  document.getElementById('planDuration').value = '6 Hours';
+  document.getElementById('startDate').value = '';
+  document.getElementById('endDate').value = '';
+  document.getElementById('planStatus').value = 'Draft';
+  document.getElementById('planTopics').value = '';
+  openModal('lessonPlanModal');
+}
+
+function editRow(id) {
+  var p = lessonPlans.find(x => x.id === id);
+  if (!p) return;
+  
+  document.getElementById('modalTitle').textContent = 'Edit Plan: ' + p.chapterName;
+  document.getElementById('editPlanId').value = p.id;
+  document.getElementById('chapterName').value = p.chapterName;
+  document.getElementById('planSubject').value = p.subject;
+  document.getElementById('planClass').value = p.classMap;
+  document.getElementById('planDuration').value = p.duration;
+  document.getElementById('startDate').value = p.start;
+  document.getElementById('endDate').value = p.end;
+  document.getElementById('planStatus').value = p.status;
+  document.getElementById('planTopics').value = p.topics || '';
+  
+  openModal('lessonPlanModal');
+}
+
+function viewRow(id) {
+  var p = lessonPlans.find(x => x.id === id);
+  if (!p) return;
+  alert('Lesson Plan Details:\n\nID: ' + p.id + '\nChapter/Topic: ' + p.chapterName + '\nSubject: ' + p.subject + '\nClass: ' + p.classMap + '\nDuration: ' + p.duration + '\nStart: ' + p.start + '\nEnd: ' + p.end + '\nStatus: ' + p.status + '\n\nTopics:\n' + (p.topics || 'N/A'));
+}
+
+function deleteRow(id) {
+  if (confirm('Delete lesson plan ' + id + '?')) {
+    lessonPlans = lessonPlans.filter(x => x.id !== id);
+    localStorage.setItem(LESSON_PLANS_KEY, JSON.stringify(lessonPlans));
+    renderTable();
+    showToast('Plan deleted', 'error');
+  }
+}
+
+function submitPlan() {
+  var id = document.getElementById('editPlanId').value;
+  var chapterName = document.getElementById('chapterName').value.trim();
+  var subject = document.getElementById('planSubject').value;
+  var classMap = document.getElementById('planClass').value;
+  var duration = document.getElementById('planDuration').value.trim();
+  var start = document.getElementById('startDate').value;
+  var end = document.getElementById('endDate').value;
+  var status = document.getElementById('planStatus').value;
+  var topics = document.getElementById('planTopics').value.trim();
+  
+  if (!chapterName || !subject || !classMap || !duration || !start || !end) {
+    showToast('Please fill all required fields', 'error');
+    return;
+  }
+  
+  if (id) {
+    var index = lessonPlans.findIndex(x => x.id === id);
+    if (index > -1) {
+      lessonPlans[index].chapterName = chapterName;
+      lessonPlans[index].subject = subject;
+      lessonPlans[index].classMap = classMap;
+      lessonPlans[index].duration = duration;
+      lessonPlans[index].start = start;
+      lessonPlans[index].end = end;
+      lessonPlans[index].status = status;
+      lessonPlans[index].topics = topics;
+      showToast('Lesson plan updated');
+    }
+  } else {
+    var newId = 'LP-' + (Math.floor(Math.random() * 9000) + 1000);
+    lessonPlans.push({
+      id: newId,
+      chapterName: chapterName,
+      subject: subject,
+      classMap: classMap,
+      duration: duration,
+      start: start,
+      end: end,
+      status: status,
+      topics: topics
+    });
+    showToast('New lesson plan created');
+  }
+  
+  localStorage.setItem(LESSON_PLANS_KEY, JSON.stringify(lessonPlans));
+  closeModal('lessonPlanModal');
+  renderTable();
+}
+
+function exportData() {
+  showToast('Exporting lesson plans to CSV...', 'info');
+  var csv = 'ID,Chapter Name,Subject,Class,Duration,Start Date,End Date,Status,Topics\n';
+  lessonPlans.forEach(function(p){
+    csv += `"${p.id}","${p.chapterName}","${p.subject}","${p.classMap}","${p.duration}","${p.start}","${p.end}","${p.status}","${(p.topics || '').replace(/"/g, '""')}"\n`;
+  });
+  var blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  var link = document.createElement("a");
+  var url = URL.createObjectURL(blob);
+  link.setAttribute("href", url);
+  link.setAttribute("download", "school_lesson_plans.csv");
+  link.style.visibility = 'hidden';
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+  initLessonPlans();
+});
+</script>
+</body>
+</html>

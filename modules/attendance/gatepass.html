@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gate Pass & Late Arrival — EduCore SMS</title>
+  <meta name="description" content="Manage student gate passes, late arrivals, early departures, and visitor passes with audit trail.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;900&family=IBM+Plex+Mono:wght@400;500;600&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../css/main.css">
+  <link rel="stylesheet" href="../../css/components.css">
+  <style>
+    /* KPIs */
+    .gp-kpi { display:grid; grid-template-columns:repeat(5,1fr); gap:1rem; margin-bottom:1.5rem; }
+    @media(max-width:1100px){ .gp-kpi{grid-template-columns:repeat(3,1fr);} }
+    .gk-card { background:var(--bg2); border:1px solid var(--border); border-radius:var(--radius); padding:1rem 1.25rem; border-left:4px solid var(--gkc); }
+    .gk-label { font-size:0.68rem; color:var(--text2); text-transform:uppercase; letter-spacing:0.05em; }
+    .gk-value { font-size:2rem; font-weight:700; font-family:'IBM Plex Mono',monospace; color:var(--gkc); }
+    .gk-sub { font-size:0.7rem; color:var(--text2); }
+    /* Tabs */
+    .gp-tabs { display:flex; border-bottom:2px solid var(--border); margin-bottom:1.5rem; gap:0; }
+    .gp-tab { padding:0.65rem 1.5rem; font-size:0.83rem; font-weight:600; color:var(--text2); border-bottom:3px solid transparent; margin-bottom:-2px; cursor:pointer; transition:all 0.18s; white-space:nowrap; display:flex; align-items:center; gap:0.5rem; }
+    .gp-tab.active { color:var(--primary); border-bottom-color:var(--primary); }
+    .gp-tab-count { padding:1px 7px; border-radius:20px; font-size:0.68rem; font-weight:700; }
+    /* Gate pass cards */
+    .gp-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(320px,1fr)); gap:1rem; }
+    .gp-card { background:var(--bg2); border:1px solid var(--border); border-radius:var(--radius); padding:1.1rem; position:relative; overflow:hidden; transition:box-shadow 0.18s; }
+    .gp-card:hover { box-shadow:var(--shadow-sm); }
+    .gp-card::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; background:var(--gpc); }
+    .gp-card.late { --gpc:var(--warning); }
+    .gp-card.ed   { --gpc:var(--info); }
+    .gp-card.out  { --gpc:var(--accent); }
+    .gp-card.visitor { --gpc:var(--purple); }
+    .gp-card.returned { --gpc:var(--success); }
+    .gp-head { display:flex; align-items:center; gap:0.75rem; margin-bottom:0.75rem; }
+    .gp-avatar { width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:0.75rem; font-weight:700; color:#fff; flex-shrink:0; }
+    .gp-name { font-size:0.87rem; font-weight:700; color:var(--text); }
+    .gp-meta { font-size:0.7rem; color:var(--text2); font-family:'IBM Plex Mono',monospace; }
+    .gp-type-badge { position:absolute; top:0.75rem; right:0.75rem; }
+    .gp-detail-row { display:flex; gap:0.5rem; margin-bottom:0.35rem; font-size:0.78rem; }
+    .gp-dkey { color:var(--text2); min-width:110px; }
+    .gp-dval { font-weight:600; color:var(--text); font-family:'IBM Plex Mono',monospace; }
+    .gp-actions { display:flex; gap:0.4rem; margin-top:0.75rem; padding-top:0.75rem; border-top:1px solid var(--border); }
+    /* Pass print slip */
+    .pass-slip { display:none; background:#fff; border:2px solid #000; border-radius:8px; padding:1.25rem; font-family:monospace; }
+    /* Table view */
+    .gp-table { width:100%; border-collapse:collapse; }
+    .gp-table th { text-align:left; padding:0.65rem 1rem; font-size:0.68rem; text-transform:uppercase; letter-spacing:0.05em; color:var(--text3); border-bottom:2px solid var(--border); background:var(--bg); white-space:nowrap; }
+    .gp-table td { padding:0.65rem 1rem; font-size:0.8rem; border-bottom:1px solid var(--border); vertical-align:middle; }
+    .gp-table tr:last-child td { border-bottom:none; }
+    .gp-table tr:hover td { background:rgba(10,61,98,0.02); }
+  </style>
+</head>
+<body>
+<div class="mobile-overlay" id="mobileOverlay" onclick="closeMobileSidebar()"></div>
+<header class="topbar">
+  <div class="logo-area">
+    <div class="logo-mark"><svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div>
+    <span class="logo-text">EduCore SMS</span>
+  </div>
+  <button class="sidebar-toggle" onclick="toggleSidebar()"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
+  <div class="tb-search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg><input type="text" placeholder="Search name, class, pass ID…"></div>
+  <div class="tb-right">
+    <div class="tb-date" id="tb-date"></div>
+    <button class="dark-toggle" onclick="toggleDarkMode()"><svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg><svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/></svg></button>
+    <div class="dropdown-wrapper">
+      <div class="tb-user" onclick="toggleUserDropdown(event)" id="userBtn"><div class="avatar">SA</div><div class="tb-user-info"><div class="tb-user-name">Super Admin</div><div class="tb-user-role">Administrator</div></div></div>
+      <div class="user-dropdown" id="userDropdown"><div class="user-dd-header"><div class="user-dd-name">Super Admin</div></div><a class="user-dd-item danger" href="../../index.html"><svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>Logout</a></div>
+    </div>
+  </div>
+</header>
+<div class="layout" id="layout">
+  <nav class="sidebar" id="sidebar"><div id="sidebar-nav"></div></nav>
+  <main class="main">
+    <div class="breadcrumb"><a href="../../index.html">Dashboard</a><span class="breadcrumb-sep">›</span><a href="dashboard.html">Attendance</a><span class="breadcrumb-sep">›</span><span>Gate Pass & Late Arrival</span></div>
+    <div class="page-header">
+      <div><h1>Gate Pass & Late Arrival</h1><div class="page-subtitle">Student movement control · Late arrivals, early departures & visitor passes · 29 Jun 2026</div></div>
+      <div class="ph-actions">
+        <input type="date" value="2026-06-29" class="filter-select">
+        <select class="filter-select"><option>All Classes</option><option>IX-A</option><option>IX-B</option><option>X-A</option><option>X-B</option><option>XI-A</option></select>
+        <button class="btn btn-ghost" onclick="exportPasses()">Export</button>
+        <button class="btn btn-primary" onclick="openModal('newPassModal')">
+          <svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Issue Gate Pass
+        </button>
+      </div>
+    </div>
+
+    <!-- KPI Strip -->
+    <div class="gp-kpi">
+      <div class="gk-card" style="--gkc:var(--warning)"><div class="gk-label">Late Arrivals Today</div><div class="gk-value">18</div><div class="gk-sub">Peak: 8:10–8:30 AM</div></div>
+      <div class="gk-card" style="--gkc:var(--info)"><div class="gk-label">Early Departures</div><div class="gk-value">7</div><div class="gk-sub">4 medical · 3 approved</div></div>
+      <div class="gk-card" style="--gkc:var(--accent)"><div class="gk-label">Students Out Now</div><div class="gk-value">3</div><div class="gk-sub">Active out-passes</div></div>
+      <div class="gk-card" style="--gkc:var(--purple)"><div class="gk-label">Visitor Passes</div><div class="gk-value">5</div><div class="gk-sub">2 pending check-out</div></div>
+      <div class="gk-card" style="--gkc:var(--success)"><div class="gk-label">Total Passes Today</div><div class="gk-value">33</div><div class="gk-sub">All types combined</div></div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="gp-tabs">
+      <div class="gp-tab active" onclick="switchTab(this,'all')">All Passes <span class="gp-tab-count badge badge-blue">33</span></div>
+      <div class="gp-tab" onclick="switchTab(this,'late')">Late Arrivals <span class="gp-tab-count badge badge-yellow">18</span></div>
+      <div class="gp-tab" onclick="switchTab(this,'ed')">Early Departure <span class="gp-tab-count badge badge-blue">7</span></div>
+      <div class="gp-tab" onclick="switchTab(this,'out')">Out-Pass <span class="gp-tab-count badge badge-red">3</span></div>
+      <div class="gp-tab" onclick="switchTab(this,'visitor')">Visitor <span class="gp-tab-count badge badge-purple">5</span></div>
+    </div>
+
+    <!-- Filter Row -->
+    <div style="display:flex;gap:0.75rem;margin-bottom:1.25rem;flex-wrap:wrap;align-items:center">
+      <select class="filter-select" id="gpView" onchange="toggleView()"><option value="cards">Card View</option><option value="table">Table View</option></select>
+      <select class="filter-select"><option>All Status</option><option>Active / Out</option><option>Returned</option><option>Overdue</option></select>
+      <div style="margin-left:auto"><input type="text" class="form-input" placeholder="Search…" oninput="filterPasses(this.value)" style="padding:6px 12px;font-size:0.8rem;width:200px"></div>
+    </div>
+
+    <!-- Card View -->
+    <div id="view-cards"><div class="gp-grid" id="passGrid"></div></div>
+
+    <!-- Table View -->
+    <div id="view-table" style="display:none">
+      <div class="card card-flush">
+        <div class="table-wrap">
+          <table class="gp-table">
+            <thead><tr><th>Pass ID</th><th>Student</th><th>Class</th><th>Type</th><th>Out Time</th><th>Return Time</th><th>Reason</th><th>Authorized By</th><th>Status</th><th>Action</th></tr></thead>
+            <tbody id="passTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Late Arrival Register -->
+    <div class="card card-flush" style="margin-top:1.5rem">
+      <div class="card-padding" style="display:flex;justify-content:space-between;align-items:center">
+        <div><div class="card-title">Late Arrival Register — 29 Jun 2026</div><div class="card-meta">18 late arrivals · All must sign register at reception</div></div>
+        <button class="btn btn-ghost btn-sm" onclick="exportPasses()">Export Register</button>
+      </div>
+      <div class="table-wrap">
+        <table class="gp-table">
+          <thead><tr><th>S.No</th><th>Name</th><th>Class</th><th>Adm No</th><th>Arrival Time</th><th>Late By</th><th>Reason</th><th>Parent Informed</th><th>Period Missed</th><th>Action</th></tr></thead>
+          <tbody id="lateRegister"></tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- Issue Gate Pass Modal -->
+<div class="modal-backdrop" id="newPassModal">
+  <div class="modal" style="max-width:540px">
+    <div class="modal-header"><div class="modal-title">Issue Gate Pass</div><button class="modal-close" onclick="closeModal('newPassModal')"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group"><label class="form-label">Pass Type <span class="req">*</span></label>
+          <select class="form-select" id="passTypeSelect" onchange="updatePassForm()">
+            <option value="">— Select Type —</option>
+            <option value="late">Late Arrival</option>
+            <option value="ed">Early Departure</option>
+            <option value="out">Out-Pass (During School)</option>
+            <option value="visitor">Visitor Pass</option>
+          </select>
+        </div>
+        <div class="form-group" id="studentField"><label class="form-label">Student Name <span class="req">*</span></label><input class="form-input" placeholder="Search by name or adm no."></div>
+        <div class="form-group" id="classField"><label class="form-label">Class & Section</label><select class="form-select"><option>IX-A</option><option>IX-B</option><option>X-A</option><option>X-B</option><option>XI-A</option></select></div>
+        <div class="form-group"><label class="form-label">Date <span class="req">*</span></label><input type="date" class="form-input" value="2026-06-29"></div>
+        <div class="form-group"><label class="form-label">Out Time</label><input type="time" class="form-input" value="09:15"></div>
+        <div class="form-group" id="returnField"><label class="form-label">Expected Return</label><input type="time" class="form-input" value="11:00"></div>
+        <div class="form-group form-full"><label class="form-label">Reason <span class="req">*</span></label><textarea class="form-textarea" placeholder="Reason for gate pass…" rows="2"></textarea></div>
+        <div class="form-group"><label class="form-label">Authorized By <span class="req">*</span></label><select class="form-select"><option>Mrs. Sunita Sharma</option><option>Mr. Principal Rajan</option><option>Mrs. Rekha S. (Coordinator)</option></select></div>
+        <div class="form-group"><label class="form-label">Parent Notified</label>
+          <div style="display:flex;gap:1rem;margin-top:0.35rem">
+            <label style="display:flex;align-items:center;gap:0.4rem;font-size:0.82rem;cursor:pointer"><input type="radio" name="parentNotif" checked> Yes — SMS sent</label>
+            <label style="display:flex;align-items:center;gap:0.4rem;font-size:0.82rem;cursor:pointer"><input type="radio" name="parentNotif"> No</label>
+          </div>
+        </div>
+        <div class="form-group form-full"><label class="form-label">Additional Notes</label><textarea class="form-textarea" placeholder="Gate security instructions, escort required, etc." rows="2"></textarea></div>
+      </div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal('newPassModal')">Cancel</button><button class="btn btn-ghost" onclick="printPass()">🖨 Print Pass</button><button class="btn btn-primary" onclick="issuePass()">Issue Pass</button></div>
+  </div>
+</div>
+
+<!-- Pass Detail Modal -->
+<div class="modal-backdrop" id="passDetailModal">
+  <div class="modal" style="max-width:420px">
+    <div class="modal-header"><div class="modal-title" id="passDetailTitle">Gate Pass</div><button class="modal-close" onclick="closeModal('passDetailModal')"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
+    <div class="modal-body" id="passDetailBody"></div>
+    <div class="modal-footer" id="passDetailFooter"></div>
+  </div>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+<script src="../../js/app.js"></script>
+<script src="../../js/sidebar.js"></script>
+<script>
+renderSidebar('attendance','gatepass','../../');
+
+var avatarColors = ['#0A3D62','#E8505B','#16A085','#8E44AD','#F39C12','#2980B9','#E67E22'];
+var PASSES = [
+  {id:'GP-001',name:'Arjun Das',adm:'ADM-0905',cls:'IX-A',type:'late',typeLabel:'Late Arrival',outTime:'08:22 AM',returnTime:'–',reason:'Bus breakdown on Ring Road. Parent confirmed.',auth:'Mrs. Sunita',status:'Checked In',parentSMS:true},
+  {id:'GP-002',name:'Dev Agarwal',adm:'ADM-0909',cls:'IX-A',type:'ed',typeLabel:'Early Departure',outTime:'10:15 AM',returnTime:'–',reason:'Doctor appointment — orthodontist.',auth:'Mrs. Rekha',status:'Left Campus',parentSMS:true},
+  {id:'GP-003',name:'Kunal Singh',adm:'ADM-0917',cls:'IX-A',type:'out',typeLabel:'Out-Pass',outTime:'11:30 AM',returnTime:'12:30 PM',reason:'Bank work with father — DD submission for examination form.',auth:'Mr. Principal',status:'Out',parentSMS:true},
+  {id:'GP-004',name:'Meena Verma',adm:'ADM-1024',cls:'X-B',type:'late',typeLabel:'Late Arrival',outTime:'08:45 AM',returnTime:'–',reason:'Medical emergency — BP check at home.',auth:'Mrs. Sunita',status:'Checked In',parentSMS:true},
+  {id:'GP-005',name:'Rohan Patel',adm:'ADM-0834',cls:'VIII-A',type:'late',typeLabel:'Late Arrival',outTime:'08:15 AM',returnTime:'–',reason:'Traffic jam — highway blocked.',auth:'Mrs. Sunita',status:'Checked In',parentSMS:false},
+  {id:'GP-006',name:'Riya Banerjee',adm:'ADM-1060',cls:'XI-A',type:'ed',typeLabel:'Early Departure',outTime:'01:20 PM',returnTime:'–',reason:'Competitive exam coaching — JEE mock test.',auth:'Mrs. Rekha',status:'Left Campus',parentSMS:true},
+  {id:'GP-007',name:'Ananya Gupta',adm:'ADM-1034',cls:'XI-A',type:'out',typeLabel:'Out-Pass',outTime:'10:45 AM',returnTime:'11:45 AM',reason:'Submit verification documents to bank.',auth:'Mr. Principal',status:'Returned',parentSMS:true},
+  {id:'GP-008',name:'Priya Singh',adm:'ADM-0902',cls:'IX-A',type:'out',typeLabel:'Out-Pass',outTime:'12:00 PM',returnTime:'01:00 PM',reason:'Medical — collect prescribed medicines.',auth:'Mrs. Rekha',status:'Out',parentSMS:true},
+  {id:'GP-009',name:'Mr. Rajesh Sharma (Parent)',adm:'–',cls:'–',type:'visitor',typeLabel:'Visitor',outTime:'09:30 AM',returnTime:'10:00 AM',reason:'Parent-teacher meeting — urgent discussion about exam performance.',auth:'Reception',status:'Checked Out',parentSMS:false},
+  {id:'GP-010',name:'Mrs. Kavita Patel (Parent)',adm:'–',cls:'–',type:'visitor',typeLabel:'Visitor',outTime:'10:15 AM',returnTime:'–',reason:'Fee submission + certificate collection.',auth:'Reception',status:'On Campus',parentSMS:false},
+];
+
+var LATE_STUDENTS = [
+  {no:1,name:'Arjun Das',cls:'IX-A',adm:'ADM-0905',time:'08:22 AM',lateBy:'37 min',reason:'Bus breakdown',sms:'Sent',period:'P-1'},
+  {no:2,name:'Meena Verma',cls:'X-B',adm:'ADM-1024',time:'08:45 AM',lateBy:'60 min',reason:'Medical',sms:'Sent',period:'P-1, P-2'},
+  {no:3,name:'Rohan Patel',cls:'VIII-A',adm:'ADM-0834',time:'08:15 AM',lateBy:'30 min',reason:'Traffic',sms:'Pending',period:'P-1'},
+  {no:4,name:'Vikram Nair',cls:'IX-A',adm:'ADM-0935',time:'08:30 AM',lateBy:'45 min',reason:'Oversleeping',sms:'Sent',period:'P-1'},
+  {no:5,name:'Kritika Shah',cls:'XI-B',adm:'ADM-1080',time:'09:05 AM',lateBy:'80 min',reason:'Unspecified',sms:'Sent',period:'P-1, P-2, P-3'},
+  {no:6,name:'Arnav Bose',cls:'VII-A',adm:'ADM-0625',time:'08:10 AM',lateBy:'25 min',reason:'Dentist appointment',sms:'Sent',period:'P-1'},
+  {no:7,name:'Shruti Mehta',cls:'IX-B',adm:'ADM-0948',time:'08:35 AM',lateBy:'50 min',reason:'Bus delayed',sms:'Sent',period:'P-1, P-2'},
+  {no:8,name:'Rahul Chauhan',cls:'IX-A',adm:'ADM-0929',time:'08:28 AM',lateBy:'43 min',reason:'Vehicle breakdown',sms:'Sent',period:'P-1'},
+];
+
+var typeColors = {late:'var(--warning)',ed:'var(--info)',out:'var(--accent)',visitor:'var(--purple)',returned:'var(--success)'};
+var typeClasses = {late:'badge-yellow',ed:'badge-blue',out:'badge-red',visitor:'badge-purple',returned:'badge-green'};
+var statusClasses = {'Checked In':'badge-green','Left Campus':'badge-red','Out':'badge-red','Returned':'badge-green','On Campus':'badge-blue','Checked Out':'badge-gray'};
+
+function renderPassGrid(filter) {
+  var data = filter&&filter!=='all'?PASSES.filter(function(p){return p.type===filter;}):PASSES;
+  var html = data.map(function(p,i) {
+    var color = avatarColors[i%avatarColors.length];
+    var inits = p.name.split(' ').slice(0,2).map(function(n){return n[0]}).join('');
+    var tc = typeColors[p.type]||'var(--text2)';
+    var sClass = statusClasses[p.status]||'badge-gray';
+    return '<div class="gp-card '+p.type+'">'
+      +'<div class="gp-type-badge"><span class="badge '+(typeClasses[p.type]||'')+'">'+p.typeLabel+'</span></div>'
+      +'<div class="gp-head">'
+      +'<div class="gp-avatar" style="background:'+color+'">'+inits+'</div>'
+      +'<div><div class="gp-name">'+p.name+'</div><div class="gp-meta">'+p.adm+(p.cls!=='–'?' · '+p.cls:'')+'</div></div>'
+      +'</div>'
+      +'<div class="gp-detail-row"><span class="gp-dkey">Pass ID</span><span class="gp-dval" style="color:var(--primary)">'+p.id+'</span></div>'
+      +'<div class="gp-detail-row"><span class="gp-dkey">Out Time</span><span class="gp-dval">'+p.outTime+'</span></div>'
+      +(p.returnTime!=='–'?'<div class="gp-detail-row"><span class="gp-dkey">Expected Return</span><span class="gp-dval">'+p.returnTime+'</span></div>':'')
+      +'<div class="gp-detail-row"><span class="gp-dkey">Reason</span><span style="font-size:0.75rem;color:var(--text);line-height:1.4">'+p.reason.substring(0,60)+(p.reason.length>60?'…':'')+'</span></div>'
+      +'<div class="gp-detail-row"><span class="gp-dkey">Authorized By</span><span class="gp-dval" style="font-family:\'DM Sans\',sans-serif;font-size:0.78rem">'+p.auth+'</span></div>'
+      +'<div class="gp-detail-row"><span class="gp-dkey">Parent SMS</span><span style="font-size:0.78rem;color:'+(p.parentSMS?'var(--success)':'var(--accent)')+'">'+( p.parentSMS?'Sent ✓':'Not sent')+'</span></div>'
+      +'<div class="gp-actions">'
+      +'<span class="badge '+sClass+'">'+p.status+'</span>'
+      +'<button class="btn btn-ghost btn-sm" style="margin-left:auto" onclick="markReturned(\''+p.id+'\')">✓ Returned</button>'
+      +'<button class="btn btn-ghost btn-sm" onclick="printSlip(\''+p.id+'\')">🖨</button>'
+      +'</div>'
+      +'</div>';
+  }).join('');
+  document.getElementById('passGrid').innerHTML = html || '<div style="grid-column:1/-1;text-align:center;padding:3rem;color:var(--text2)">No passes for this category</div>';
+}
+
+function renderPassTable(filter) {
+  var data = filter&&filter!=='all'?PASSES.filter(function(p){return p.type===filter;}):PASSES;
+  var html = data.map(function(p) {
+    var sClass = statusClasses[p.status]||'badge-gray';
+    return '<tr>'
+      +'<td style="font-family:\'IBM Plex Mono\',monospace;font-size:0.75rem;color:var(--primary)">'+p.id+'</td>'
+      +'<td><strong>'+p.name+'</strong><div style="font-size:0.68rem;color:var(--text2);font-family:\'IBM Plex Mono\',monospace">'+p.adm+'</div></td>'
+      +'<td><span class="badge badge-blue">'+p.cls+'</span></td>'
+      +'<td><span class="badge '+(typeClasses[p.type]||'')+'">'+p.typeLabel+'</span></td>'
+      +'<td style="font-family:\'IBM Plex Mono\',monospace;font-size:0.75rem">'+p.outTime+'</td>'
+      +'<td style="font-family:\'IBM Plex Mono\',monospace;font-size:0.75rem">'+p.returnTime+'</td>'
+      +'<td style="max-width:180px;font-size:0.78rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+p.reason+'</td>'
+      +'<td style="font-size:0.78rem">'+p.auth+'</td>'
+      +'<td><span class="badge '+sClass+'">'+p.status+'</span></td>'
+      +'<td><div style="display:flex;gap:0.3rem"><button class="btn btn-ghost btn-sm" style="font-size:0.65rem;padding:2px 7px" onclick="markReturned(\''+p.id+'\')">Returned</button><button class="btn btn-ghost btn-sm" style="font-size:0.65rem;padding:2px 7px" onclick="printSlip(\''+p.id+'\')">Print</button></div></td>'
+      +'</tr>';
+  }).join('');
+  document.getElementById('passTableBody').innerHTML = html;
+}
+
+function renderLateRegister() {
+  var html = LATE_STUDENTS.map(function(s) {
+    var late = parseInt(s.lateBy)>=60?'var(--accent)':parseInt(s.lateBy)>=40?'var(--warning)':'var(--text2)';
+    return '<tr>'
+      +'<td style="font-family:\'IBM Plex Mono\',monospace;font-size:0.75rem;color:var(--text3)">'+s.no+'</td>'
+      +'<td><strong>'+s.name+'</strong></td>'
+      +'<td><span class="badge badge-blue">'+s.cls+'</span></td>'
+      +'<td style="font-family:\'IBM Plex Mono\',monospace;font-size:0.75rem">'+s.adm+'</td>'
+      +'<td style="font-family:\'IBM Plex Mono\',monospace;font-size:0.75rem">'+s.time+'</td>'
+      +'<td style="font-family:\'IBM Plex Mono\',monospace;font-weight:700;color:'+late+'">'+s.lateBy+'</td>'
+      +'<td style="font-size:0.78rem">'+s.reason+'</td>'
+      +'<td><span class="badge '+(s.sms==='Sent'?'badge-green':'badge-yellow')+'">'+s.sms+'</span></td>'
+      +'<td style="font-size:0.75rem;color:var(--text2)">'+s.period+'</td>'
+      +'<td><button class="btn btn-ghost btn-sm" style="font-size:0.65rem;padding:2px 7px" onclick="showToast(\'Sending SMS to parent of '+s.name+'…\',\'info\')">SMS</button></td>'
+      +'</tr>';
+  }).join('');
+  document.getElementById('lateRegister').innerHTML = html;
+}
+
+var currentTab = 'all';
+function switchTab(el,tab) {
+  document.querySelectorAll('.gp-tab').forEach(function(t){t.classList.remove('active');});
+  el.classList.add('active');
+  currentTab = tab;
+  var filter = tab==='all'?null:tab;
+  renderPassGrid(filter);
+  renderPassTable(filter);
+}
+
+function toggleView() {
+  var v = document.getElementById('gpView').value;
+  document.getElementById('view-cards').style.display = v==='cards'?'block':'none';
+  document.getElementById('view-table').style.display = v==='table'?'block':'none';
+}
+
+function markReturned(id) {
+  var p = PASSES.find(function(x){return x.id===id;});
+  if(p) { p.status='Returned'; renderPassGrid(currentTab==='all'?null:currentTab); renderPassTable(currentTab==='all'?null:currentTab); }
+  showToast(id+' — student marked as returned','success');
+}
+function printSlip(id) { showToast('Printing gate pass slip for '+id,'info'); }
+function issuePass() { closeModal('newPassModal'); showToast('Gate pass issued. SMS sent to parent and security guard notified.','success'); }
+function printPass() { closeModal('newPassModal'); showToast('Printing gate pass…','info'); }
+function exportPasses() { showToast('Exporting gate pass register…','info'); }
+function filterPasses(q) { showToast('Filtering passes…','info'); }
+
+function openModal(id){ var m=document.getElementById(id);if(m)m.classList.add('open'); }
+function closeModal(id){ var m=document.getElementById(id);if(m)m.classList.remove('open'); }
+document.addEventListener('click',function(e){if(e.target.classList.contains('modal-backdrop'))e.target.classList.remove('open');});
+function showToast(msg,type){var icons={success:'<path d="M9 11l3 3L22 4"/>',error:'<path d="M18 6 6 18M6 6l12 12"/>',info:'<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>',warning:'<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>'};var c=document.getElementById('toastContainer');var t=document.createElement('div');t.className='toast toast-'+type;t.innerHTML='<div class="toast-icon"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">'+icons[type]+'</svg></div><div class="toast-body"><div class="toast-title">'+(type.charAt(0).toUpperCase()+type.slice(1))+'</div><div class="toast-msg">'+msg+'</div></div>';c.appendChild(t);setTimeout(function(){t.classList.add('show');},10);setTimeout(function(){t.classList.remove('show');setTimeout(function(){t.remove();},300);},3500);}
+
+renderPassGrid();
+renderPassTable();
+renderLateRegister();
+</script>
+</body>
+</html>

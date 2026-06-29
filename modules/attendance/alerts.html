@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Attendance Notifications & Audit Log — EduCore SMS</title>
+  <meta name="description" content="Manage automated attendance SMS/email alerts, notification rules, and full attendance audit trail for compliance.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;900&family=IBM+Plex+Mono:wght@400;500;600&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../css/main.css">
+  <link rel="stylesheet" href="../../css/components.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <style>
+    /* KPIs */
+    .alert-kpi { display:grid; grid-template-columns:repeat(5,1fr); gap:1rem; margin-bottom:1.5rem; }
+    @media(max-width:1100px){ .alert-kpi{grid-template-columns:repeat(3,1fr);} }
+    .ak-card2 { background:var(--bg2); border:1px solid var(--border); border-radius:var(--radius); padding:1rem; text-align:center; position:relative; overflow:hidden; }
+    .ak-card2::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; background:var(--ac2); border-radius:3px; }
+    .ak-label2 { font-size:0.65rem; color:var(--text2); text-transform:uppercase; letter-spacing:0.04em; margin-bottom:0.35rem; }
+    .ak-value2 { font-size:1.8rem; font-weight:700; font-family:'IBM Plex Mono',monospace; color:var(--ac2); line-height:1.1; }
+    .ak-sub2 { font-size:0.68rem; color:var(--text2); margin-top:2px; }
+    /* Alert rule cards */
+    .rule-card { background:var(--bg2); border:1px solid var(--border); border-radius:var(--radius); padding:1.1rem 1.25rem; margin-bottom:0.75rem; display:flex; align-items:center; gap:1rem; }
+    .rule-card.inactive { opacity:0.6; }
+    .rule-icon { width:42px; height:42px; border-radius:10px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+    .rule-icon svg { width:20px; height:20px; fill:none; stroke:#fff; stroke-width:2; }
+    .rule-body { flex:1; min-width:0; }
+    .rule-name { font-size:0.87rem; font-weight:700; color:var(--text); }
+    .rule-desc { font-size:0.72rem; color:var(--text2); margin-top:2px; line-height:1.4; }
+    .rule-meta { display:flex; gap:0.75rem; margin-top:0.4rem; flex-wrap:wrap; }
+    .rule-chip { font-size:0.65rem; padding:2px 8px; border-radius:20px; font-weight:600; }
+    .rule-toggle { flex-shrink:0; }
+    .rule-actions { display:flex; gap:0.4rem; flex-shrink:0; }
+    /* Toggle */
+    .toggle { width:42px; height:22px; border-radius:11px; background:var(--border); cursor:pointer; position:relative; transition:background 0.2s; }
+    .toggle.on { background:var(--success); }
+    .toggle::after { content:''; position:absolute; top:2px; left:2px; width:18px; height:18px; border-radius:50%; background:#fff; transition:transform 0.2s; box-shadow:0 1px 3px rgba(0,0,0,0.2); }
+    .toggle.on::after { transform:translateX(20px); }
+    /* Notification feed */
+    .notif-feed { display:flex; flex-direction:column; gap:0; }
+    .nf-item { display:flex; gap:0.75rem; padding:0.75rem 0; border-bottom:1px solid var(--border); position:relative; }
+    .nf-item.unread { background:rgba(10,61,98,0.025); }
+    .nf-item:last-child { border-bottom:none; }
+    .nf-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; margin-top:5px; }
+    .nf-icon { width:34px; height:34px; border-radius:8px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+    .nf-icon svg { width:15px; height:15px; fill:none; stroke:#fff; stroke-width:2; }
+    .nf-body { flex:1; min-width:0; }
+    .nf-title { font-size:0.82rem; font-weight:600; color:var(--text); }
+    .nf-sub { font-size:0.72rem; color:var(--text2); margin-top:2px; line-height:1.4; }
+    .nf-time { font-size:0.65rem; color:var(--text3); font-family:'IBM Plex Mono',monospace; white-space:nowrap; }
+    .nf-channels { display:flex; gap:0.3rem; margin-top:0.35rem; }
+    .nf-chan { font-size:0.6rem; padding:1px 6px; border-radius:10px; font-weight:600; }
+    .unread-dot { position:absolute; top:0.9rem; right:0; width:7px; height:7px; border-radius:50%; background:var(--primary); }
+    /* Audit log */
+    .audit-table { width:100%; border-collapse:collapse; }
+    .audit-table th { text-align:left; padding:0.6rem 1rem; font-size:0.68rem; text-transform:uppercase; letter-spacing:0.05em; color:var(--text3); border-bottom:2px solid var(--border); background:var(--bg); white-space:nowrap; }
+    .audit-table td { padding:0.65rem 1rem; font-size:0.78rem; border-bottom:1px solid var(--border); vertical-align:top; }
+    .audit-table tr:last-child td { border-bottom:none; }
+    .audit-table tr:hover td { background:rgba(10,61,98,0.02); }
+    .audit-action-chip { font-size:0.65rem; padding:2px 8px; border-radius:4px; font-weight:600; font-family:'IBM Plex Mono',monospace; }
+    .a-create { background:rgba(22,160,133,0.12); color:var(--success); }
+    .a-modify { background:rgba(243,156,18,0.12); color:var(--warning); }
+    .a-delete { background:rgba(232,80,91,0.12); color:var(--accent); }
+    .a-approve { background:rgba(10,61,98,0.12); color:var(--primary); }
+    .a-submit { background:rgba(41,128,185,0.12); color:var(--info); }
+    .a-correct { background:rgba(142,68,173,0.12); color:var(--purple); }
+    .a-sync { background:rgba(22,160,133,0.08); color:var(--success); }
+    /* Tabs */
+    .alerts-tabs { display:flex; border-bottom:2px solid var(--border); margin-bottom:1.5rem; gap:0; }
+    .at { padding:0.65rem 1.5rem; font-size:0.83rem; font-weight:600; color:var(--text2); border-bottom:3px solid transparent; margin-bottom:-2px; cursor:pointer; transition:all 0.18s; white-space:nowrap; }
+    .at.active { color:var(--primary); border-bottom-color:var(--primary); }
+    /* Layout split */
+    .alerts-layout { display:grid; grid-template-columns:1fr 360px; gap:1.5rem; }
+    @media(max-width:1100px){ .alerts-layout{grid-template-columns:1fr;} }
+    /* SMS delivery chart */
+    .charts-2col { display:grid; grid-template-columns:1fr 1fr; gap:1.25rem; margin-bottom:1.5rem; }
+    @media(max-width:900px){ .charts-2col{grid-template-columns:1fr;} }
+  </style>
+</head>
+<body>
+<div class="mobile-overlay" id="mobileOverlay" onclick="closeMobileSidebar()"></div>
+<header class="topbar">
+  <div class="logo-area">
+    <div class="logo-mark"><svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div>
+    <span class="logo-text">EduCore SMS</span>
+  </div>
+  <button class="sidebar-toggle" onclick="toggleSidebar()"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
+  <div class="tb-search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg><input type="text" placeholder="Search alerts, audit events…"></div>
+  <div class="tb-right">
+    <div class="tb-date" id="tb-date"></div>
+    <button class="dark-toggle" onclick="toggleDarkMode()"><svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg><svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/></svg></button>
+    <div class="dropdown-wrapper">
+      <div class="tb-user" onclick="toggleUserDropdown(event)" id="userBtn"><div class="avatar">SA</div><div class="tb-user-info"><div class="tb-user-name">Super Admin</div><div class="tb-user-role">Administrator</div></div></div>
+      <div class="user-dropdown" id="userDropdown"><div class="user-dd-header"><div class="user-dd-name">Super Admin</div><div class="user-dd-role">Administrator · EduCore SMS</div></div><a class="user-dd-item danger" href="../../index.html"><svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>Logout</a></div>
+    </div>
+  </div>
+</header>
+<div class="layout" id="layout">
+  <nav class="sidebar" id="sidebar"><div id="sidebar-nav"></div></nav>
+  <main class="main">
+    <div class="breadcrumb"><a href="../../index.html">Dashboard</a><span class="breadcrumb-sep">›</span><a href="dashboard.html">Attendance</a><span class="breadcrumb-sep">›</span><span>Alerts & Audit Log</span></div>
+    <div class="page-header">
+      <div><h1>Alerts, Notifications & Audit Log</h1><div class="page-subtitle">Automated SMS/Email alerts · Notification rules · Full attendance audit trail</div></div>
+      <div class="ph-actions">
+        <button class="btn btn-ghost" onclick="sendTestAlert()">Send Test Alert</button>
+        <button class="btn btn-ghost" onclick="exportAuditLog()">Export Log</button>
+        <button class="btn btn-primary" onclick="openModal('newRuleModal')">
+          <svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          New Alert Rule
+        </button>
+      </div>
+    </div>
+
+    <!-- KPIs -->
+    <div class="alert-kpi">
+      <div class="ak-card2" style="--ac2:var(--success)"><div class="ak-label2">SMS Sent Today</div><div class="ak-value2">412</div><div class="ak-sub2">98.3% delivery rate</div></div>
+      <div class="ak-card2" style="--ac2:var(--accent)"><div class="ak-label2">SMS Failed</div><div class="ak-value2">7</div><div class="ak-sub2">Invalid numbers</div></div>
+      <div class="ak-card2" style="--ac2:var(--warning)"><div class="ak-label2">Pending Alerts</div><div class="ak-value2">3</div><div class="ak-sub2">Queue processing</div></div>
+      <div class="ak-card2" style="--ac2:var(--info)"><div class="ak-label2">Email Alerts</div><div class="ak-value2">128</div><div class="ak-sub2">Delivered today</div></div>
+      <div class="ak-card2" style="--ac2:var(--purple)"><div class="ak-label2">Active Rules</div><div class="ak-value2">9</div><div class="ak-sub2">Of 12 configured</div></div>
+    </div>
+
+    <!-- Charts Row -->
+    <div class="charts-2col">
+      <div class="card">
+        <div class="card-header"><div class="card-title">SMS Delivery Trend</div><div class="card-meta">Last 7 days — sent vs delivered</div></div>
+        <div class="chart-wrap" style="height:180px"><canvas id="smsChart"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-header"><div class="card-title">Alert Type Breakdown</div><div class="card-meta">Today · By trigger</div></div>
+        <div class="chart-wrap" style="height:180px"><canvas id="alertTypeChart"></canvas></div>
+      </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="alerts-tabs">
+      <div class="at active" onclick="switchTab(this,'rules')">Alert Rules</div>
+      <div class="at" onclick="switchTab(this,'feed')">Notification Feed <span style="padding:1px 7px;border-radius:20px;font-size:0.68rem;background:var(--accent);color:#fff;font-weight:700;margin-left:4px">12</span></div>
+      <div class="at" onclick="switchTab(this,'audit')">Audit Log</div>
+      <div class="at" onclick="switchTab(this,'sms')">SMS Templates</div>
+    </div>
+
+    <!-- Alert Rules -->
+    <div id="view-rules">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
+        <div style="font-size:0.82rem;color:var(--text2)">9 of 12 rules active · Triggers run automatically based on conditions</div>
+        <button class="btn btn-ghost btn-sm" onclick="openModal('newRuleModal')">+ Add Rule</button>
+      </div>
+      <div id="rulesList"></div>
+    </div>
+
+    <!-- Notification Feed -->
+    <div id="view-feed" style="display:none">
+      <div style="display:flex;gap:0.75rem;margin-bottom:1rem;flex-wrap:wrap;align-items:center">
+        <select class="filter-select"><option>All Channels</option><option>SMS</option><option>Email</option><option>In-App</option><option>WhatsApp</option></select>
+        <select class="filter-select"><option>All Types</option><option>Absence Alert</option><option>Late Arrival</option><option>Defaulter</option><option>Leave Approved</option></select>
+        <button class="btn btn-ghost btn-sm" onclick="markAllReadAction()">Mark All Read</button>
+        <div style="margin-left:auto"><input type="text" class="form-input" placeholder="Search notifications…" style="padding:6px 12px;font-size:0.8rem;width:200px"></div>
+      </div>
+      <div class="card" style="padding:0">
+        <div style="padding:0.75rem 1.25rem;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">
+          <div style="font-size:0.85rem;font-weight:700">Today's Notifications — 29 Jun 2026</div>
+          <span class="badge badge-red">12 unread</span>
+        </div>
+        <div style="padding:0.75rem 1.25rem" class="notif-feed" id="notifFeed"></div>
+      </div>
+    </div>
+
+    <!-- Audit Log -->
+    <div id="view-audit" style="display:none">
+      <div style="display:flex;gap:0.75rem;margin-bottom:1rem;flex-wrap:wrap;align-items:center">
+        <input type="date" class="filter-select" value="2026-06-29">
+        <select class="filter-select"><option>All Actions</option><option>Create</option><option>Modify</option><option>Submit</option><option>Approve</option><option>Delete</option><option>Correction</option><option>Sync</option></select>
+        <select class="filter-select"><option>All Users</option><option>Mrs. Sunita Sharma</option><option>Mr. Rajesh Kumar</option><option>Super Admin</option></select>
+        <select class="filter-select"><option>All Modules</option><option>Student Attendance</option><option>Staff Attendance</option><option>Leave Management</option><option>Biometric Sync</option></select>
+        <button class="btn btn-ghost btn-sm" onclick="exportAuditLog()">Export</button>
+        <div style="margin-left:auto"><input type="text" class="form-input" placeholder="Search audit…" style="padding:6px 12px;font-size:0.8rem;width:200px"></div>
+      </div>
+      <div class="card card-flush">
+        <div class="card-padding" style="display:flex;justify-content:space-between;align-items:center">
+          <div><div class="card-title">Attendance Audit Trail</div><div class="card-meta">All changes are logged with user, timestamp, IP and before/after values · Immutable log</div></div>
+          <div style="display:flex;gap:0.5rem;align-items:center">
+            <span class="badge badge-green" style="font-size:0.68rem">🔒 Tamper-proof</span>
+            <span class="badge badge-blue" id="auditCount">48 events today</span>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table class="audit-table">
+            <thead><tr><th>#</th><th>Timestamp</th><th>User</th><th>Role</th><th>Action</th><th>Module</th><th>Entity</th><th>Description</th><th>IP Address</th><th>Status</th></tr></thead>
+            <tbody id="auditTableBody"></tbody>
+          </table>
+        </div>
+        <div style="padding:0.75rem 1rem;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;font-size:0.75rem;color:var(--text2)">
+          <span>Showing 25 of 48 audit events</span>
+          <div style="display:flex;gap:0.35rem">
+            <button class="page-btn">‹</button><button class="page-btn active">1</button><button class="page-btn">2</button><button class="page-btn">›</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SMS Templates -->
+    <div id="view-sms" style="display:none">
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(400px,1fr));gap:1.25rem" id="smsTemplates"></div>
+    </div>
+
+  </main>
+</div>
+
+<!-- New Alert Rule Modal -->
+<div class="modal-backdrop" id="newRuleModal">
+  <div class="modal" style="max-width:560px">
+    <div class="modal-header"><div class="modal-title">New Alert Rule</div><button class="modal-close" onclick="closeModal('newRuleModal')"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group"><label class="form-label">Rule Name <span class="req">*</span></label><input class="form-input" placeholder="e.g. Absent Notification — Students"></div>
+        <div class="form-group"><label class="form-label">Trigger Event <span class="req">*</span></label>
+          <select class="form-select">
+            <option>Student marked Absent</option><option>Student Late Arrival</option><option>Below 75% Attendance</option><option>3 Consecutive Absences</option><option>Leave Approved/Rejected</option><option>Attendance Submitted</option><option>Biometric Sync Failed</option>
+          </select>
+        </div>
+        <div class="form-group"><label class="form-label">Send Via <span class="req">*</span></label>
+          <div style="display:flex;gap:0.75rem;margin-top:0.35rem;flex-wrap:wrap">
+            <label style="display:flex;align-items:center;gap:0.4rem;font-size:0.82rem;cursor:pointer"><input type="checkbox" checked> SMS</label>
+            <label style="display:flex;align-items:center;gap:0.4rem;font-size:0.82rem;cursor:pointer"><input type="checkbox" checked> Email</label>
+            <label style="display:flex;align-items:center;gap:0.4rem;font-size:0.82rem;cursor:pointer"><input type="checkbox"> WhatsApp</label>
+            <label style="display:flex;align-items:center;gap:0.4rem;font-size:0.82rem;cursor:pointer"><input type="checkbox" checked> In-App</label>
+          </div>
+        </div>
+        <div class="form-group"><label class="form-label">Send To <span class="req">*</span></label>
+          <div style="display:flex;gap:0.75rem;margin-top:0.35rem;flex-wrap:wrap">
+            <label style="display:flex;align-items:center;gap:0.4rem;font-size:0.82rem;cursor:pointer"><input type="checkbox" checked> Parent/Guardian</label>
+            <label style="display:flex;align-items:center;gap:0.4rem;font-size:0.82rem;cursor:pointer"><input type="checkbox"> Class Teacher</label>
+            <label style="display:flex;align-items:center;gap:0.4rem;font-size:0.82rem;cursor:pointer"><input type="checkbox"> Coordinator</label>
+            <label style="display:flex;align-items:center;gap:0.4rem;font-size:0.82rem;cursor:pointer"><input type="checkbox"> Principal</label>
+          </div>
+        </div>
+        <div class="form-group"><label class="form-label">Trigger Time</label><select class="form-select"><option>Immediately on event</option><option>8:30 AM daily</option><option>10:00 AM daily</option><option>End of day (2:50 PM)</option></select></div>
+        <div class="form-group"><label class="form-label">Applicable to</label><select class="form-select"><option>All Grades</option><option>Primary Only</option><option>Secondary Only</option><option>Sr. Secondary Only</option></select></div>
+        <div class="form-group form-full"><label class="form-label">Message Template</label><textarea class="form-textarea" rows="3" placeholder="Use variables: {student_name}, {date}, {class}, {attendance_pct}&#10;&#10;E.g. Dear Parent, {student_name} of Class {class} was absent on {date}. Attendance: {attendance_pct}%. — EduCore SMS"></textarea></div>
+        <div class="form-group form-full"><label class="form-label">Condition (Optional)</label><input class="form-input" placeholder="e.g. Attendance % < 75 OR consecutive_absences >= 3"></div>
+      </div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal('newRuleModal')">Cancel</button><button class="btn btn-ghost" onclick="testRule()">Test Rule</button><button class="btn btn-primary" onclick="saveRule()">Save Rule</button></div>
+  </div>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+<script src="../../js/app.js"></script>
+<script src="../../js/sidebar.js"></script>
+<script>
+renderSidebar('attendance','att-alerts','../../');
+
+var RULES = [
+  {id:1,name:'Daily Absence Alert — Students',desc:'Send SMS & email to parent immediately when student marked absent.',trigger:'Student Absent',channels:['SMS','Email','In-App'],to:['Parent'],time:'Immediate',status:true,sent:198,success:194,color:'#E8505B'},
+  {id:2,name:'Late Arrival Notification',desc:'Alert parent when student checks in 30+ minutes after school start time.',trigger:'Late Arrival (>30 min)',channels:['SMS'],to:['Parent'],time:'Immediate',status:true,sent:42,success:42,color:'#F39C12'},
+  {id:3,name:'Attendance Warning — Below 75%',desc:'Escalate to parent + class teacher + coordinator when cumulative attendance drops below 75%.',trigger:'Attendance < 75%',channels:['SMS','Email'],to:['Parent','Class Teacher','Coordinator'],time:'Daily 4:00 PM',status:true,sent:14,success:14,color:'#E74C3C'},
+  {id:4,name:'3 Consecutive Absences Alert',desc:'Notify class teacher and coordinator when student absent 3 days in a row.',trigger:'3 Consecutive Absences',channels:['Email','In-App'],to:['Class Teacher','Coordinator'],time:'Immediate',status:true,sent:6,success:6,color:'#8E44AD'},
+  {id:5,name:'Leave Approval/Rejection',desc:'Notify parent & student when leave application status changes.',trigger:'Leave Status Change',channels:['SMS','In-App'],to:['Parent'],time:'Immediate',status:true,sent:22,success:22,color:'#2980B9'},
+  {id:6,name:'Attendance Submission Confirmation',desc:'Notify class teacher when their attendance is successfully submitted.',trigger:'Attendance Submitted',channels:['In-App'],to:['Class Teacher'],time:'Immediate',status:true,sent:18,success:18,color:'#16A085'},
+  {id:7,name:'Biometric Sync Failure',desc:'Alert admin & IT when biometric device goes offline or sync fails.',trigger:'Sync Failed',channels:['Email','In-App'],to:['IT Admin','Coordinator'],time:'Immediate',status:true,sent:3,success:3,color:'#E67E22'},
+  {id:8,name:'Weekly Attendance Summary',desc:'Send weekly attendance percentage report to parents every Monday morning.',trigger:'Weekly — Every Monday',channels:['SMS','Email'],to:['Parent'],time:'Monday 8:00 AM',status:true,sent:1248,success:1241,color:'#1ABC9C'},
+  {id:9,name:'Monthly Report Card Reminder',desc:'Remind teachers to finalize attendance before monthly report generation.',trigger:'Monthly Report Due',channels:['Email','In-App'],to:['Class Teachers'],time:'Last Friday of Month',status:false,sent:0,success:0,color:'#95A5A6'},
+  {id:10,name:'Gate Pass Auto-Notify',desc:'Alert parent when student exits campus via gate pass during school hours.',trigger:'Out-Pass Issued',channels:['SMS'],to:['Parent'],time:'Immediate',status:false,sent:7,success:7,color:'#E8505B'},
+  {id:11,name:'Staff Absent — HOD Alert',desc:'Notify HOD immediately when teacher under their department is marked absent.',trigger:'Staff Absent',channels:['In-App','Email'],to:['HOD'],time:'Immediate',status:true,sent:4,success:4,color:'#E74C3C'},
+  {id:12,name:'Holiday Calendar Update',desc:'Notify all parents and staff when a new holiday is added to the academic calendar.',trigger:'Holiday Added',channels:['SMS','Email'],to:['All Parents','All Staff'],time:'Immediate',status:false,sent:0,success:0,color:'#3498DB'},
+];
+
+var NOTIFS = [
+  {id:1,title:'Arjun Das (IX-A) — Marked Absent',desc:'Arjun Das was marked absent on 29 Jun 2026. Parent Mr. Biplab Das has been notified via SMS.',time:'9:15 AM',channels:['SMS','Email'],type:'absence',color:'#E8505B',unread:true},
+  {id:2,title:'Dev Agarwal (IX-A) — Medical Leave',desc:'Medical leave application for Dev Agarwal approved by Mrs. Rekha. Parent notified.',time:'9:08 AM',channels:['SMS','In-App'],type:'leave',color:'#2980B9',unread:true},
+  {id:3,title:'Biometric BIO-03 Sync Failed',desc:'Device BIO-03 (Admin Block) failed to sync at 9:30 AM. IT admin has been notified.',time:'9:31 AM',channels:['Email','In-App'],type:'system',color:'#E67E22',unread:true},
+  {id:4,title:'Late Arrival — 18 students today',desc:'18 students arrived late on 29 Jun 2026. Parent SMS sent for all. Class teacher notified.',time:'8:35 AM',channels:['SMS','In-App'],type:'late',color:'#F39C12',unread:true},
+  {id:5,title:'Attendance Warning — Aditya Singh (VIII-A)',desc:'Cumulative attendance for Aditya Singh has dropped to 58%. Second warning issued. Escalated to Principal.',time:'8:00 AM',channels:['SMS','Email','In-App'],type:'warning',color:'#E74C3C',unread:true},
+  {id:6,title:'Weekly SMS Report Sent — 1,241 parents',desc:'Weekly attendance summary SMS delivered to 1,241 parents. 7 failed (invalid numbers).',time:'Monday 8:00 AM',channels:['SMS'],type:'report',color:'#16A085',unread:false},
+  {id:7,title:'Staff Absent — Mr. Srinivas G. (CS)',desc:'Mr. Srinivas G. is absent today. HOD Mr. Rajesh has been notified. Substitute assigned.',time:'8:20 AM',channels:['In-App','Email'],type:'staff',color:'#8E44AD',unread:false},
+  {id:8,title:'Leave Rejected — Harsh Kapoor',desc:'Leave application for Harsh Kapoor rejected by Mrs. Rekha. Reason: Exam period. Parent SMS sent.',time:'Yesterday 4:30 PM',channels:['SMS','In-App'],type:'leave',color:'#E8505B',unread:false},
+];
+
+var AUDIT = [
+  {no:1,ts:'09:52:14',user:'Mrs. Sunita Sharma',role:'Class Teacher',action:'submit',actionLabel:'Submit',module:'Student Attendance',entity:'IX-A · 29 Jun 2026',desc:'Attendance submitted for 35 students. P:30 A:2 L:2 ML:1 CL:1 — Final submission.',ip:'192.168.1.45',ok:true},
+  {no:2,ts:'09:30:05',user:'Mrs. Sunita Sharma',role:'Class Teacher',action:'modify',actionLabel:'Modify',module:'Student Attendance',entity:'ADM-0905 Arjun Das',desc:'Status changed from P to A (Late → Absent). Original: Present. Reason: Not arrived after P-1.',ip:'192.168.1.45',ok:true},
+  {no:3,ts:'09:08:22',user:'Mrs. Rekha S.',role:'Coordinator',action:'approve',actionLabel:'Approve',module:'Leave Management',entity:'LP-2026-042 Dev Agarwal',desc:'Medical leave approved for 29 Jun–1 Jul 2026. Certificate verified.',ip:'192.168.1.52',ok:true},
+  {no:4,ts:'09:05:01',user:'BIO-01 Device',role:'System',action:'sync',actionLabel:'Sync',module:'Biometric Sync',entity:'BIO-01 Main Entrance',desc:'Synced 234 records. 228 matched to registered staff/students. 6 unrecognized records logged.',ip:'192.168.1.101',ok:true},
+  {no:5,ts:'08:52:17',user:'Mr. Rajesh Kumar',role:'HOD Physics',action:'submit',actionLabel:'Submit',module:'Staff Attendance',entity:'Physics Dept · 29 Jun 2026',desc:'Staff attendance submitted for 3 physics teachers. P:2 OL:1.',ip:'192.168.1.62',ok:true},
+  {no:6,ts:'08:44:10',user:'Mrs. Priya Nair',role:'Class Teacher',action:'create',actionLabel:'Create',module:'Gate Pass',entity:'GP-003 Kunal Singh IX-A',desc:'Out-pass issued for Kunal Singh. Reason: Bank work with parent. Expected return: 12:30 PM.',ip:'192.168.1.48',ok:true},
+  {no:7,ts:'08:35:44',user:'System',role:'Automation',action:'create',actionLabel:'Auto-Send',module:'SMS Alert',entity:'18 Late Arrivals',desc:'Automated SMS sent to 18 parents for late-arriving students. Delivery rate: 100%.',ip:'10.0.0.1',ok:true},
+  {no:8,ts:'08:30:12',user:'BIO-03 Device',role:'System',action:'sync',actionLabel:'Sync Fail',module:'Biometric Sync',entity:'BIO-03 Admin Block',desc:'Sync failed — device unreachable. Timeout after 30s. IT admin auto-notified.',ip:'192.168.1.103',ok:false},
+  {no:9,ts:'08:20:33',user:'Mrs. Rekha S.',role:'Coordinator',action:'modify',actionLabel:'Modify',module:'Staff Attendance',entity:'ADM EMP-008 Mr. Srinivas G.',desc:'Substitute assigned for Mr. Srinivas G. (absent). Mr. Ravi Kumar assigned for IX-B CS class.',ip:'192.168.1.52',ok:true},
+  {no:10,ts:'08:10:05',user:'System',role:'Automation',action:'create',actionLabel:'Auto-Mark',module:'Biometric Sync',entity:'BIO-01 Records',desc:'Auto-marked 182 staff as Present based on biometric punch-in data. 4 errors discarded.',ip:'10.0.0.1',ok:true},
+  {no:11,ts:'07:45:00',user:'Super Admin',role:'Administrator',action:'create',actionLabel:'Create',module:'Holiday Calendar',entity:'AY 2025-26 Calendar',desc:'Working Saturday added: 29 Jun 2026 — Science Fair. All staff and parents notified.',ip:'192.168.1.2',ok:true},
+  {no:12,ts:'Yesterday 17:05',user:'Mrs. Rekha S.',role:'Coordinator',action:'correct',actionLabel:'Correction',module:'Student Attendance',entity:'VIII-B · 28 Jun 2026',desc:'Correction approved: ADM-0788 Rohan Das changed from A → CL (Casual Leave). Parent provided letter.',ip:'192.168.1.52',ok:true},
+];
+
+var SMS_TEMPLATES = [
+  {id:'T001',name:'Daily Absence — Student',trigger:'Student Absent',template:'Dear Parent, Your ward {student_name} of Class {class}, {school_name} was absent on {date}. Cumulative Attendance: {attendance_pct}%. For queries, contact school at {phone}. — EduCore SMS',lastUsed:'Today'},
+  {id:'T002',name:'Late Arrival',trigger:'Late Arrival',template:'Dear Parent, {student_name} ({class}) arrived late at {arrival_time} on {date}. Periods missed: {periods_missed}. — {school_name}',lastUsed:'Today'},
+  {id:'T003',name:'Attendance Warning (Below 75%)',trigger:'< 75% Attendance',template:'URGENT: {student_name} ({class}) attendance has fallen to {attendance_pct}%. Minimum required is 75%. Risk of exam disqualification. Please contact school immediately. — {school_name}',lastUsed:'Today'},
+  {id:'T004',name:'Leave Approved',trigger:'Leave Approved',template:'Dear Parent, Leave of {student_name} ({class}) from {from_date} to {to_date} has been APPROVED. Attendance will be updated. — {school_name}',lastUsed:'29 Jun'},
+  {id:'T005',name:'Leave Rejected',trigger:'Leave Rejected',template:'Dear Parent, Leave application for {student_name} ({class}) from {from_date} to {to_date} has been REJECTED. Reason: {reason}. Student must attend school. — {school_name}',lastUsed:'28 Jun'},
+  {id:'T006',name:'Weekly Summary',trigger:'Every Monday',template:'Weekly Attendance Update: {student_name} ({class}) — Week {week}: Present {present_days}/5 days. Cumulative: {attendance_pct}%. — {school_name}',lastUsed:'23 Jun'},
+];
+
+function renderRules() {
+  var html = RULES.map(function(r) {
+    var channelChips = r.channels.map(function(c){
+      var cc = c==='SMS'?'badge-green':c==='Email'?'badge-blue':c==='WhatsApp'?'badge-success':'badge-gray';
+      return '<span class="rule-chip badge '+cc+'">'+c+'</span>';
+    }).join('');
+    var deliveryPct = r.sent>0?Math.round(r.success/r.sent*100):0;
+    return '<div class="rule-card'+(r.status?'':' inactive')+'">'
+      +'<div class="rule-icon" style="background:'+r.color+'"><svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></div>'
+      +'<div class="rule-body">'
+      +'<div class="rule-name">'+r.name+'</div>'
+      +'<div class="rule-desc">'+r.desc+'</div>'
+      +'<div class="rule-meta">'
+      +'<span class="rule-chip" style="background:var(--bg);border:1px solid var(--border);color:var(--text2)">'+r.trigger+'</span>'
+      +channelChips
+      +'→ <span style="font-size:0.68rem;color:var(--text2)">'+r.to.join(', ')+'</span>'
+      +(r.sent>0?'<span class="rule-chip" style="background:rgba(22,160,133,0.1);color:var(--success)">'+r.sent+' sent · '+deliveryPct+'% delivered</span>':'')
+      +'</div>'
+      +'</div>'
+      +'<div class="rule-actions">'
+      +'<button class="btn btn-ghost btn-sm" onclick="showToast(\'Editing rule: '+r.name+'…\',\'info\')" style="font-size:0.7rem;padding:4px 10px">Edit</button>'
+      +'<div class="toggle'+(r.status?' on':'')+'" id="rtog-'+r.id+'" onclick="toggleRule('+r.id+')"></div>'
+      +'</div>'
+      +'</div>';
+  }).join('');
+  document.getElementById('rulesList').innerHTML = html;
+}
+
+function renderNotifFeed() {
+  var icons = {absence:'<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>',leave:'<rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/>',system:'<path d="M1 4v6h6M23 20v-6h-6"/>',late:'<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>',warning:'<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>',report:'<polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>',staff:'<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>',other:'<path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>'};
+  var html = NOTIFS.map(function(n) {
+    var chanChips = n.channels.map(function(c){ var cc=c==='SMS'?'badge-green':c==='Email'?'badge-blue':'badge-gray'; return '<span class="nf-chan badge '+cc+'">'+c+'</span>'; }).join('');
+    return '<div class="nf-item'+(n.unread?' unread':'')+'">'
+      +(n.unread?'<div class="unread-dot"></div>':'')
+      +'<div class="nf-icon" style="background:'+n.color+'"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">'+(icons[n.type]||icons.other)+'</svg></div>'
+      +'<div class="nf-body">'
+      +'<div class="nf-title">'+n.title+'</div>'
+      +'<div class="nf-sub">'+n.desc+'</div>'
+      +'<div class="nf-channels">'+chanChips+'</div>'
+      +'</div>'
+      +'<div class="nf-time">'+n.time+'</div>'
+      +'</div>';
+  }).join('');
+  document.getElementById('notifFeed').innerHTML = html;
+}
+
+function renderAuditLog() {
+  var actionClasses = {submit:'a-submit',modify:'a-modify',create:'a-create',delete:'a-delete',approve:'a-approve',correct:'a-correct',sync:'a-sync'};
+  var html = AUDIT.map(function(r) {
+    return '<tr>'
+      +'<td style="font-family:\'IBM Plex Mono\',monospace;font-size:0.7rem;color:var(--text3)">'+r.no+'</td>'
+      +'<td style="font-family:\'IBM Plex Mono\',monospace;font-size:0.72rem;white-space:nowrap">'+r.ts+'</td>'
+      +'<td><strong style="font-size:0.78rem">'+r.user+'</strong></td>'
+      +'<td style="font-size:0.72rem;color:var(--text2)">'+r.role+'</td>'
+      +'<td><span class="audit-action-chip '+(actionClasses[r.action]||'a-create')+'">'+r.actionLabel+'</span></td>'
+      +'<td style="font-size:0.75rem;color:var(--text2)">'+r.module+'</td>'
+      +'<td style="font-size:0.75rem;max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+r.entity+'</td>'
+      +'<td style="font-size:0.75rem;max-width:240px;line-height:1.4">'+r.desc+'</td>'
+      +'<td style="font-family:\'IBM Plex Mono\',monospace;font-size:0.68rem;color:var(--text3)">'+r.ip+'</td>'
+      +'<td><span class="badge '+(r.ok?'badge-green':'badge-red')+'">'+(r.ok?'OK':'Failed')+'</span></td>'
+      +'</tr>';
+  }).join('');
+  document.getElementById('auditTableBody').innerHTML = html;
+}
+
+function renderSMSTemplates() {
+  var html = SMS_TEMPLATES.map(function(t) {
+    return '<div class="card" style="padding:0">'
+      +'<div style="padding:1rem 1.25rem;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">'
+      +'<div><div style="font-size:0.87rem;font-weight:700;color:var(--text)">'+t.name+'</div><div style="font-size:0.7rem;color:var(--text2)">ID: '+t.id+' · Trigger: '+t.trigger+'</div></div>'
+      +'<button class="btn btn-ghost btn-sm" onclick="showToast(\'Editing template '+t.id+'…\',\'info\')">Edit</button>'
+      +'</div>'
+      +'<div style="padding:1rem 1.25rem">'
+      +'<div style="padding:0.75rem;background:var(--bg);border-radius:6px;font-size:0.78rem;color:var(--text);line-height:1.6;font-family:\'DM Sans\',sans-serif;border:1px solid var(--border)">'+t.template+'</div>'
+      +'<div style="display:flex;justify-content:space-between;align-items:center;margin-top:0.6rem">'
+      +'<div style="font-size:0.68rem;color:var(--text3)">Last used: '+t.lastUsed+' · Char count: '+t.template.length+'</div>'
+      +'<button class="btn btn-ghost btn-sm" onclick="showToast(\'Test SMS sent to admin phone\',\'info\')">Test</button>'
+      +'</div>'
+      +'</div>'
+      +'</div>';
+  }).join('');
+  document.getElementById('smsTemplates').innerHTML = html;
+}
+
+function toggleRule(id) {
+  var r = RULES.find(function(x){return x.id===id;});
+  if(r) { r.status=!r.status; var el=document.getElementById('rtog-'+id); if(el) el.classList.toggle('on'); showToast('Rule '+(r.status?'enabled':'disabled')+': '+r.name,r.status?'success':'info'); }
+}
+function switchTab(el,view) {
+  document.querySelectorAll('.at').forEach(function(t){t.classList.remove('active');});
+  el.classList.add('active');
+  ['rules','feed','audit','sms'].forEach(function(v){ var e=document.getElementById('view-'+v); if(e) e.style.display=v===view?'block':'none'; });
+}
+function sendTestAlert() { showToast('Test alert sent to admin phone and email','success'); }
+function exportAuditLog() { showToast('Exporting audit log as PDF…','info'); }
+function markAllReadAction() { document.querySelectorAll('.nf-item.unread').forEach(function(n){ n.classList.remove('unread'); }); document.querySelector('.at.active .badge') && (document.querySelector('.at.active').querySelector('.badge').textContent='0 unread'); showToast('All notifications marked as read','success'); }
+function saveRule() { closeModal('newRuleModal'); showToast('Alert rule saved and activated','success'); }
+function testRule() { showToast('Test notification sent successfully','success'); }
+
+/* ── CHARTS ── */
+var tc = document.documentElement.getAttribute('data-theme')==='dark'?'#94A3B8':'#6C757D';
+var gc = document.documentElement.getAttribute('data-theme')==='dark'?'rgba(255,255,255,0.06)':'rgba(0,0,0,0.06)';
+new Chart(document.getElementById('smsChart'),{type:'line',data:{labels:['Mon','Tue','Wed','Thu','Fri','Sat','Sun'],datasets:[{label:'Sent',data:[398,412,380,420,405,290,0],borderColor:'#0A3D62',backgroundColor:'rgba(10,61,98,0.07)',fill:true,tension:0.4,borderWidth:2.5,pointRadius:3},{label:'Delivered',data:[392,405,374,414,398,288,0],borderColor:'#16A085',backgroundColor:'transparent',fill:false,tension:0.4,borderWidth:2,pointRadius:3,borderDash:[4,3]}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',labels:{boxWidth:10,font:{size:10},color:tc}}},scales:{x:{grid:{display:false},ticks:{font:{size:10},color:tc}},y:{grid:{color:gc},ticks:{font:{size:10},color:tc}}}}});
+new Chart(document.getElementById('alertTypeChart'),{type:'doughnut',data:{labels:['Absence','Late Arrival','Warning','Leave','System','Weekly Report'],datasets:[{data:[198,42,14,22,7,128],backgroundColor:['#E8505B','#F39C12','#E74C3C','#2980B9','#E67E22','#16A085'],borderWidth:0,hoverOffset:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right',labels:{boxWidth:10,font:{size:10},color:tc,padding:10}}}}});
+
+function openModal(id){ var m=document.getElementById(id);if(m)m.classList.add('open'); }
+function closeModal(id){ var m=document.getElementById(id);if(m)m.classList.remove('open'); }
+document.addEventListener('click',function(e){if(e.target.classList.contains('modal-backdrop'))e.target.classList.remove('open');});
+function showToast(msg,type){var icons={success:'<path d="M9 11l3 3L22 4"/>',error:'<path d="M18 6 6 18M6 6l12 12"/>',info:'<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>',warning:'<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>'};var c=document.getElementById('toastContainer');var t=document.createElement('div');t.className='toast toast-'+type;t.innerHTML='<div class="toast-icon"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">'+icons[type]+'</svg></div><div class="toast-body"><div class="toast-title">'+(type.charAt(0).toUpperCase()+type.slice(1))+'</div><div class="toast-msg">'+msg+'</div></div>';c.appendChild(t);setTimeout(function(){t.classList.add('show');},10);setTimeout(function(){t.classList.remove('show');setTimeout(function(){t.remove();},300);},3500);}
+
+renderRules();
+renderNotifFeed();
+renderAuditLog();
+renderSMSTemplates();
+</script>
+</body>
+</html>
